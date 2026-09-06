@@ -1,0 +1,43 @@
+name: Core state-machine tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    env:
+      CARGO_BUILD_JOBS: "2"
+      CARGO_INCREMENTAL: "0"
+      RISC0_DEV_MODE: "0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.94.0 --profile minimal --component rustfmt
+      - name: Format check
+        run: cargo +1.94.0 fmt --all -- --check
+      - name: Fetch locked public dependencies
+        run: cargo +1.94.0 fetch --locked
+      - name: Run host-side state-machine tests
+        run: cargo +1.94.0 test --locked --offline -p astra-logos-primitives --features host
+      - name: Clarify coverage boundary
+        run: |
+          printf '%s\n' 'These are host state-machine tests, not real sequencer/private-proof/testnet evidence.' >> "$GITHUB_STEP_SUMMARY"

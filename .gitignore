@@ -1,0 +1,7 @@
+/target/
+/result*
+/.env
+/runtime/
+/secrets/
+*.log
+node_modules/

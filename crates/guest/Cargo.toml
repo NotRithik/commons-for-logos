@@ -1,0 +1,23 @@
+[package]
+name = "astra-logos-guests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+astra-logos-primitives = { path = "../primitives" }
+lee_core.workspace = true
+risc0-zkvm.workspace = true
+borsh.workspace = true
+
+[[bin]]
+name = "astra_allowlist"
+path = "src/bin/allowlist.rs"
+test = false
+bench = false
+
+[[bin]]
+name = "astra_threshold"
+path = "src/bin/threshold.rs"
+test = false
+bench = false
