@@ -10,7 +10,7 @@ compiler. Calling Cargo directly from a different path can produce a different
 image ID even when the Rust logic is unchanged.
 
 Two separate local checkouts produced byte-identical guest ELF files. The
-comparison is recorded in `evidence/build/path-reproducibility.json`. Public
+comparison is recorded in `evidence/reproducibility/path-reproducibility.json`. Public
 acceptance tests also require the rebuilt packaged files to match this
 manifest before submitting any transaction.
 

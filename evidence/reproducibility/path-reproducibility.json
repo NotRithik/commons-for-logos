@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "program": "allowlist",
+      "first_sha256": "577b197e423235e89bf7b883f50dc91683e0c9db8df9d5204cd602ca1a454ab4",
+      "second_sha256": "577b197e423235e89bf7b883f50dc91683e0c9db8df9d5204cd602ca1a454ab4",
+      "identical": true
+    },
+    {
+      "program": "threshold",
+      "first_sha256": "8b6f803c57024815492c66388bd33b74e592c9cef61fcff9b94b6d0c77c019d0",
+      "second_sha256": "8b6f803c57024815492c66388bd33b74e592c9cef61fcff9b94b6d0c77c019d0",
+      "identical": true
+    }
+  ],
+  "all_identical": true
+}
