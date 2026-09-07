@@ -48,12 +48,12 @@ case "$(uname -s)" in
  Linux) export LD_LIBRARY_PATH="$RAPIDSNARK_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
 esac
 cargo +1.94.0 build --locked --offline --manifest-path "$LEZ/Cargo.toml" --features standalone -p sequencer_service
-cargo +1.94.0 build --locked --offline --manifest-path "$ROOT/integration/Cargo.toml"
-cargo +1.94.0 build --locked --offline --manifest-path "$ROOT/cli/Cargo.toml"
+python3 "$ROOT/scripts/build-rust.py" host --manifest "$ROOT/integration/Cargo.toml" --target-dir "$OUT/clients"
+python3 "$ROOT/scripts/build-rust.py" host --manifest "$ROOT/cli/Cargo.toml" --target-dir "$OUT/clients"
 (
     cd "$ROOT/testnet"
-    RUSTC="$GUEST_RUSTC" CARGO_TARGET_DIR="$OUT/guest" cargo +1.94.0 build --locked --offline --release \
-        --target riscv32im-risc0-zkvm-elf -p commons-logos-testnet-guests
+    python3 "$ROOT/scripts/build-rust.py" guest --manifest "$ROOT/testnet/Cargo.toml" \
+        --target-dir "$OUT/guest" --guest-rustc "$GUEST_RUSTC" --package commons-logos-testnet-guests
 )
 for family in allowlist threshold; do
     cargo +1.94.0 run --locked --offline --quiet --manifest-path "$ROOT/testnet/Cargo.toml" \

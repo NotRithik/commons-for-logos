@@ -73,7 +73,7 @@ def main() -> None:
     if not 60 <= args.timeout_seconds <= 6 * 3600:
         raise SystemExit('Timeout must be 60 seconds to 6 hours')
     paths = json.loads((out / 'proof-deps/paths.json').read_text())
-    driver, node = out / 'host/debug/commons-logos-e2e', out / 'host/debug/sequencer_service'
+    driver, node = out / 'clients/debug/commons-logos-e2e', out / 'host/debug/sequencer_service'
     for binary in [driver, node, Path(paths['r0vm'])]:
         if not binary.is_file() or not os.access(binary, os.X_OK):
             raise SystemExit('Missing executable prerequisite: ' + str(binary))

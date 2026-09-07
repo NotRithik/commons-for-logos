@@ -1,0 +1,38 @@
+{
+  "version": "0.1.0-rc.1",
+  "lez_revision": "47eba256479f6f785acbd138834340703cd03401",
+  "testnet_endpoint": "https://testnet.lez.logos.co/",
+  "guest_source_tree": "78c949c03ea20d99ea990f49b545a29be27adc5f",
+  "programs": {
+    "allowlist": {
+      "file": "commons_allowlist",
+      "sha256": "e061c4ae939185ab1aeb6982da22821e1f8e6d0e472c680ff906a3bb23a79f8d",
+      "bytes": 396952,
+      "image_id": [
+        2845804935,
+        2808498389,
+        3889940433,
+        1867540510,
+        1021644695,
+        1925904071,
+        3360686415,
+        3553088831
+      ]
+    },
+    "threshold": {
+      "file": "commons_threshold",
+      "sha256": "eea319e154d8b3da72ed7e7e91912565c7820bd7f51ea4445b5c6557bdcee1c7",
+      "bytes": 406732,
+      "image_id": [
+        3889587528,
+        4072157194,
+        1675466154,
+        3386074792,
+        1392369498,
+        2156404430,
+        3280262519,
+        3599087292
+      ]
+    }
+  }
+}

@@ -1,0 +1,65 @@
+name: Public testnet allowlist acceptance
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_testnet:
+        description: 'Create fresh test identities and submit real private claims to the official testnet'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: public-testnet-acceptance-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  allowlist:
+    if: github.event.repository.private == false && inputs.confirm_testnet
+    name: Ten independent test identities (distribution ${{ matrix.distribution }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        distribution: [1, 2]
+    env:
+      CARGO_BUILD_JOBS: '3'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      RISC0_DEV_MODE: '0'
+      RISC0_PROVER: ipc
+      RISC0_EXECUTOR: ipc
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install standard compilation prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential clang libclang-dev pkg-config libssl-dev libpcsclite-dev libgmp-dev libomp-dev unzip
+          rustup toolchain install 1.94.0 --profile minimal
+      - name: Test orchestration before execution
+        run: python3 -m unittest discover -s tests/tooling -v
+      - name: Fetch verified toolchain and locked dependencies
+        run: /bin/sh scripts/prepare-local.sh fetch
+      - name: Build release artifacts and clients offline
+        run: /bin/sh scripts/prepare-local.sh build
+      - name: Verify ten fresh private claims against the deployed release
+        run: python3 scripts/demo-public.py --confirm-public-testnet --timeout-seconds 14400
+      - name: Publish public receipts only
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          report = pathlib.Path('out/latest-public-report.json')
+          if report.is_file():
+              text = json.dumps(json.loads(report.read_text()), indent=2)
+              print('BEGIN_PUBLIC_TESTNET_REPORT')
+              print(text)
+              print('END_PUBLIC_TESTNET_REPORT')
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+                  out.write('## Public testnet acceptance\n\n```json\n' + text + '\n```\n')
+          else:
+              print('No public testnet report was produced. No completed claim is inferred.')
+          PY
