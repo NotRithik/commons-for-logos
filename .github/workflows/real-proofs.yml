@@ -1,0 +1,64 @@
+name: Real local sequencer and private proofs
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Real private-proof coverage (no public network transactions)'
+        type: choice
+        options: [allowlist-smoke, threshold, all]
+        default: all
+permissions:
+  contents: read
+concurrency:
+  group: real-proofs-${{ github.ref }}-${{ inputs.mode }}
+  cancel-in-progress: false
+jobs:
+  real-sequencer:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      CARGO_BUILD_JOBS: '3'
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      RISC0_DEV_MODE: '0'
+      RISC0_PROVER: ipc
+      RISC0_EXECUTOR: ipc
+      ASTRA_PROOF_THREADS: '3'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install ordinary system compilation prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential clang libclang-dev pkg-config libssl-dev libpcsclite-dev libgmp-dev libomp-dev unzip
+          rustup toolchain install 1.94.0 --profile minimal
+          df -h .
+      - name: Verify orchestration invariants before any chain execution
+        run: |
+          /bin/sh -n scripts/prepare-local.sh
+          python3 -m unittest discover -s tests/tooling -v
+      - name: Fetch verified official archives and locked dependencies
+        run: /bin/sh scripts/prepare-local.sh fetch
+      - name: Build the exact pinned sequencer, clients and RISC-V guests offline
+        run: /bin/sh scripts/prepare-local.sh build
+      - name: Run real local sequencer and private-proof integration
+        env:
+          DEMO_MODE: ${{ inputs.mode }}
+        run: python3 scripts/demo-local.py --mode "$DEMO_MODE" --timeout-seconds 7200
+      - name: Publish only the sanitized result in the job summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          report = pathlib.Path('out/latest-local-report.json')
+          if report.exists():
+              data = json.loads(report.read_text())
+              text = json.dumps(data, indent=2)
+              print(text)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+                  out.write('## Real local proof result\n\n```json\n' + text + '\n```\n')
+          else:
+              print('No completed local report. Build/startup failed; no proof success is claimed.')
+          PY

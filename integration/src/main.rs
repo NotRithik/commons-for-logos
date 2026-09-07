@@ -367,9 +367,11 @@ async fn main() -> Result<()> {
     if mode == "--help" || mode == "help" {
         println!(
             "Astra Logos E2E runner (testnet only)\n\
+prepare-local DIR (offline keys for a fresh local genesis)\n\
 prepare DIR [http://127.0.0.1:34341|https://testnet.lez.logos.co]\n\
 deploy DIR ARTIFACT_DIRECTORY\n\
 claims DIR ALLOWLIST_ARTIFACT [MAX_CLAIMS=20]\n\
+claims-smoke DIR ALLOWLIST_ARTIFACT (one real claim in each distribution)\n\
 threshold DIR THRESHOLD_ARTIFACT\n\
 verify DIR [minimum_claims=20]\n\
 GUI membership setup: setup-gui DIR [allowlist|threshold]\n\
@@ -402,6 +404,56 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
             "Read-only public testnet probe: {:?}",
             client.get_last_block_id().await
         );
+        return Ok(());
+    }
+    if mode == "prepare-local" {
+        // Build an entirely new wallet before a local sequencer exists, so its
+        // genesis can fund only these newly generated public fixture accounts.
+        ensure!(
+            !dir.join("storage.json").exists(),
+            "refusing to replace an existing test wallet"
+        );
+        let (mut storage, _mnemonic) =
+            wallet::storage::Storage::new("fresh-local-test-fixture-not-encrypted")?;
+        let mut plan = json!({});
+        for name in [
+            "payer",
+            "distribution_a",
+            "distribution_b",
+            "threshold_group",
+        ] {
+            plan[name] = json!(
+                storage
+                    .key_chain_mut()
+                    .generate_new_public_transaction_private_key(None)
+                    .0
+                    .to_string()
+            );
+        }
+        let mut config = WalletConfig::default();
+        config.sequencers = vec![SequencerConnectionData {
+            sequencer_addr: "http://127.0.0.1:34341".parse()?,
+            basic_auth: None,
+        }];
+        config.multi_sequencer_client_config.calibration_limit = 2;
+        config.seq_tx_poll_max_blocks = 180;
+        config.seq_poll_timeout = std::time::Duration::from_millis(500);
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o700))?;
+        private_write(&dir.join("storage.json"), b"{}")?;
+        storage.save_to_path(&dir.join("storage.json"))?;
+        fs::set_permissions(dir.join("storage.json"), fs::Permissions::from_mode(0o600))?;
+        save(&dir.join("config.json"), &serde_json::to_value(config)?)?;
+        save(&dir.join("statistics.json"), &json!({}))?;
+        save(&dir.join("public-plan.json"), &plan)?;
+        fs::write(
+            dir.join(".astra-logos-testnet-wallet"),
+            b"LOCAL ONLY fresh fixture. No mainnet value. Plaintext owner-only wallet storage.\n",
+        )?;
+        event(
+            &dir,
+            json!({"stage":"prepared_offline","test_only":true,"network":"loopback","public_accounts":plan,"no_network_request":true}),
+        )?;
         return Ok(());
     }
     if mode == "prepare" {
@@ -753,9 +805,12 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
         }
         return Ok(());
     }
-    if mode == "claims" || mode == "claims-a" || mode == "claims-b" {
+    if mode == "claims" || mode == "claims-a" || mode == "claims-b" || mode == "claims-smoke" {
         let elf = PathBuf::from(args.next().context("expected allowlist artifact")?);
         let limit: usize = args.next().unwrap_or_else(|| "20".into()).parse()?;
+        ensure!(limit <= 20, "at most 20 demo identities are available");
+        let per_distribution = if mode == "claims-smoke" { 1 } else { 10 };
+        let mut confirmed_by_distribution = Vec::new();
         let prog = program(&dir, "allowlist", &elf)?;
         for (d, name) in ["distribution_a", "distribution_b"].iter().enumerate() {
             if (mode == "claims-a" && d != 0) || (mode == "claims-b" && d != 1) {
@@ -779,9 +834,9 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
                 )
                 .await?;
             }
-            for (i, witness) in list.iter().enumerate() {
-                if d * 10 + i >= limit {
-                    return Ok(());
+            for (i, witness) in list.iter().enumerate().take(per_distribution) {
+                if mode != "claims-smoke" && d * 10 + i >= limit {
+                    break;
                 }
                 let current =
                     Distribution::try_from_slice(&w.get_account_public(state).await?.data)?;
@@ -807,10 +862,30 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
                     "confirmed claim count mismatch"
                 );
             }
+            let observed = Distribution::try_from_slice(&w.get_account_public(state).await?.data)?;
+            let distinct: std::collections::HashSet<_> = observed.claims.iter().collect();
+            ensure!(
+                distinct.len() == observed.claims.len(),
+                "duplicate persisted nullifier"
+            );
+            confirmed_by_distribution.push(json!({"name":name,"state_account":state.to_string(),"unique_claims":distinct.len()}));
         }
+        let total: usize = confirmed_by_distribution
+            .iter()
+            .map(|r| r["unique_claims"].as_u64().unwrap_or(0) as usize)
+            .sum();
+        let required = if mode == "claims-smoke" {
+            2
+        } else if mode == "claims" {
+            20
+        } else {
+            10
+        };
         event(
             &dir,
-            json!({"stage":"claims_complete","mode":mode,"distributions":if mode=="claims" {2} else {1},"unique_private_claims":if mode=="claims" {20} else {10},"network":w.helm_url().as_str()}),
+            json!({"stage":if total >= required {"claims_complete"} else {"claims_partial"},"mode":mode,
+                "distributions":confirmed_by_distribution,"unique_private_claims":total,
+                "required_for_this_mode":required,"network":w.helm_url().as_str()}),
         )?;
         return Ok(());
     }
