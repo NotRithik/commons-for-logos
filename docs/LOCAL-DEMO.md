@@ -1,10 +1,9 @@
 # Real local demonstration
 
-This is not a simulation. The integration command starts the pinned LEZ sequencer,
-deploys the compiled RISC-V programs, generates real RISC0 proofs locally, submits
-private transactions and checks their confirmations. It never contacts a public
-chain, signs with an existing user wallet, calls a model API or selects a hosted
-prover. `RISC0_DEV_MODE=0`, `RISC0_PROVER=ipc` and `RISC0_EXECUTOR=ipc` are mandatory.
+The integration command starts the pinned LEZ sequencer, deploys the compiled
+RISC-V programs, generates RISC0 proofs locally, submits private transactions and
+checks their confirmations. It uses fresh local profiles and no public network.
+`RISC0_DEV_MODE=0`, `RISC0_PROVER=ipc` and `RISC0_EXECUTOR=ipc` are mandatory.
 
 ## Prerequisites
 
@@ -52,6 +51,5 @@ on a standard public-repository runner, without artifact/cache upload actions.
 It prints only the sanitized report. A green host/unit-test workflow is not a
 substitute for this real-proof workflow.
 
-This workflow is still being run and debugged. Until a corresponding successful
-run is linked in the verification ledger, its existence is not proof that a clean
-environment has passed.
+The verification ledger identifies completed runs by source revision. Check that
+revision before comparing the result with another build.

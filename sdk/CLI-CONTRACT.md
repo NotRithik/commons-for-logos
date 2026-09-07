@@ -1,8 +1,8 @@
-# Astra Logos CLI Contract
+# Commons Logos CLI Contract
 
 This SDK does not construct private Logos transactions itself. The Basecamp GUI
 delegates every live LP-0002 and LP-0003 transaction action to an explicitly
-configured absolute `astra-logos-cli` executable.
+configured absolute `commons-logos-cli` executable.
 
 ## Invocation
 
@@ -21,7 +21,7 @@ allowlist. It never invokes a shell.
 | `threshold.inspect_state` | `primitives threshold-inspect --json-stdin` |
 
 For every invocation the environment must contain `RISC0_DEV_MODE=0` and
-`ASTRA_LOGOS_NETWORK=testnet`. The CLI must reject any non-testnet wallet or
+`COMMONS_LOGOS_NETWORK=testnet`. The CLI must reject any non-testnet wallet or
 configuration even if the GUI already performed local path checks.
 
 ## Request

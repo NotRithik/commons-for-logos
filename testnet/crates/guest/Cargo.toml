@@ -1,22 +1,22 @@
 [package]
-name = "astra-logos-testnet-guests"
+name = "commons-logos-testnet-guests"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-astra-logos-testnet-primitives = { path = "../primitives" }
+commons-logos-testnet-primitives = { path = "../primitives" }
 lee_core.workspace = true
 risc0-zkvm.workspace = true
 
 [[bin]]
-name = "astra_allowlist_v024"
+name = "commons_allowlist_v024"
 path = "src/bin/allowlist.rs"
 test = false
 bench = false
 
 [[bin]]
-name = "astra_threshold_v024"
+name = "commons_threshold_v024"
 path = "src/bin/threshold.rs"
 test = false
 bench = false

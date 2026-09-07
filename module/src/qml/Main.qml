@@ -6,7 +6,7 @@ import QtQuick.Layouts
 Item {
     id: root
     objectName: "commons.root"
-    readonly property var backend: logos.module("astra_primitives_ui")
+    readonly property var backend: logos.module("commons_primitives_ui")
     property bool ready: false
     readonly property bool configured: ready && backend && backend.configured
     readonly property bool busy: ready && backend && backend.busy
@@ -51,7 +51,7 @@ Item {
     Connections {
         target: logos
         function onViewModuleReadyChanged(name, isReady) {
-            if (name === "astra_primitives_ui") root.ready = isReady && root.backend !== null
+            if (name === "commons_primitives_ui") root.ready = isReady && root.backend !== null
         }
     }
     Connections {
@@ -62,7 +62,7 @@ Item {
         }
         function onOperationFailed(operation, message) { transientError.text = message }
     }
-    Component.onCompleted: root.ready = root.backend !== null && logos.isViewModuleReady("astra_primitives_ui")
+    Component.onCompleted: root.ready = root.backend !== null && logos.isViewModuleReady("commons_primitives_ui")
 
     component CopyLabel: Label {
         color: "#b1b5bd"

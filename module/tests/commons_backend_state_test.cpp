@@ -1,5 +1,5 @@
 // Isolated backend/UI-state tests. The compiled fixture is NOT a real wallet.
-#include "astra_primitives_backend.h"
+#include "commons_primitives_backend.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
@@ -14,7 +14,7 @@ QJsonObject object(const QString& text) { return QJsonDocument::fromJson(text.to
 QString makeWallet(const QString& parent, const QString& name = QStringLiteral("testnet-wallet")) {
     const QString path = QDir(parent).filePath(name);
     QDir().mkpath(path);
-    QFile marker(QDir(path).filePath(QStringLiteral(".astra-logos-testnet-wallet")));
+    QFile marker(QDir(path).filePath(QStringLiteral(".commons-logos-testnet-wallet")));
     if (!marker.open(QIODevice::WriteOnly)) return {};
     marker.close();
     return path;
@@ -27,16 +27,16 @@ QString witness(const QString& wallet, const QString& name = QStringLiteral("mem
     f.close();
     return path;
 }
-QString cli() { return QString::fromLocal8Bit(ASTRA_TEST_FAKE_CLI); }
+QString cli() { return QString::fromLocal8Bit(COMMONS_TEST_FAKE_CLI); }
 }
 
-class AstraBackendStateTest : public QObject {
+class CommonsBackendStateTest : public QObject {
     Q_OBJECT
 private slots:
-    void init() { qputenv("ASTRA_FAKE_CLI_MODE", "echo"); }
-    void cleanup() { qunsetenv("ASTRA_FAKE_CLI_MODE"); }
+    void init() { qputenv("COMMONS_FAKE_CLI_MODE", "echo"); }
+    void cleanup() { qunsetenv("COMMONS_FAKE_CLI_MODE"); }
     void initiallyNotConfigured() {
-        AstraPrimitivesBackend backend;
+        CommonsPrimitivesBackend backend;
         QVERIFY(!backend.configured());
         QVERIFY(!backend.busy());
         QVERIFY(backend.captureDirectory().isEmpty());
@@ -46,11 +46,11 @@ private slots:
         QTemporaryDir temp; QVERIFY(temp.isValid());
         const QString a = makeWallet(temp.path(), "testnet-a");
         const QString b = makeWallet(temp.path(), "testnet-b");
-        AstraPrimitivesBackend backend;
+        CommonsPrimitivesBackend backend;
         QVERIFY(object(backend.configure(cli(), a))["configured"].toBool());
         QVERIFY(object(backend.selectAllowlistWitness(witness(a)))["selected"].toBool());
         QVERIFY(object(backend.selectThresholdWitness(witness(a, "threshold.bin")))["selected"].toBool());
-        QSignalSpy finished(&backend, &AstraPrimitivesUiSource::operationFinished);
+        QSignalSpy finished(&backend, &CommonsPrimitivesUiSource::operationFinished);
         backend.inspectDistribution(address());
         QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 4000);
         QVERIFY(!backend.distributionStateAccount().isEmpty());
@@ -65,7 +65,7 @@ private slots:
     }
     void invalidConfigurationClearsPreviousCaptureDirectory() {
         QTemporaryDir temp; const auto wallet = makeWallet(temp.path());
-        AstraPrimitivesBackend backend;
+        CommonsPrimitivesBackend backend;
         backend.configure(cli(), wallet);
         QVERIFY(!backend.captureDirectory().isEmpty());
         backend.selectAllowlistWitness(witness(wallet));
@@ -77,9 +77,9 @@ private slots:
     }
     void rejectedWitnessReplacementDisarmsTheOldWitness() {
         QTemporaryDir temp; const auto wallet = makeWallet(temp.path());
-        AstraPrimitivesBackend backend; backend.configure(cli(), wallet);
+        CommonsPrimitivesBackend backend; backend.configure(cli(), wallet);
         backend.selectThresholdWitness(witness(wallet));
-        QSignalSpy failed(&backend, &AstraPrimitivesUiSource::operationFailed);
+        QSignalSpy failed(&backend, &CommonsPrimitivesUiSource::operationFailed);
         const auto reply = object(backend.selectThresholdWitness(temp.filePath("outside.bin")));
         QVERIFY(!reply["selected"].toBool());
         QCOMPARE(failed.count(), 1);
@@ -90,10 +90,10 @@ private slots:
     }
     void successfulWitnessSelectionClearsPreviousError() {
         QTemporaryDir temp; const auto wallet = makeWallet(temp.path());
-        AstraPrimitivesBackend backend; backend.configure(cli(), wallet);
+        CommonsPrimitivesBackend backend; backend.configure(cli(), wallet);
         backend.selectAllowlistWitness("/not-a-witness");
         QVERIFY(!backend.lastError().isEmpty());
-        QSignalSpy finished(&backend, &AstraPrimitivesUiSource::operationFinished);
+        QSignalSpy finished(&backend, &CommonsPrimitivesUiSource::operationFinished);
         backend.selectAllowlistWitness(witness(wallet));
         QVERIFY(backend.lastError().isEmpty());
         QVERIFY(object(backend.lastResultJson())["selected"].toBool());
@@ -101,9 +101,9 @@ private slots:
         QVERIFY(!backend.lastResultJson().contains(wallet));
     }
     void invalidReadClearsPreviouslyDisplayedState() {
-        QTemporaryDir temp; AstraPrimitivesBackend backend;
+        QTemporaryDir temp; CommonsPrimitivesBackend backend;
         backend.configure(cli(), makeWallet(temp.path()));
-        QSignalSpy finished(&backend, &AstraPrimitivesUiSource::operationFinished);
+        QSignalSpy finished(&backend, &CommonsPrimitivesUiSource::operationFinished);
         backend.inspectDistribution(address());
         QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 4000);
         QCOMPARE(backend.distributionStateAccount(), address());
@@ -114,14 +114,14 @@ private slots:
         QVERIFY(!backend.busy());
     }
     void failedReadCannotKeepAnOlderSuccessSummary() {
-        QTemporaryDir temp; AstraPrimitivesBackend backend;
+        QTemporaryDir temp; CommonsPrimitivesBackend backend;
         backend.configure(cli(), makeWallet(temp.path()));
-        QSignalSpy finished(&backend, &AstraPrimitivesUiSource::operationFinished);
+        QSignalSpy finished(&backend, &CommonsPrimitivesUiSource::operationFinished);
         backend.inspectGroup(address());
         QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 4000);
         QVERIFY(!backend.groupStateAccount().isEmpty());
-        qputenv("ASTRA_FAKE_CLI_MODE", "fail");
-        QSignalSpy failed(&backend, &AstraPrimitivesUiSource::operationFailed);
+        qputenv("COMMONS_FAKE_CLI_MODE", "fail");
+        QSignalSpy failed(&backend, &CommonsPrimitivesUiSource::operationFailed);
         backend.inspectGroup(address());
         QTRY_COMPARE_WITH_TIMEOUT(failed.count(), 1, 4000);
         QVERIFY(backend.groupStateAccount().isEmpty());
@@ -129,7 +129,7 @@ private slots:
         QVERIFY(!backend.busy());
     }
     void readStatusDoesNotClaimProofGeneration() {
-        QTemporaryDir temp; AstraPrimitivesBackend backend;
+        QTemporaryDir temp; CommonsPrimitivesBackend backend;
         backend.configure(cli(), makeWallet(temp.path()));
         backend.inspectDistribution(address());
         QCOMPARE(backend.statusText(), QStringLiteral("Reading testnet state..."));
@@ -138,9 +138,9 @@ private slots:
     }
     void activeOperationCannotSwitchWallets() {
         QTemporaryDir temp; const auto wallet = makeWallet(temp.path());
-        AstraPrimitivesBackend backend; backend.configure(cli(), wallet);
+        CommonsPrimitivesBackend backend; backend.configure(cli(), wallet);
         const auto capture = backend.captureDirectory();
-        qputenv("ASTRA_FAKE_CLI_MODE", "hang");
+        qputenv("COMMONS_FAKE_CLI_MODE", "hang");
         backend.inspectDistribution(address());
         QVERIFY(backend.busy());
         const auto reply = object(backend.configure(cli(), makeWallet(temp.path(), "testnet-b")));
@@ -151,5 +151,5 @@ private slots:
     }
 };
 
-QTEST_GUILESS_MAIN(AstraBackendStateTest)
-#include "astra_backend_state_test.moc"
+QTEST_GUILESS_MAIN(CommonsBackendStateTest)
+#include "commons_backend_state_test.moc"

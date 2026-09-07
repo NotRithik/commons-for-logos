@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AstraLogosSchemas.h"
+#include "CommonsLogosSchemas.h"
 
 #include <QObject>
 #include <QJsonObject>
@@ -8,7 +8,7 @@
 #include <QTimer>
 #include <QString>
 
-namespace AstraLogos {
+namespace CommonsLogos {
 
 struct StartResult {
     bool accepted = false;
@@ -71,4 +71,4 @@ private:
     static constexpr qsizetype MAX_OUTPUT_BYTES = 1024 * 1024;
 };
 
-} // namespace AstraLogos
+} // namespace CommonsLogos

@@ -23,8 +23,8 @@ use sha2::{Digest, Sha256};
 pub type Hash32 = [u8; 32];
 pub const MAX_MEMBERS: usize = 256;
 pub const MAX_TREE_DEPTH: usize = 8;
-const DISTRIBUTION_MAGIC: [u8; 8] = *b"ASTRAD01";
-const GROUP_MAGIC: [u8; 8] = *b"ASTRAM01";
+const DISTRIBUTION_MAGIC: [u8; 8] = *b"COMNSD01";
+const GROUP_MAGIC: [u8; 8] = *b"COMNSM01";
 
 const PRIVATE_ACCOUNT_ID_PREFIX: &[u8; 32] = b"/LEE/v0.3/AccountId/Private/\x00\x00\x00\x00";
 
@@ -56,7 +56,7 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ASTRA_ERROR_{}:{self:?}", *self as u32)
+        write!(f, "COMMONS_ERROR_{}:{self:?}", *self as u32)
     }
 }
 
@@ -173,7 +173,7 @@ pub fn program_id_bytes(program: ProgramId) -> [u8; 32] {
 
 pub fn context(program: ProgramId, state: AccountId) -> Hash32 {
     let program = program_id_bytes(program);
-    hash_parts(b"astra/context/v1", &[&program, state.as_ref()])
+    hash_parts(b"commons/context/v1", &[&program, state.as_ref()])
 }
 
 pub fn regular_private_account_id(
@@ -209,7 +209,7 @@ pub struct MemberLeaf {
 impl MemberLeaf {
     pub fn commitment(&self, scope: &Hash32) -> Hash32 {
         hash_parts(
-            b"astra/member/v1",
+            b"commons/member/v1",
             &[
                 scope,
                 self.account_id.as_ref(),
@@ -271,7 +271,7 @@ impl MemberWitness {
 
     fn nullifier(&self, scope: &Hash32, purpose: &[u8], sequence: u64) -> Hash32 {
         hash_parts(
-            b"astra/nullifier/v1",
+            b"commons/nullifier/v1",
             &[
                 scope,
                 purpose,
@@ -292,7 +292,7 @@ fn check_size(count: u32) -> Result<usize, Error> {
 }
 
 fn node(left: &Hash32, right: &Hash32) -> Hash32 {
-    hash_parts(b"astra/node/v1", &[left, right])
+    hash_parts(b"commons/node/v1", &[left, right])
 }
 
 /// Canonical padded binary tree. Empty leaves cannot be claimed because the
@@ -302,7 +302,7 @@ pub fn merkle_tree(leaves: &[Hash32]) -> Result<Vec<Vec<Hash32>>, Error> {
     let mut bottom = leaves.to_vec();
     bottom.resize(
         leaves.len().next_power_of_two(),
-        hash_parts(b"astra/empty/v1", &[]),
+        hash_parts(b"commons/empty/v1", &[]),
     );
     let mut levels = vec![bottom];
     while levels.last().unwrap().len() > 1 {

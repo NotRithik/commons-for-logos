@@ -4,9 +4,9 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 : "${LOGOS_DEPS_DIR:?Set LOGOS_DEPS_DIR to the pinned official source checkouts}"
 : "${QT_PREFIX:?Set QT_PREFIX to a compatible Qt 6.9 SDK}"
-OUT=${ASTRA_BUILD_DIR:-"$ROOT/out/native"}
-PREFIX=${ASTRA_INSTALL_DIR:-"$ROOT/out/module"}
-JOBS=${ASTRA_BUILD_JOBS:-2}
+OUT=${COMMONS_BUILD_DIR:-"$ROOT/out/native"}
+PREFIX=${COMMONS_INSTALL_DIR:-"$ROOT/out/module"}
+JOBS=${COMMONS_BUILD_JOBS:-2}
 case "$JOBS" in ''|*[!0-9]*) printf 'Invalid build-job limit\n' >&2; exit 2;; esac
 [ "$JOBS" -ge 1 ] && [ "$JOBS" -le 16 ] || { printf 'Build jobs must be 1..16\n' >&2; exit 2; }
 cmake -S "$LOGOS_DEPS_DIR/logos-view-module/view-generator" -B "$OUT/generator" \

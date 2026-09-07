@@ -141,7 +141,7 @@ fn generate(root: &Path, out: &Path) -> Result<Vec<SpelIdl>> {
             Ok(IdlError {
                 code,
                 name: v.ident.to_string(),
-                msg: Some(format!("ASTRA_ERROR_{code}:{}", v.ident)),
+                msg: Some(format!("COMMONS_ERROR_{code}:{}", v.ident)),
             })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -149,13 +149,13 @@ fn generate(root: &Path, out: &Path) -> Result<Vec<SpelIdl>> {
     for (enum_name, module, state_type) in [
         (
             "DistributionInstruction",
-            "astra_allowlist_v024",
+            "commons_allowlist_v024",
             "Distribution",
         ),
-        ("GroupInstruction", "astra_threshold_v024", "Group"),
+        ("GroupInstruction", "commons_threshold_v024", "Group"),
     ] {
         let en = enums.get(enum_name).context("instruction enum missing")?;
-        let mut decl=format!("// GENERATED IDL declaration, NOT executable guest code.\n#[lez_program(instruction = \"astra_logos_testnet_primitives::{enum_name}\")]\nmod {module} {{\n");
+        let mut decl=format!("// GENERATED IDL declaration, NOT executable guest code.\n#[lez_program(instruction = \"commons_logos_testnet_primitives::{enum_name}\")]\nmod {module} {{\n");
         for v in &en.variants {
             let variant = v.ident.to_string();
             let private = v
@@ -276,7 +276,7 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use astra_logos_testnet_primitives::{DistributionInstruction, GroupInstruction};
+    use commons_logos_testnet_primitives::{DistributionInstruction, GroupInstruction};
     #[test]
     fn generated_order_privacy_and_no_fictional_discriminators() -> Result<()> {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

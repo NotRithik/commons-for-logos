@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/NotRithik/astra-logos-primitives/main/sdk/schema.json",
-  "title": "Astra Logos Primitive CLI Contract",
+  "$id": "https://raw.githubusercontent.com/NotRithik/commons-for-logos/main/sdk/schema.json",
+  "title": "Commons Logos Primitive CLI Contract",
   "type": "object",
   "required": [
     "schema_version",

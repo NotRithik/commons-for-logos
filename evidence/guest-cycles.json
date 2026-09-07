@@ -1,0 +1,408 @@
+{
+  "method": "actual RISC0 guest execution on synthetic benchmark inputs",
+  "not_a_gas_price": true,
+  "outer_privacy_circuit_excluded": true,
+  "results": [
+    {
+      "executor_wall_seconds": 0.043978833,
+      "guest_user_cycles": 59923,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "allowlist.create",
+      "program_image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.054723375,
+      "guest_user_cycles": 554527,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "allowlist.claim",
+      "program_image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.043944208,
+      "guest_user_cycles": 63340,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "threshold.create",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.080527959,
+      "guest_user_cycles": 546826,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "threshold.propose",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.057920917,
+      "guest_user_cycles": 570893,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "threshold.approve_first",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.055116958,
+      "guest_user_cycles": 584572,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "threshold.approve_second",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.045807,
+      "guest_user_cycles": 116216,
+      "member_count": 3,
+      "network_transaction": false,
+      "operation": "threshold.execute",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.043938833,
+      "guest_user_cycles": 59923,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "allowlist.create",
+      "program_image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.057729375,
+      "guest_user_cycles": 592883,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "allowlist.claim",
+      "program_image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.047345292,
+      "guest_user_cycles": 63340,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "threshold.create",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.069003708,
+      "guest_user_cycles": 585182,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "threshold.propose",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.073414292,
+      "guest_user_cycles": 609249,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "threshold.approve_first",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.058792,
+      "guest_user_cycles": 622928,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "threshold.approve_second",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.053924625,
+      "guest_user_cycles": 116216,
+      "member_count": 10,
+      "network_transaction": false,
+      "operation": "threshold.execute",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.043949875,
+      "guest_user_cycles": 59923,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "allowlist.create",
+      "program_image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.057430292,
+      "guest_user_cycles": 669595,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "allowlist.claim",
+      "program_image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.049992875,
+      "guest_user_cycles": 63340,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "threshold.create",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.114374083,
+      "guest_user_cycles": 661894,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "threshold.propose",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.0595635,
+      "guest_user_cycles": 685961,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "threshold.approve_first",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.059476583,
+      "guest_user_cycles": 699640,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "threshold.approve_second",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    },
+    {
+      "executor_wall_seconds": 0.044268667,
+      "guest_user_cycles": 116216,
+      "member_count": 256,
+      "network_transaction": false,
+      "operation": "threshold.execute",
+      "program_image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "proof_generated": false,
+      "segments": 1
+    }
+  ],
+  "risc0_version": "3.0.5",
+  "unit": "RISC0 user cycles, excluding continuation/po2 padding"
+}

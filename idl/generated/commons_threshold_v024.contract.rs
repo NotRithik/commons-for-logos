@@ -1,6 +1,6 @@
 // GENERATED IDL declaration, NOT executable guest code.
-#[lez_program(instruction = "astra_logos_testnet_primitives::GroupInstruction")]
-mod astra_threshold_v024 {
+#[lez_program(instruction = "commons_logos_testnet_primitives::GroupInstruction")]
+mod commons_threshold_v024 {
  #[instruction]
  pub fn create(
  #[account(mut, init, signer)] state: AccountWithMetadata,

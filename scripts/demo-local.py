@@ -51,7 +51,7 @@ def child_env(out: Path, run: Path, paths: dict[str, str]) -> dict[str, str]:
     env = {k: os.environ[k] for k in ['PATH', 'LANG', 'SSL_CERT_FILE', 'DYLD_LIBRARY_PATH', 'LD_LIBRARY_PATH'] if k in os.environ}
     env.update({'HOME': str(run / 'home'), 'TMPDIR': str(run / 'tmp') + '/', 'RUST_LOG': 'warn',
                 'RISC0_DEV_MODE': '0', 'RISC0_PROVER': 'ipc', 'RISC0_EXECUTOR': 'ipc',
-                'RAYON_NUM_THREADS': os.environ.get('ASTRA_PROOF_THREADS', '2'),
+                'RAYON_NUM_THREADS': os.environ.get('COMMONS_PROOF_THREADS', '2'),
                 'SUPPRESS_VERBOSE_PRINTS': '1', 'CARGO_NET_OFFLINE': 'true',
                 'LBC_ROOT_DIR': paths['lbc_root'], 'RAPIDSNARK_LIB_DIR': paths['rapidsnark_lib'],
                 'RISC0_SERVER_PATH': paths['r0vm']})
@@ -73,7 +73,7 @@ def main() -> None:
     if not 60 <= args.timeout_seconds <= 6 * 3600:
         raise SystemExit('Timeout must be 60 seconds to 6 hours')
     paths = json.loads((out / 'proof-deps/paths.json').read_text())
-    driver, node = out / 'host/debug/astra-logos-e2e', out / 'host/debug/sequencer_service'
+    driver, node = out / 'host/debug/commons-logos-e2e', out / 'host/debug/sequencer_service'
     for binary in [driver, node, Path(paths['r0vm'])]:
         if not binary.is_file() or not os.access(binary, os.X_OK):
             raise SystemExit('Missing executable prerequisite: ' + str(binary))
@@ -147,9 +147,9 @@ def main() -> None:
             raise TimeoutError('Local sequencer did not become ready')
         stage('deploy-real-programs', 'deploy', str(run / 'wallet'), str(out / 'artifacts'))
         if args.mode in ['allowlist-smoke', 'all']:
-            stage('real-private-allowlist-claims', 'claims-smoke', str(run / 'wallet'), str(out / 'artifacts/astra_allowlist'))
+            stage('real-private-allowlist-claims', 'claims-smoke', str(run / 'wallet'), str(out / 'artifacts/commons_allowlist'))
         if args.mode in ['threshold', 'all']:
-            stage('real-private-threshold-lifecycle', 'threshold', str(run / 'wallet'), str(out / 'artifacts/astra_threshold'))
+            stage('real-private-threshold-lifecycle', 'threshold', str(run / 'wallet'), str(out / 'artifacts/commons_threshold'))
         for line in (run / 'wallet/evidence.jsonl').read_text().splitlines():
             value = json.loads(line)
             record = {k: v for k, v in value.items() if k in PUBLIC_FIELDS}

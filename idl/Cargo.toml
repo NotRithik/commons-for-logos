@@ -1,7 +1,7 @@
 [workspace]
 
 [package]
-name = "astra-spel-idl"
+name = "commons-spel-idl"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -13,8 +13,8 @@ syn = { version = "2", features = ["full", "extra-traits"] }
 quote = "1"
 anyhow = "1"
 risc0-zkvm = { version = "=3.0.5", default-features = false, features = ["std"] }
-astra-logos-testnet-primitives = { path = "../testnet/crates/primitives", features = ["host"] }
-astra-logos-testnet-sdk = { path = "../testnet/crates/sdk" }
+commons-logos-testnet-primitives = { path = "../testnet/crates/primitives", features = ["host"] }
+commons-logos-testnet-sdk = { path = "../testnet/crates/sdk" }
 
 [patch.crates-io]
 keccak = { git = "https://github.com/logos-blockchain/sponges", rev = "3a56e99771beedf04946eab21a4a62adc2951377" }

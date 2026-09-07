@@ -256,38 +256,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
-name = "astra-logos-testnet-guests"
-version = "0.1.0"
-dependencies = [
- "astra-logos-testnet-primitives",
- "lee_core",
- "risc0-zkvm",
-]
-
-[[package]]
-name = "astra-logos-testnet-primitives"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "lee_core",
- "risc0-zkvm",
- "serde",
- "sha2",
-]
-
-[[package]]
-name = "astra-logos-testnet-sdk"
-version = "0.1.0"
-dependencies = [
- "astra-logos-testnet-primitives",
- "lee_core",
- "risc0-binfmt",
- "risc0-zkos-v1compat",
- "risc0-zkvm",
- "serde",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -511,6 +479,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fa961b519f0b462e3a3b4a34b64d119eeaca1d59af726fe450bbba07a9fc0a1"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "commons-logos-testnet-guests"
+version = "0.1.0"
+dependencies = [
+ "commons-logos-testnet-primitives",
+ "lee_core",
+ "risc0-zkvm",
+]
+
+[[package]]
+name = "commons-logos-testnet-primitives"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "lee_core",
+ "risc0-zkvm",
+ "serde",
+ "sha2",
+]
+
+[[package]]
+name = "commons-logos-testnet-sdk"
+version = "0.1.0"
+dependencies = [
+ "commons-logos-testnet-primitives",
+ "lee_core",
+ "risc0-binfmt",
+ "risc0-zkos-v1compat",
+ "risc0-zkvm",
+ "serde",
 ]
 
 [[package]]

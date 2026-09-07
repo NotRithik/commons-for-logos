@@ -464,48 +464,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "astra-logos-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "astra-logos-testnet-primitives",
- "astra-logos-testnet-sdk",
- "borsh",
- "hex",
- "lee",
- "lee_core",
- "libc",
- "sequencer_service_rpc",
- "serde",
- "serde_json",
- "tokio",
- "wallet",
-]
-
-[[package]]
-name = "astra-logos-testnet-primitives"
-version = "0.1.0"
-dependencies = [
- "borsh",
- "lee_core",
- "risc0-zkvm",
- "serde",
- "sha2 0.10.9",
-]
-
-[[package]]
-name = "astra-logos-testnet-sdk"
-version = "0.1.0"
-dependencies = [
- "astra-logos-testnet-primitives",
- "lee_core",
- "risc0-binfmt",
- "risc0-zkos-v1compat",
- "risc0-zkvm",
- "serde",
-]
-
-[[package]]
 name = "astro-float"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1208,6 +1166,48 @@ dependencies = [
  "sha2 0.10.9",
  "system_accounts",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "commons-logos-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "borsh",
+ "commons-logos-testnet-primitives",
+ "commons-logos-testnet-sdk",
+ "hex",
+ "lee",
+ "lee_core",
+ "libc",
+ "sequencer_service_rpc",
+ "serde",
+ "serde_json",
+ "tokio",
+ "wallet",
+]
+
+[[package]]
+name = "commons-logos-testnet-primitives"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "lee_core",
+ "risc0-zkvm",
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "commons-logos-testnet-sdk"
+version = "0.1.0"
+dependencies = [
+ "commons-logos-testnet-primitives",
+ "lee_core",
+ "risc0-binfmt",
+ "risc0-zkos-v1compat",
+ "risc0-zkvm",
+ "serde",
 ]
 
 [[package]]

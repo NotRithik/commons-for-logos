@@ -173,7 +173,7 @@ pub fn wallet_root(path: &Path) -> Result<PathBuf> {
     );
     let root = path.canonicalize()?;
     ensure!(
-        root.join(".astra-logos-testnet-wallet").is_file(),
+        root.join(".commons-logos-testnet-wallet").is_file(),
         "testnet wallet marker missing"
     );
     Ok(root)

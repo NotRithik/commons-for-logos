@@ -1,4 +1,4 @@
-#include "AstraLogosCliClient.h"
+#include "CommonsLogosCliClient.h"
 
 #include <QFileInfo>
 #include <QDir>
@@ -12,7 +12,7 @@
 #include <QProcess>
 #include <QProcessEnvironment>
 
-namespace AstraLogos {
+namespace CommonsLogos {
 namespace {
 
 bool fail(QString* errorMessage, const QString& value)
@@ -182,7 +182,7 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
     result.operation = operationId(operation);
 
     if (!isConfigured()) {
-        result.errorMessage = QStringLiteral("Configure astra-logos-cli and a testnet wallet directory first.");
+        result.errorMessage = QStringLiteral("Configure commons-logos-cli and a testnet wallet directory first.");
         return result;
     }
     if (m_process) {
@@ -212,7 +212,7 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
     }
 
     result.accepted = true;
-    result.requestId = QStringLiteral("astra-%1").arg(m_nextRequest++);
+    result.requestId = QStringLiteral("commons-%1").arg(m_nextRequest++);
     m_currentRequestId = result.requestId;
     m_currentOperation = operation;
     m_currentSensitivePaths = sensitivePathsFor(arguments);
@@ -235,14 +235,14 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
         QStringLiteral("DYLD_LIBRARY_PATH"), QStringLiteral("SSL_CERT_FILE"), QStringLiteral("LANG"),
         QStringLiteral("LC_ALL"), QStringLiteral("RISC0_SERVER_PATH"), QStringLiteral("RAYON_NUM_THREADS")};
     for (const auto& key : allowed) if (inherited.contains(key)) env.insert(key, inherited.value(key));
-#ifdef ASTRA_SDK_TESTING
-    if (inherited.contains(QStringLiteral("ASTRA_FAKE_CLI_MODE")))
-        env.insert(QStringLiteral("ASTRA_FAKE_CLI_MODE"), inherited.value(QStringLiteral("ASTRA_FAKE_CLI_MODE")));
+#ifdef COMMONS_SDK_TESTING
+    if (inherited.contains(QStringLiteral("COMMONS_FAKE_CLI_MODE")))
+        env.insert(QStringLiteral("COMMONS_FAKE_CLI_MODE"), inherited.value(QStringLiteral("COMMONS_FAKE_CLI_MODE")));
 #endif
     env.insert(QStringLiteral("RISC0_DEV_MODE"), QStringLiteral("0"));
     env.insert(QStringLiteral("RISC0_PROVER"), QStringLiteral("ipc"));
     env.insert(QStringLiteral("RISC0_EXECUTOR"), QStringLiteral("ipc"));
-    env.insert(QStringLiteral("ASTRA_LOGOS_NETWORK"), QStringLiteral("testnet"));
+    env.insert(QStringLiteral("COMMONS_LOGOS_NETWORK"), QStringLiteral("testnet"));
     process->setProcessEnvironment(env);
 #ifdef Q_OS_UNIX
     process->setUnixProcessParameters(QProcess::UnixProcessFlag::CreateNewSession);
@@ -273,7 +273,7 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
         if (process != m_process)
             return;
         if (error == QProcess::FailedToStart) {
-            failCurrent(QStringLiteral("Could not start configured astra-logos-cli."));
+            failCurrent(QStringLiteral("Could not start configured commons-logos-cli."));
         }
     });
 
@@ -468,4 +468,4 @@ QStringList LogosCliClient::sensitivePathsFor(const QJsonObject& arguments) cons
     return paths;
 }
 
-} // namespace AstraLogos
+} // namespace CommonsLogos

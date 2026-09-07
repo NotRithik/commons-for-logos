@@ -1,21 +1,21 @@
 {
-  "name": "astra_primitives_ui",
+  "name": "commons_primitives_ui",
   "display_name": "Commons for Logos",
   "version": "0.1.0",
   "type": "ui_qml",
   "interface": "universal",
   "category": "wallet",
   "description": "Private allowlists and threshold approvals for Logos Basecamp",
-  "main": "astra_primitives_ui_plugin",
-  "icon": "",
+  "main": "commons_primitives_ui_plugin",
+  "icon": "icons/commons.svg",
   "view": "qml/Main.qml",
   "dependencies": [],
   "provides": [],
   "uses": [],
   "codegen": {
-    "rep": "src/astra_primitives_ui.rep",
-    "backend_class": "AstraPrimitivesBackend",
-    "backend_header": "astra_primitives_backend.h"
+    "rep": "src/commons_primitives_ui.rep",
+    "backend_class": "CommonsPrimitivesBackend",
+    "backend_header": "commons_primitives_backend.h"
   },
   "nix": {
     "packages": {

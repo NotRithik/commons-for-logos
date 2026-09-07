@@ -5,8 +5,8 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PHASE=${1:-all}
 case "$PHASE" in fetch|build|all) ;; *) echo 'usage: prepare-local.sh [fetch|build|all]' >&2; exit 2;; esac
-OUT=${ASTRA_OUT_DIR:-"$ROOT/out"}
-OUT=$(python3 -c 'import pathlib,sys; root=pathlib.Path(sys.argv[1]).resolve(); out=pathlib.Path(sys.argv[2]).resolve(); assert out != root and out.is_relative_to(root), "ASTRA_OUT_DIR must stay inside this checkout"; print(out)' "$ROOT" "$OUT")
+OUT=${COMMONS_OUT_DIR:-"$ROOT/out"}
+OUT=$(python3 -c 'import pathlib,sys; root=pathlib.Path(sys.argv[1]).resolve(); out=pathlib.Path(sys.argv[2]).resolve(); assert out != root and out.is_relative_to(root), "COMMONS_OUT_DIR must stay inside this checkout"; print(out)' "$ROOT" "$OUT")
 mkdir -p "$OUT"
 umask 077
 mkdir -p "$OUT/home" "$OUT/tmp" "$OUT/cargo" "$OUT/host" "$OUT/guest" "$OUT/artifacts"
@@ -53,11 +53,11 @@ cargo +1.94.0 build --locked --offline --manifest-path "$ROOT/cli/Cargo.toml"
 (
     cd "$ROOT/testnet"
     RUSTC="$GUEST_RUSTC" CARGO_TARGET_DIR="$OUT/guest" cargo +1.94.0 build --locked --offline --release \
-        --target riscv32im-risc0-zkvm-elf -p astra-logos-testnet-guests
+        --target riscv32im-risc0-zkvm-elf -p commons-logos-testnet-guests
 )
 for family in allowlist threshold; do
     cargo +1.94.0 run --locked --offline --quiet --manifest-path "$ROOT/testnet/Cargo.toml" \
-        -p astra-logos-testnet-sdk --bin pack_v024 -- \
-        "$OUT/guest/riscv32im-risc0-zkvm-elf/release/astra_${family}_v024" "$OUT/artifacts/astra_$family"
+        -p commons-logos-testnet-sdk --bin pack_v024 -- \
+        "$OUT/guest/riscv32im-risc0-zkvm-elf/release/commons_${family}_v024" "$OUT/artifacts/commons_$family"
 done
 printf '%s\n' 'Pinned local stack compiled. No node was started and no transaction was submitted.'

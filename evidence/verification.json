@@ -1,118 +1,77 @@
 {
-  "as_of_utc": "2026-09-07T08:16:20Z",
+  "release": "Commons for Logos",
+  "as_of_utc": "2026-09-07T10:32:15.180054+00:00",
   "submission_status": "not_submitted",
-  "award_status": "no_award_verified",
-  "public_endpoint": "https://testnet.lez.logos.co/",
-  "public_lez_revision": "47eba256479f6f785acbd138834340703cd03401",
+  "network": "https://testnet.lez.logos.co/",
+  "lez_revision": "47eba256479f6f785acbd138834340703cd03401",
   "risc0_dev_mode": "0",
   "prover": "local IPC",
-  "canonical_programs": {
-    "allowlist": [
-      201364732,
-      1081806914,
-      1065739865,
-      3294502879,
-      1958817064,
-      1848347385,
-      2152089692,
-      112407748
-    ],
-    "threshold": [
-      1469618483,
-      438583847,
-      3548012620,
-      4227596486,
-      4004003709,
-      3428565108,
-      2174568730,
-      2703137465
-    ]
-  },
   "public_deployments": [
     {
-      "block_id": 41328,
+      "block_id": 41496,
       "image_id": [
-        201364732,
-        1081806914,
-        1065739865,
-        3294502879,
-        1958817064,
-        1848347385,
-        2152089692,
-        112407748
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
       ],
       "program": "allowlist",
-      "seconds": 51.102085292,
+      "seconds": 67.206842583,
       "stage": "deployed",
-      "tx_hash": "fec23d77ed3367dbd2756ff0ac0706c7d547e8eb6a9428711358fb25348b1170"
+      "tx_hash": "ed3f4f0dfe3a888ee926e871606fbcc2fc08bbbcb3d6607e9d2b77810f987d22",
+      "independently_found_on_public_rpc": true,
+      "binary_sha256": "ec6f52607c0571d14214025b559a6ba471d0182f9c97f4c04f159685d9adf1ba"
     },
     {
-      "block_id": 41329,
+      "block_id": 41497,
       "image_id": [
-        1469618483,
-        438583847,
-        3548012620,
-        4227596486,
-        4004003709,
-        3428565108,
-        2174568730,
-        2703137465
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
       ],
       "program": "threshold",
-      "seconds": 54.88211875,
+      "seconds": 56.862479791,
       "stage": "deployed",
-      "tx_hash": "459d9022a5df5d1c497e6a07d4664e264e5c9077f564297d743c441d06027f60"
+      "tx_hash": "21a48cebc07a7343469665ca8debb2010622a22a776b6396828010ed3438b25e",
+      "independently_found_on_public_rpc": true,
+      "binary_sha256": "85aaf8e36f55b03b73ba9d4688cd9f979575c326832d9100c8d28acde31f0950"
     }
   ],
-  "public_gui_group_read": {
-    "block_id": 41364,
-    "endpoint": "https://testnet.lez.logos.co/",
-    "network": "testnet",
-    "operation": "threshold.inspect_state",
-    "program_id": [
-      1469618483,
-      438583847,
-      3548012620,
-      4227596486,
-      4004003709,
-      3428565108,
-      2174568730,
-      2703137465
-    ],
-    "state": {
-      "member_count": 3,
-      "proposal": null,
-      "root": "2eb7aaf350929e818eb7c45ff44938ff3e9ae44106e6ab7ff1867c9acf248d2c",
-      "sequence": 0,
-      "threshold": 2,
-      "value": "7"
-    },
-    "state_account": "565ab17bf81343d3ac06e6a09f0d2ee14f6ebd2034b7ec3f27811722d5e7d137",
-    "success": true
+  "public_confirmations": [],
+  "verified_tests": {
+    "primitive_cases": 55,
+    "sdk_cases": 2,
+    "cli_cases": 21,
+    "spel_idl_cases": 3,
+    "local_runner_cases": 7,
+    "native_ctest_suites": 3
   },
-  "local_real_private_confirmations": [
+  "pending": [
+    "confirmed public threshold lifecycle for these program images",
+    "20 unique claims across two distributions for these program images",
+    "narrated end-to-end demonstration",
+    "final-revision real-proof CI"
+  ],
+  "native_gui_confirmations": [
     {
-      "block_id": 4305,
-      "private": true,
-      "seconds": 2708.463320875,
-      "stage": "propose",
-      "status": "confirmed",
-      "tx_hash": "46a66e4dc76b5b92b3b26309d9c713e5334cc227c4e141b51864b7e9d3119ed1"
+      "operation": "allowlist.create_distribution",
+      "method": "visible native Basecamp UI",
+      "network": "https://testnet.lez.logos.co/",
+      "block_id": 41504,
+      "tx_hash": "cf84cf3335732aead4ac6a424fcd9cea5346b2a530c3b9811764e4164d4a4a65",
+      "state_account": "829bd46c8b4b77af6de06767ea6ed365d1bc409770a42e602983610bb098b7e2",
+      "member_count": 10,
+      "claims_count": 0,
+      "independent_rpc_confirmation": true
     }
-  ],
-  "pending_requirements": [
-    "20 confirmed unique public testnet claims across two distributions",
-    "completed public threshold proposal, two distinct approvals and execution",
-    "final narrated end-to-end demo",
-    "green real-proof sequencer CI",
-    "final release assets and evaluator reproduction"
-  ],
-  "test_counts_local": {
-    "canonical_primitives": 55,
-    "canonical_sdk": 2,
-    "cli": 18,
-    "qt_boundary": 27,
-    "spel_idl": 3
-  },
-  "counts_are_not_testnet_claims": true
+  ]
 }

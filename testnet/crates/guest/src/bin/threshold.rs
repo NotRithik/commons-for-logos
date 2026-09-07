@@ -1,4 +1,4 @@
-use astra_logos_testnet_primitives::{GroupInstruction, execute_group};
+use commons_logos_testnet_primitives::{GroupInstruction, execute_group};
 use lee_core::program::{ProgramInput, ProgramOutput, read_lee_inputs};
 
 fn main() {

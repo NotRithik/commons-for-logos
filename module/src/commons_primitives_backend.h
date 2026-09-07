@@ -1,14 +1,14 @@
 #pragma once
 
-#include "AstraLogosCliClient.h"
+#include "CommonsLogosCliClient.h"
 #include "logos_ui_plugin_context.h"
-#include "rep_astra_primitives_ui_source.h"
+#include "rep_commons_primitives_ui_source.h"
 
-class AstraPrimitivesBackend : public AstraPrimitivesUiSimpleSource,
+class CommonsPrimitivesBackend : public CommonsPrimitivesUiSimpleSource,
                                public LogosUiPluginContext
 {
 public:
-    AstraPrimitivesBackend();
+    CommonsPrimitivesBackend();
 
     QString configure(QString cliPath, QString walletDir) override;
     QString selectAllowlistWitness(QString witnessPath) override;
@@ -27,14 +27,14 @@ private:
     void resetSessionState();
     void clearStateForOperation(const QString& operation);
     QString selectWitnessFile(const QString& rawPath, bool thresholdWitness);
-    QString queue(AstraLogos::PrimitiveOperation operation, const QJsonObject& arguments);
-    QString reject(AstraLogos::PrimitiveOperation operation, const QString& message);
+    QString queue(CommonsLogos::PrimitiveOperation operation, const QJsonObject& arguments);
+    QString reject(CommonsLogos::PrimitiveOperation operation, const QString& message);
     void completeOperation(const QString& operation, const QJsonObject& result);
     void failOperation(const QString& operation, const QString& errorMessage);
     void updateDistributionState(const QJsonObject& result);
     void updateGroupState(const QJsonObject& result);
 
-    AstraLogos::LogosCliClient m_client;
+    CommonsLogos::LogosCliClient m_client;
     QString m_allowlistWitnessPath;
     QString m_thresholdWitnessPath;
 };

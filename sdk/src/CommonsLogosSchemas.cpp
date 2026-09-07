@@ -1,4 +1,4 @@
-#include "AstraLogosSchemas.h"
+#include "CommonsLogosSchemas.h"
 
 #include <QDir>
 #include <QFileInfo>
@@ -8,15 +8,15 @@
 #include <QRegularExpression>
 #include <QUrl>
 
-namespace AstraLogos {
+namespace CommonsLogos {
 namespace {
 
 const char* schemaLiteral()
 {
     return R"JSON({
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/NotRithik/astra-logos-primitives/main/sdk/schema.json",
-  "title": "Astra Logos Primitive CLI Contract",
+  "$id": "https://raw.githubusercontent.com/NotRithik/commons-for-logos/main/sdk/schema.json",
+  "title": "Commons Logos Primitive CLI Contract",
   "type": "object",
   "required": [
     "schema_version",
@@ -402,7 +402,7 @@ bool pathSegmentLooksTestnet(const QString& canonicalPath)
 
 bool hasTestnetMarker(const QDir& dir)
 {
-    return dir.exists(QStringLiteral(".astra-logos-testnet-wallet"))
+    return dir.exists(QStringLiteral(".commons-logos-testnet-wallet"))
         || dir.exists(QStringLiteral(".logos-testnet"))
         || dir.exists(QStringLiteral("testnet.config.yaml"));
 }
@@ -600,9 +600,7 @@ bool validateCliPath(const QString& rawCliPath, QString* errorMessage)
 
     const QString fileName = info.fileName();
     if (fileName != QStringLiteral("commons-logos-cli")
-        && fileName != QStringLiteral("commons-logos-cli.exe")
-        && fileName != QStringLiteral("astra-logos-cli")
-        && fileName != QStringLiteral("astra-logos-cli.exe")) {
+        && fileName != QStringLiteral("commons-logos-cli.exe")) {
         return setError(errorMessage,
                         QStringLiteral("Select the commons-logos-cli executable."));
     }
@@ -631,7 +629,7 @@ bool validateWalletDir(const QString& rawWalletDir,
     const QDir dir(canonical);
     if (!pathSegmentLooksTestnet(canonical) && !hasTestnetMarker(dir)) {
         return setError(errorMessage,
-                        QStringLiteral("The wallet directory must be testnet-only. Use a path containing 'testnet' or add a .astra-logos-testnet-wallet marker."));
+                        QStringLiteral("The wallet directory must be testnet-only. Use a path containing 'testnet' or add a .commons-logos-testnet-wallet marker."));
     }
 
     if (canonicalWalletDir)
@@ -682,4 +680,4 @@ QJsonObject redactSensitiveJsonObject(const QJsonObject& object,
     return redactValue(object, sensitivePaths).toObject();
 }
 
-} // namespace AstraLogos
+} // namespace CommonsLogos

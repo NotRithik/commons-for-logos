@@ -1,72 +1,60 @@
-# Astra Logos Primitives
+# Commons for Logos
 
-**Testnet reference implementation. Work in progress; not an accepted Lambda Prize solution and not audited. Never use these fixture wallets with real funds.**
+Private membership and shared approvals in Logos Basecamp.
 
-Two original Logos Execution Zone applications, with a real native Basecamp GUI:
+Commons has two applications. **Allowlist** lets a member register once by proving membership of a committed eligibility set. **Shared approvals** lets a group approve a parameter change with an M-of-N threshold. Both use LEZ private accounts and locally generated RISC Zero proofs. Member addresses and credentials are not written into public application state.
 
-- **Private allowlist gate:** commit a salted eligibility tree, prove membership locally, and register each eligible identity once without publishing the member address.
-- **Private threshold control:** propose an integer parameter update, collect distinct private approvals, and execute the update once the configured threshold is reached.
+This release targets the Logos testnet. It is not audited and must not hold real funds.
 
-Neither program transfers user tokens. These implement the allowlist-gate and parameter-change examples in LP-0003 and LP-0002. Account creation/deployment on the configured network may use testnet resources.
+## Start here
 
-## Use the correct protocol version
+The native Basecamp module has an allowlist screen, a shared-approvals screen, and a local client connection. Select your wallet profile, inspect a distribution or group, and choose the membership credential stored on your device. Connection paths and transaction JSON stay in collapsible settings and technical details.
 
-**`testnet/` is the canonical implementation for the public testnet.** It pins LEZ v0.2.4 at `47eba256479f6f785acbd138834340703cd03401`, RISC0 3.0.5 and Rust 1.94.0. The official endpoint is `https://testnet.lez.logos.co/`.
+- [Build and install the native module](docs/NATIVE-BUILD.md)
+- [Use the Basecamp app and CLI](docs/GUI.md)
+- [Run the complete local demonstration](docs/LOCAL-DEMO.md)
+- [Protocol and account model](docs/PROTOCOL.md)
+- [Privacy model](docs/PRIVACY.md)
 
-The root `crates/` workspace preserves an earlier experiment against a different LEZ development ABI. Do not deploy its binaries to the public testnet or combine its Borsh guest-call encoding with the v0.2.4 SDK. Each workspace has its own lockfile.
+Deployment addresses, confirmed transactions and completed verification runs are recorded in [the release evidence](evidence/verification.json). Only results for the program images named there apply to this release.
 
-## Current evidence, not promises
+## Reproduce the local stack
 
-The corrected v2 programs have been deployed on the official testnet. Their program IDs and deployment receipts are in [the verification ledger](evidence/verification.json). A real native Basecamp group-creation action was independently read back from the public sequencer. A corrected private proposal has also been proven and confirmed against the real local sequencer with `RISC0_DEV_MODE=0`.
+From a clean clone, with the prerequisites in the local demonstration guide:
 
-The complete 20-claim/two-distribution public flow, threshold execution, final narrated demonstrations and full real-proof CI are still being verified. **A running proof job, passing host test, green build or repository publication is not counted as a completed prize criterion.**
+```sh
+/bin/sh scripts/prepare-local.sh fetch
+/bin/sh scripts/prepare-local.sh build
+python3 scripts/demo-local.py --mode all
+```
 
-Latest locally verified suites: 55 canonical primitive tests, 2 SDK serialization tests, 18 production CLI validation/recovery tests, 27 native Qt process-boundary checks, and 3 SPEL IDL tests. The root experimental workspace has a separate 42-test suite. See the repository's Actions results for the exact revision and platforms actually checked; do not infer cross-platform or end-to-end success from these counts.
+The first command downloads pinned dependencies. The second compiles offline. The third starts its own local sequencer, deploys both programs, completes private claims and a threshold decision, then stops that sequencer. It uses fresh test profiles and real local proofs (`RISC0_DEV_MODE=0`).
 
-## Project layout
-
-| Directory | Purpose |
-| --- | --- |
-| `testnet/crates/primitives` | Shared v0.2.4 instruction types, state transition rules and regression tests |
-| `testnet/crates/guest` | Actual RISC-V LEZ guest programs |
-| `testnet/crates/sdk` | Typed Rust instruction construction, wire encoding and guest packaging |
-| `cli` | Production JSON-over-stdin CLI, endpoint checks, wallet locking and broadcast recovery |
-| `integration` | Real sequencer/testnet demo runner and independent state verification |
-| `sdk/src` | Native Qt SDK used by the GUI; fixed allowlisted subprocess interface, no shell |
-| `module` | Basecamp Qt Remote Objects backend and QML view |
-| `native`, `scripts` | Reproducible native plugin build with pinned official dependencies |
-| `idl` | SPEL-generated public testnet instruction and error schemas |
-| `docs` | Protocol, privacy model, error semantics, GUI and build instructions |
-
-## Test the canonical implementation
+## Tests
 
 ```sh
 cargo +1.94.0 test --locked --manifest-path testnet/Cargo.toml \
-  -p astra-logos-testnet-primitives -p astra-logos-testnet-sdk
+  -p commons-logos-testnet-primitives -p commons-logos-testnet-sdk
 cargo +1.94.0 test --locked --manifest-path cli/Cargo.toml
 cargo +1.94.0 test --locked --manifest-path idl/Cargo.toml
 cargo +1.94.0 run --locked --manifest-path idl/Cargo.toml
-git diff --exit-code -- idl/generated
+python3 -m unittest discover -s tests/tooling -v
 ```
 
-The CLI's dependencies include the real LEZ wallet and proving stack; install/fetch their pinned build prerequisites before compiling it. For an offline build, fetch dependencies in a separate step, then pass `--offline`. No hosted prover is required or supported by the CLI.
+The native build also runs the Qt client-boundary and UI-state regression suites. Those tests use a labeled fixture executable; the installed module uses the real `commons-logos-cli`.
 
-## Build the native Basecamp module
+## Layout
 
-See [native build instructions](docs/NATIVE-BUILD.md). The tested build produces the actual plugin and replica factory, runs the Qt process-boundary tests, and installs only the module's own files. It does not install the fake test CLI, replace a system Basecamp application, or package the Qt SDK/fonts for distribution.
+`testnet/` contains the LEZ programs and Rust SDK. `cli/` provides validated JSON-over-stdin operations. `integration/` drives reproducible real-chain verification. `sdk/`, `module/` and `native/` contain the native Qt client, Basecamp view and build definitions. `idl/` generates the SPEL interfaces.
 
-## Important safety and privacy boundaries
+The protocol is pinned to LEZ v0.2.4, revision `47eba256479f6f785acbd138834340703cd03401`, with RISC0 3.0.5 and Rust 1.94.0. Do not replace this dependency pin without checking the wire format and private-account behavior.
 
-Read [the privacy model](docs/PRIVACY.md) and [protocol specification](docs/PROTOCOL.md) before using the code. In particular:
+## Before using a profile
 
-- Claim/propose/approve instructions contain secrets and go only through local private proving. Never publish a witness, an unwrapped inner journal, a test-wallet storage file, or raw upstream debug output.
-- Public state exposes the membership commitment, counts, application nullifiers and proposal parameter, not a list of member addresses. Timing, traffic patterns and outside information are not hidden by this application.
-- The pinned upstream wallet stores key data in **plaintext JSON**. This project uses restricted file permissions and separate member-only profiles; that is not encryption at rest. Keep the operating-system account and storage protected.
-- The production CLI pins the permitted endpoint and the v0.2.4 protocol fingerprint. It forces real local IPC proving, never invokes a model API, and rejects silently switching to a paid hosted prover.
-- This is reference code, not an audit or guarantee of production security. The demonstration setup generates controlled test identities; it does not claim independent human users or production key ceremonies.
+Credentials and wallet files stay local. The pinned LEZ wallet stores keys in plaintext JSON; restricted file permissions are not encryption. Keep those files out of source control and recordings. Claim and approval payloads must use the private proving path. Public observers can still see group parameters, counters and transaction timing; see the privacy guide for the precise assumptions.
 
-Implementation and validation work are AI-assisted and disclosed. The repository owner is not represented as having personally audited the code. Prize evaluation and awards belong to Logos, and no endorsement or payout is implied.
+Implementation and testing were AI-assisted. Commons is independently developed for the Logos ecosystem.
 
 ## License
 
-Dual-licensed under MIT and Apache-2.0; see `LICENSE-MIT` and `LICENSE-APACHE`. Upstream dependencies keep their own licenses.
+MIT or Apache-2.0, at your option. Upstream dependencies retain their own licenses.

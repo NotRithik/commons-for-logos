@@ -1,4 +1,4 @@
-#include "astra_primitives_backend.h"
+#include "commons_primitives_backend.h"
 
 #include <QFileInfo>
 #include <QDir>
@@ -53,23 +53,23 @@ void insertIfPresent(QStringList& parts, const QString& label, const QString& va
 
 } // namespace
 
-AstraPrimitivesBackend::AstraPrimitivesBackend()
+CommonsPrimitivesBackend::CommonsPrimitivesBackend()
 {
     connect(&m_client,
-            &AstraLogos::LogosCliClient::completed,
+            &CommonsLogos::LogosCliClient::completed,
             this,
             [this](const QString&, const QString& operation, const QJsonObject& result) {
                 completeOperation(operation, result);
             });
     connect(&m_client,
-            &AstraLogos::LogosCliClient::failed,
+            &CommonsLogos::LogosCliClient::failed,
             this,
             [this](const QString&, const QString& operation, const QString& errorMessage) {
                 failOperation(operation, errorMessage);
             });
 }
 
-void AstraPrimitivesBackend::resetSessionState()
+void CommonsPrimitivesBackend::resetSessionState()
 {
     m_allowlistWitnessPath.clear();
     m_thresholdWitnessPath.clear();
@@ -86,7 +86,7 @@ void AstraPrimitivesBackend::resetSessionState()
     setLastResultJson(QStringLiteral("{}"));
 }
 
-void AstraPrimitivesBackend::clearStateForOperation(const QString& operation)
+void CommonsPrimitivesBackend::clearStateForOperation(const QString& operation)
 {
     if (operation.startsWith(QStringLiteral("allowlist."))) {
         setDistributionStateAccount(QString());
@@ -97,10 +97,10 @@ void AstraPrimitivesBackend::clearStateForOperation(const QString& operation)
     }
 }
 
-QString AstraPrimitivesBackend::configure(QString cliPath, QString walletDir)
+QString CommonsPrimitivesBackend::configure(QString cliPath, QString walletDir)
 {
     if (m_client.isBusy())
-        return reject(AstraLogos::PrimitiveOperation::AllowlistInspect,
+        return reject(CommonsLogos::PrimitiveOperation::AllowlistInspect,
                       QStringLiteral("Wait for the current CLI operation to finish."));
 
     // A new profile must not retain the previous profile's witness or results.
@@ -139,46 +139,46 @@ QString AstraPrimitivesBackend::configure(QString cliPath, QString walletDir)
     return compactJson(response);
 }
 
-QString AstraPrimitivesBackend::selectAllowlistWitness(QString witnessPath)
+QString CommonsPrimitivesBackend::selectAllowlistWitness(QString witnessPath)
 {
     return selectWitnessFile(witnessPath, false);
 }
 
-QString AstraPrimitivesBackend::selectThresholdWitness(QString witnessPath)
+QString CommonsPrimitivesBackend::selectThresholdWitness(QString witnessPath)
 {
     return selectWitnessFile(witnessPath, true);
 }
 
-QString AstraPrimitivesBackend::createDistribution(QString stateAccount, QString rootHex, int memberCount)
+QString CommonsPrimitivesBackend::createDistribution(QString stateAccount, QString rootHex, int memberCount)
 {
     QJsonObject arguments;
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
     arguments.insert(QStringLiteral("root"), rootHex.trimmed());
     arguments.insert(QStringLiteral("member_count"), memberCount);
-    return queue(AstraLogos::PrimitiveOperation::AllowlistCreateDistribution, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::AllowlistCreateDistribution, arguments);
 }
 
-QString AstraPrimitivesBackend::claimAllowlist(QString stateAccount)
+QString CommonsPrimitivesBackend::claimAllowlist(QString stateAccount)
 {
     if (m_allowlistWitnessPath.isEmpty()) {
-        return reject(AstraLogos::PrimitiveOperation::AllowlistClaim,
+        return reject(CommonsLogos::PrimitiveOperation::AllowlistClaim,
                       QStringLiteral("Select an allowlist witness file first."));
     }
 
     QJsonObject arguments;
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
     arguments.insert(QStringLiteral("witness_file"), m_allowlistWitnessPath);
-    return queue(AstraLogos::PrimitiveOperation::AllowlistClaim, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::AllowlistClaim, arguments);
 }
 
-QString AstraPrimitivesBackend::inspectDistribution(QString stateAccount)
+QString CommonsPrimitivesBackend::inspectDistribution(QString stateAccount)
 {
     QJsonObject arguments;
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
-    return queue(AstraLogos::PrimitiveOperation::AllowlistInspect, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::AllowlistInspect, arguments);
 }
 
-QString AstraPrimitivesBackend::createGroup(QString stateAccount, QString rootHex,
+QString CommonsPrimitivesBackend::createGroup(QString stateAccount, QString rootHex,
                                             int memberCount,
                                             int threshold,
                                             QString initialValue)
@@ -189,13 +189,13 @@ QString AstraPrimitivesBackend::createGroup(QString stateAccount, QString rootHe
     arguments.insert(QStringLiteral("member_count"), memberCount);
     arguments.insert(QStringLiteral("threshold"), threshold);
     arguments.insert(QStringLiteral("initial_value"), initialValue.trimmed());
-    return queue(AstraLogos::PrimitiveOperation::ThresholdCreateGroup, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::ThresholdCreateGroup, arguments);
 }
 
-QString AstraPrimitivesBackend::proposeParameter(QString stateAccount, QString nextValue)
+QString CommonsPrimitivesBackend::proposeParameter(QString stateAccount, QString nextValue)
 {
     if (m_thresholdWitnessPath.isEmpty()) {
-        return reject(AstraLogos::PrimitiveOperation::ThresholdPropose,
+        return reject(CommonsLogos::PrimitiveOperation::ThresholdPropose,
                       QStringLiteral("Select a threshold witness file first."));
     }
 
@@ -203,42 +203,42 @@ QString AstraPrimitivesBackend::proposeParameter(QString stateAccount, QString n
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
     arguments.insert(QStringLiteral("witness_file"), m_thresholdWitnessPath);
     arguments.insert(QStringLiteral("next_value"), nextValue.trimmed());
-    return queue(AstraLogos::PrimitiveOperation::ThresholdPropose, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::ThresholdPropose, arguments);
 }
 
-QString AstraPrimitivesBackend::approveParameter(QString stateAccount)
+QString CommonsPrimitivesBackend::approveParameter(QString stateAccount)
 {
     if (m_thresholdWitnessPath.isEmpty()) {
-        return reject(AstraLogos::PrimitiveOperation::ThresholdApprove,
+        return reject(CommonsLogos::PrimitiveOperation::ThresholdApprove,
                       QStringLiteral("Select a threshold witness file first."));
     }
 
     QJsonObject arguments;
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
     arguments.insert(QStringLiteral("witness_file"), m_thresholdWitnessPath);
-    return queue(AstraLogos::PrimitiveOperation::ThresholdApprove, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::ThresholdApprove, arguments);
 }
 
-QString AstraPrimitivesBackend::executeParameter(QString stateAccount)
+QString CommonsPrimitivesBackend::executeParameter(QString stateAccount)
 {
     QJsonObject arguments;
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
-    return queue(AstraLogos::PrimitiveOperation::ThresholdExecute, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::ThresholdExecute, arguments);
 }
 
-QString AstraPrimitivesBackend::inspectGroup(QString stateAccount)
+QString CommonsPrimitivesBackend::inspectGroup(QString stateAccount)
 {
     QJsonObject arguments;
     arguments.insert(QStringLiteral("state_account"), stateAccount.trimmed());
-    return queue(AstraLogos::PrimitiveOperation::ThresholdInspect, arguments);
+    return queue(CommonsLogos::PrimitiveOperation::ThresholdInspect, arguments);
 }
 
-QString AstraPrimitivesBackend::schemaJson()
+QString CommonsPrimitivesBackend::schemaJson()
 {
-    return AstraLogos::contractSchemaJson();
+    return CommonsLogos::contractSchemaJson();
 }
 
-QString AstraPrimitivesBackend::selectWitnessFile(const QString& rawPath, const bool thresholdWitness)
+QString CommonsPrimitivesBackend::selectWitnessFile(const QString& rawPath, const bool thresholdWitness)
 {
     if (m_client.isBusy()) {
         return compactJson(QJsonObject{{QStringLiteral("selected"), false},
@@ -252,7 +252,7 @@ QString AstraPrimitivesBackend::selectWitnessFile(const QString& rawPath, const 
         m_allowlistWitnessPath.clear();
         setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
     }
-    const QString path = AstraLogos::localPathFromUi(rawPath);
+    const QString path = CommonsLogos::localPathFromUi(rawPath);
     const QFileInfo info(path);
     if (m_client.isBusy() || !m_client.isConfigured() || !info.isAbsolute() || !info.exists() || !info.isFile() || info.isSymLink() || !info.canonicalFilePath().startsWith(m_client.walletDir() + QLatin1Char('/'))) {
         const QString message = QStringLiteral("Select a regular witness file inside the configured wallet directory while idle.");
@@ -286,12 +286,12 @@ QString AstraPrimitivesBackend::selectWitnessFile(const QString& rawPath, const 
     return compactJson(response);
 }
 
-QString AstraPrimitivesBackend::queue(AstraLogos::PrimitiveOperation operation,
+QString CommonsPrimitivesBackend::queue(CommonsLogos::PrimitiveOperation operation,
                                       const QJsonObject& arguments)
 {
     if (!m_client.isBusy())
-        clearStateForOperation(AstraLogos::operationId(operation));
-    const AstraLogos::StartResult result = m_client.start(operation, arguments);
+        clearStateForOperation(CommonsLogos::operationId(operation));
+    const CommonsLogos::StartResult result = m_client.start(operation, arguments);
     if (!result.accepted) {
         setLastOperation(result.operation);
         setLastError(result.errorMessage);
@@ -303,25 +303,25 @@ QString AstraPrimitivesBackend::queue(AstraLogos::PrimitiveOperation operation,
     }
 
     setBusy(true);
-    const QString displayName = AstraLogos::operationDisplayName(operation);
+    const QString displayName = CommonsLogos::operationDisplayName(operation);
     setActiveOperation(displayName);
     setLastOperation(result.operation);
     setLastError(QString());
-    const bool reading = operation == AstraLogos::PrimitiveOperation::AllowlistInspect
-        || operation == AstraLogos::PrimitiveOperation::ThresholdInspect;
-    const bool proving = operation == AstraLogos::PrimitiveOperation::AllowlistClaim
-        || operation == AstraLogos::PrimitiveOperation::ThresholdPropose
-        || operation == AstraLogos::PrimitiveOperation::ThresholdApprove;
+    const bool reading = operation == CommonsLogos::PrimitiveOperation::AllowlistInspect
+        || operation == CommonsLogos::PrimitiveOperation::ThresholdInspect;
+    const bool proving = operation == CommonsLogos::PrimitiveOperation::AllowlistClaim
+        || operation == CommonsLogos::PrimitiveOperation::ThresholdPropose
+        || operation == CommonsLogos::PrimitiveOperation::ThresholdApprove;
     setStatusText(reading ? QStringLiteral("Reading testnet state...")
         : proving ? QStringLiteral("Generating a private proof locally, then submitting to testnet...")
                   : QStringLiteral("Submitting to testnet and waiting for confirmation..."));
     return result.toJson();
 }
 
-QString AstraPrimitivesBackend::reject(AstraLogos::PrimitiveOperation operation,
+QString CommonsPrimitivesBackend::reject(CommonsLogos::PrimitiveOperation operation,
                                        const QString& message)
 {
-    const QString operationName = AstraLogos::operationId(operation);
+    const QString operationName = CommonsLogos::operationId(operation);
     if (!m_client.isBusy()) clearStateForOperation(operationName);
     setLastOperation(operationName);
     setLastError(message);
@@ -337,7 +337,7 @@ QString AstraPrimitivesBackend::reject(AstraLogos::PrimitiveOperation operation,
     return compactJson(response);
 }
 
-void AstraPrimitivesBackend::completeOperation(const QString& operation,
+void CommonsPrimitivesBackend::completeOperation(const QString& operation,
                                                const QJsonObject& result)
 {
     setBusy(false);
@@ -364,7 +364,7 @@ void AstraPrimitivesBackend::completeOperation(const QString& operation,
     Q_EMIT operationFinished(operation, compactJson(result));
 }
 
-void AstraPrimitivesBackend::failOperation(const QString& operation,
+void CommonsPrimitivesBackend::failOperation(const QString& operation,
                                            const QString& errorMessage)
 {
     setBusy(false);
@@ -378,7 +378,7 @@ void AstraPrimitivesBackend::failOperation(const QString& operation,
     Q_EMIT operationFailed(operation, errorMessage);
 }
 
-void AstraPrimitivesBackend::updateDistributionState(const QJsonObject& result)
+void CommonsPrimitivesBackend::updateDistributionState(const QJsonObject& result)
 {
     const QJsonObject state = stateObject(result);
     const QString stateAccount = stringValue(result, QStringLiteral("state_account"));
@@ -403,7 +403,7 @@ void AstraPrimitivesBackend::updateDistributionState(const QJsonObject& result)
         setDistributionSummary(parts.join(QStringLiteral("; ")));
 }
 
-void AstraPrimitivesBackend::updateGroupState(const QJsonObject& result)
+void CommonsPrimitivesBackend::updateGroupState(const QJsonObject& result)
 {
     const QJsonObject state = stateObject(result);
     const QString stateAccount = stringValue(result, QStringLiteral("state_account"));

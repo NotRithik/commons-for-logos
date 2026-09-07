@@ -3,11 +3,11 @@
 //! if the operation contains a member witness.
 mod validation;
 use anyhow::{Context, Result, ensure};
-use astra_logos_testnet_primitives::{
+use borsh::BorshDeserialize;
+use commons_logos_testnet_primitives::{
     Distribution, DistributionInstruction, Group, GroupInstruction, MemberWitness,
     execute_distribution, execute_group,
 };
-use borsh::BorshDeserialize;
 use lee::{privacy_preserving_transaction::circuit::ProgramWithDependencies, program::Program};
 use lee_core::{
     account::{AccountId, AccountWithMetadata},
@@ -38,7 +38,7 @@ impl WalletLock {
             .truncate(false)
             .mode(0o600)
             .custom_flags(libc::O_NOFOLLOW)
-            .open(root.join(".astra-cli.lock"))?;
+            .open(root.join(".commons-cli.lock"))?;
         // SAFETY: a valid, held descriptor; no pointer or ownership transfer.
         ensure!(
             unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0,
@@ -56,13 +56,13 @@ impl Drop for WalletLock {
 fn decode_state(op: Op, bytes: &[u8]) -> Result<Value> {
     if op.family() == "allowlist" {
         let state = Distribution::try_from_slice(bytes)?;
-        ensure!(state.magic == *b"ASTRAD01", "wrong state type");
+        ensure!(state.magic == *b"COMNSD01", "wrong state type");
         Ok(
             json!({"root":hex::encode(state.root),"member_count":state.member_count,"claims_count":state.claims.len()}),
         )
     } else {
         let state = Group::try_from_slice(bytes)?;
-        ensure!(state.magic == *b"ASTRAM01", "wrong state type");
+        ensure!(state.magic == *b"COMNSM01", "wrong state type");
         Ok(
             json!({"root":hex::encode(state.root),"member_count":state.member_count,"threshold":state.threshold,"value":state.value.to_string(),"sequence":state.sequence,
    "proposal":state.proposal.map(|p|json!({"sequence":p.sequence,"next_value":p.next_value.to_string(),"approvals_count":p.approvals.len(),"executed":p.executed}))}),
@@ -87,8 +87,8 @@ async fn wallet(root: &Path) -> Result<WalletCore> {
     .await
 }
 fn pending(root: &Path, op: Op, state: AccountId, tx: &str) -> Result<()> {
-    let path = root.join(".astra-pending.json");
-    let tmp = root.join(".astra-pending.json.new");
+    let path = root.join(".commons-pending.json");
+    let tmp = root.join(".commons-pending.json.new");
     use std::os::unix::fs::OpenOptionsExt;
     let mut file = fs::OpenOptions::new()
         .write(true)
@@ -125,7 +125,7 @@ async fn private<T: Serialize>(
     let (_, block) = w.poll_transaction(hash).await?;
     w.sync_to_latest_block().await?;
     w.store_persistent_data()?;
-    fs::remove_file(root.join(".astra-pending.json"))?;
+    fs::remove_file(root.join(".commons-pending.json"))?;
     Ok((hash.to_string(), block))
 }
 async fn public<T: Serialize>(
@@ -154,13 +154,13 @@ async fn public<T: Serialize>(
     let (_, block) = w.poll_transaction(hash).await?;
     w.sync_to_latest_block().await?;
     w.store_persistent_data()?;
-    fs::remove_file(root.join(".astra-pending.json"))?;
+    fs::remove_file(root.join(".commons-pending.json"))?;
     Ok((hash.to_string(), block))
 }
 /// Resolve a previously broadcast transaction before allowing another write.
 /// A network error or missing confirmation never deletes the checkpoint.
 async fn reconcile_pending(root: &Path, w: &mut WalletCore) -> Result<()> {
-    let path = root.join(".astra-pending.json");
+    let path = root.join(".commons-pending.json");
     if !path.try_exists()? {
         return Ok(());
     }
@@ -190,7 +190,7 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         64 * 1024,
         false,
     )?)?;
-    let local = std::env::var("ASTRA_ALLOW_LOCAL_TESTNET").as_deref() == Ok("1");
+    let local = std::env::var("COMMONS_ALLOW_LOCAL_TESTNET").as_deref() == Ok("1");
     ensure!(
         config.sequencers.len() == 1,
         "exactly one testnet endpoint required"
@@ -241,7 +241,7 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         &root,
         &root
             .join("artifacts")
-            .join(format!("astra_{}", op.family())),
+            .join(format!("commons_{}", op.family())),
         8 * 1024 * 1024,
         false,
     )?;
@@ -352,13 +352,103 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         json!({"success":true,"operation":op.id(),"network":"testnet","endpoint":endpoint,"program_id":pid,"tx_hash":tx,"block_id":block,"seconds":start.elapsed().as_secs_f64(),"private":op.is_private(),"risc0_dev_mode":"0","state_account":hex::encode(state_id.as_ref()),"state":decode_state(op,&state.data)?}),
     )
 }
-fn safe_error(error: &anyhow::Error) -> Value {
-    // Never forward upstream Debug payloads, stdin, wallet paths, or witness data.
-    if let Some(e) = error.downcast_ref::<astra_logos_testnet_primitives::Error>() {
-        return json!({"success":false,"error":{"code":*e as u32,"message":e.to_string()}});
+fn application_error_message(error: commons_logos_testnet_primitives::Error) -> &'static str {
+    use commons_logos_testnet_primitives::Error::*;
+    match error {
+        AccountCount => "The operation received the wrong number of accounts.",
+        Unauthorized => "This wallet cannot authorize that account.",
+        AlreadyInitialized => "This account is already initialized. Choose an unused account.",
+        WrongOwner => "The state account belongs to a different program.",
+        InvalidState => {
+            "The stored state could not be read. Check the account and program version."
+        }
+        InvalidSize => "The member count or membership proof is outside the supported range.",
+        IdentityMismatch => "The credential does not match the member in this wallet.",
+        InvalidMembership => {
+            "This credential is not eligible for the selected group or distribution."
+        }
+        DuplicateClaim => "This member has already registered for this distribution.",
+        CapacityReached => "All available registrations have been claimed.",
+        InvalidThreshold => "Required approvals must be between one and the number of members.",
+        PendingProposal => "Complete the current proposal before creating another.",
+        NoProposal => "There is no proposal to approve or execute.",
+        DuplicateApproval => "This member has already approved the current proposal.",
+        ThresholdNotMet => "More member approvals are needed before this proposal can execute.",
+        AlreadyExecuted => "This proposal has already executed.",
+        ThresholdAlreadyMet => "The required approvals are present. The proposal can be executed.",
+        SequenceOverflow => "The proposal counter is exhausted. Create a new group.",
+        DataTooLarge => "The resulting state exceeds the account size limit.",
+        InvalidViewingPublicKey => "The credential contains an invalid viewing key.",
+        UninitializedMember => {
+            "This member account cannot be reused with the selected program version."
+        }
     }
-    json!({"success":false,"error":{"code":"CLI_REQUEST_FAILED","message":"Request failed validation, wallet availability, network confirmation, or proof generation. Inspect the configured testnet state before retrying. No private payload is included in this error."}})
 }
+
+fn safe_error(error: &anyhow::Error) -> Value {
+    // Only static, enumerated messages cross the CLI boundary. Raw upstream
+    // errors can contain witness fields, file paths or nested proof payloads.
+    if let Some(e) = error.downcast_ref::<commons_logos_testnet_primitives::Error>() {
+        return json!({"success":false,"error":{"code":*e as u32,"message":application_error_message(*e)}});
+    }
+    json!({"success":false,"error":{"code":"CLI_REQUEST_FAILED","message":"The client could not finish this operation. Check the connection and inspect the current testnet state before retrying."}})
+}
+
+#[cfg(test)]
+mod public_error_tests {
+    use super::*;
+    use commons_logos_testnet_primitives::Error;
+
+    #[test]
+    fn maps_every_application_error_without_losing_its_code() {
+        let cases = [
+            Error::AccountCount,
+            Error::Unauthorized,
+            Error::AlreadyInitialized,
+            Error::WrongOwner,
+            Error::InvalidState,
+            Error::InvalidSize,
+            Error::IdentityMismatch,
+            Error::InvalidMembership,
+            Error::DuplicateClaim,
+            Error::CapacityReached,
+            Error::InvalidThreshold,
+            Error::PendingProposal,
+            Error::NoProposal,
+            Error::DuplicateApproval,
+            Error::ThresholdNotMet,
+            Error::AlreadyExecuted,
+            Error::ThresholdAlreadyMet,
+            Error::SequenceOverflow,
+            Error::DataTooLarge,
+            Error::InvalidViewingPublicKey,
+            Error::UninitializedMember,
+        ];
+        for e in cases {
+            let output = safe_error(&anyhow::Error::new(e));
+            assert_eq!(output["error"]["code"], e as u32);
+            assert!(!output["error"]["message"].as_str().unwrap().is_empty());
+            assert_eq!(output["success"], false);
+        }
+    }
+    #[test]
+    fn error_context_never_discloses_private_fields() {
+        let secret = "SYNTHETIC_PRIVATE_CONTEXT_NOT_A_REAL_SECRET";
+        let error = anyhow::Error::new(Error::DuplicateClaim).context(secret);
+        let output = safe_error(&error).to_string();
+        assert!(!output.contains(secret));
+        assert!(output.contains("already registered"));
+    }
+    #[test]
+    fn unknown_errors_do_not_echo_input_or_paths() {
+        let error = anyhow::anyhow!("SYNTHETIC_CREDENTIAL /private/example/wallet");
+        let output = safe_error(&error).to_string();
+        assert!(!output.contains("SYNTHETIC_CREDENTIAL"));
+        assert!(!output.contains("/private/example"));
+        assert!(output.contains("CLI_REQUEST_FAILED"));
+    }
+}
+
 fn main() {
     // Wallet dependencies print diagnostics to stdout. Redirect them BEFORE any
     // library call, preserving the original output descriptor only for our JSON.
@@ -374,7 +464,7 @@ fn main() {
         let args: Vec<_> = std::env::args().skip(1).collect();
         if args == ["--help"] {
             return Ok(
-                json!({"usage":"astra-logos-cli primitives <allowlist-create|allowlist-claim|allowlist-inspect|threshold-create|threshold-propose|threshold-approve|threshold-execute|threshold-inspect> --json-stdin","network":"testnet only","contract":"sdk/CLI-CONTRACT.md"}),
+                json!({"usage":"commons-logos-cli primitives <allowlist-create|allowlist-claim|allowlist-inspect|threshold-create|threshold-propose|threshold-approve|threshold-execute|threshold-inspect> --json-stdin","network":"testnet only","contract":"sdk/CLI-CONTRACT.md"}),
             );
         }
         ensure!(

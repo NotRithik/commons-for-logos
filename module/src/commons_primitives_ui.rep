@@ -1,4 +1,4 @@
-class AstraPrimitivesUi
+class CommonsPrimitivesUi
 {
     SLOT(QString configure(QString cliPath, QString walletDir))
     SLOT(QString selectAllowlistWitness(QString witnessPath))
@@ -14,7 +14,7 @@ class AstraPrimitivesUi
     SLOT(QString schemaJson())
     PROP(QString captureDirectory="" READONLY)
     PROP(QString backendState="Offline" READONLY)
-    PROP(QString statusText="Offline. Configure astra-logos-cli and a testnet wallet directory." READONLY)
+    PROP(QString statusText="Connect a client and a testnet wallet to begin." READONLY)
     PROP(bool configured=false READONLY)
     PROP(bool busy=false READONLY)
     PROP(QString activeOperation="" READONLY)

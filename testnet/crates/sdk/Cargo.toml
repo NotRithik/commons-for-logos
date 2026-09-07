@@ -1,11 +1,11 @@
 [package]
-name = "astra-logos-testnet-sdk"
+name = "commons-logos-testnet-sdk"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-astra-logos-testnet-primitives = { path = "../primitives", features = ["host"] }
+commons-logos-testnet-primitives = { path = "../primitives", features = ["host"] }
 lee_core = { workspace = true, features = ["host"] }
 risc0-zkvm.workspace = true
 risc0-binfmt.workspace = true

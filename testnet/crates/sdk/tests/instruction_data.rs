@@ -1,5 +1,5 @@
-use astra_logos_testnet_primitives::{DistributionInstruction, GroupInstruction};
-use astra_logos_testnet_sdk::{
+use commons_logos_testnet_primitives::{DistributionInstruction, GroupInstruction};
+use commons_logos_testnet_sdk::{
     allowlist_create, allowlist_create_data, serialize_instruction, threshold_create,
     threshold_execute, threshold_execute_data,
 };

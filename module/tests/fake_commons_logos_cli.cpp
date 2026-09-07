@@ -30,7 +30,7 @@ int main(int argc, char** argv)
                             std::istreambuf_iterator<char>());
     const QByteArray stdinBytes(input.data(), static_cast<qsizetype>(input.size()));
 
-    const QString mode = qEnvironmentVariable("ASTRA_FAKE_CLI_MODE", "echo");
+    const QString mode = qEnvironmentVariable("COMMONS_FAKE_CLI_MODE", "echo");
     if (mode == QStringLiteral("hang")) { QThread::sleep(10); return 0; }
     if (mode == QStringLiteral("oversize-stdout")) { std::cout << std::string(2 * 1024 * 1024, 'x') << std::endl; QThread::sleep(2); return 0; }
     if (mode == QStringLiteral("oversize-stderr")) { std::cerr << std::string(2 * 1024 * 1024, 'x') << std::endl; QThread::sleep(2); return 0; }
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
     QJsonObject out;
     out.insert(QStringLiteral("success"), true);
-    out.insert(QStringLiteral("environment_canary_present"), qEnvironmentVariableIsSet("ASTRA_TEST_SECRET"));
+    out.insert(QStringLiteral("environment_canary_present"), qEnvironmentVariableIsSet("COMMONS_TEST_SECRET"));
     out.insert(QStringLiteral("operation"), request.value(QStringLiteral("operation")).toString());
     out.insert(QStringLiteral("network"), request.value(QStringLiteral("network")).toString());
     out.insert(QStringLiteral("risc0_dev_mode"), qEnvironmentVariable("RISC0_DEV_MODE"));

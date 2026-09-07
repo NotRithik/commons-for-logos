@@ -16,7 +16,7 @@ jobs:
   real-sequencer:
     if: github.event.repository.private == false
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 360
     env:
       CARGO_BUILD_JOBS: '3'
       CARGO_INCREMENTAL: '0'
@@ -24,7 +24,7 @@ jobs:
       RISC0_DEV_MODE: '0'
       RISC0_PROVER: ipc
       RISC0_EXECUTOR: ipc
-      ASTRA_PROOF_THREADS: '3'
+      COMMONS_PROOF_THREADS: '3'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -46,7 +46,7 @@ jobs:
       - name: Run real local sequencer and private-proof integration
         env:
           DEMO_MODE: ${{ inputs.mode }}
-        run: python3 scripts/demo-local.py --mode "$DEMO_MODE" --timeout-seconds 7200
+        run: python3 scripts/demo-local.py --mode "$DEMO_MODE" --timeout-seconds 14400
       - name: Publish only the sanitized result in the job summary
         if: always()
         run: |

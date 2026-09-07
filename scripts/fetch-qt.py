@@ -58,7 +58,7 @@ def run(destination: pathlib.Path, selected: str) -> None:
         print('Verified',name,flush=True)
     prefix=destination/'prefix'
     if prefix.exists():
-        receipt=prefix/'.astra-qt-pins.json'
+        receipt=prefix/'.commons-qt-pins.json'
         if receipt.is_file() and json.loads(receipt.read_text())==archives:
             print('Previously extracted verified SDK:',prefix)
             return
@@ -74,7 +74,7 @@ def run(destination: pathlib.Path, selected: str) -> None:
             extract_to = temporary / 'lib' if item['name'].startswith('icu-') else temporary
             extract_to.mkdir(exist_ok=True)
             subprocess.run([tar,'-xf',str(cache/item['name']),'-C',str(extract_to),'--no-same-owner'],check=True)
-        (temporary/'.astra-qt-pins.json').write_text(json.dumps(archives,indent=2)+'\n')
+        (temporary/'.commons-qt-pins.json').write_text(json.dumps(archives,indent=2)+'\n')
         temporary.rename(prefix)
     finally:
         if temporary.exists():shutil.rmtree(temporary)

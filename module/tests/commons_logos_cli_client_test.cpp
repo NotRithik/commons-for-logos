@@ -1,7 +1,7 @@
 // TEST HARNESS ONLY.
 // These tests validate the GUI SDK's CLI boundary with a compiled fake CLI.
 
-#include "AstraLogosCliClient.h"
+#include "CommonsLogosCliClient.h"
 
 #include <QDir>
 #include <QFile>
@@ -12,8 +12,8 @@
 #include <QElapsedTimer>
 #include <QtTest/QtTest>
 
-using AstraLogos::LogosCliClient;
-using AstraLogos::PrimitiveOperation;
+using CommonsLogos::LogosCliClient;
+using CommonsLogos::PrimitiveOperation;
 
 namespace {
 
@@ -24,7 +24,7 @@ QString hex32(const QChar fill = QLatin1Char('a'))
 
 QString fakeCliPath()
 {
-    return QString::fromLocal8Bit(ASTRA_TEST_FAKE_CLI);
+    return QString::fromLocal8Bit(COMMONS_TEST_FAKE_CLI);
 }
 
 QString makeTestnetWallet(QTemporaryDir& temp)
@@ -33,7 +33,7 @@ QString makeTestnetWallet(QTemporaryDir& temp)
     if (!root.exists(QStringLiteral("testnet-wallet")))
         root.mkdir(QStringLiteral("testnet-wallet"));
     const QString wallet = root.filePath(QStringLiteral("testnet-wallet"));
-    QFile marker(QDir(wallet).filePath(QStringLiteral(".astra-logos-testnet-wallet")));
+    QFile marker(QDir(wallet).filePath(QStringLiteral(".commons-logos-testnet-wallet")));
     marker.open(QIODevice::WriteOnly);
     marker.close();
     return wallet;
@@ -64,20 +64,20 @@ QString firstFailureMessage(QSignalSpy& spy)
 
 } // namespace
 
-class AstraLogosCliClientTest : public QObject {
+class CommonsLogosCliClientTest : public QObject {
     Q_OBJECT
 
 private slots:
     void init()
     {
         qRegisterMetaType<QJsonObject>("QJsonObject");
-        qputenv("ASTRA_FAKE_CLI_MODE", "echo");
+        qputenv("COMMONS_FAKE_CLI_MODE", "echo");
     }
 
     void cleanup()
     {
-        qunsetenv("ASTRA_FAKE_CLI_MODE");
-        qunsetenv("ASTRA_TEST_SECRET");
+        qunsetenv("COMMONS_FAKE_CLI_MODE");
+        qunsetenv("COMMONS_TEST_SECRET");
     }
 
     void configurationRequiresNamedCli()
@@ -161,7 +161,7 @@ private slots:
 
     void invalidJsonFailsWithoutRawOutput()
     {
-        qputenv("ASTRA_FAKE_CLI_MODE", "invalid-json");
+        qputenv("COMMONS_FAKE_CLI_MODE", "invalid-json");
 
         QTemporaryDir temp;
         QVERIFY(temp.isValid());
@@ -188,7 +188,7 @@ private slots:
 
     void cliFailureRedactsWalletAndWitnessPaths()
     {
-        qputenv("ASTRA_FAKE_CLI_MODE", "fail");
+        qputenv("COMMONS_FAKE_CLI_MODE", "fail");
 
         QTemporaryDir temp;
         QVERIFY(temp.isValid());
@@ -294,9 +294,9 @@ private slots:
     {
         QTemporaryDir temp;const QString wallet=makeTestnetWallet(temp);LogosCliClient client(nullptr,120);QString error;
         QVERIFY(client.configure(fakeCliPath(),wallet,&error));QSignalSpy failures(&client,&LogosCliClient::failed);QSignalSpy successes(&client,&LogosCliClient::completed);
-        QElapsedTimer timer; timer.start(); qputenv("ASTRA_FAKE_CLI_MODE","hang");QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
+        QElapsedTimer timer; timer.start(); qputenv("COMMONS_FAKE_CLI_MODE","hang");QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
         QTRY_COMPARE_WITH_TIMEOUT(failures.count(),1,4000);QVERIFY(!client.isBusy());QVERIFY(firstFailureMessage(failures).contains("timed out")); QVERIFY(timer.elapsed()<2000);
-        qputenv("ASTRA_FAKE_CLI_MODE","echo");QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
+        qputenv("COMMONS_FAKE_CLI_MODE","echo");QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
         QTRY_COMPARE_WITH_TIMEOUT(successes.count(),1,4000);
     }
     void outputLimitsKillOnlyOurChild_data()
@@ -305,14 +305,14 @@ private slots:
     }
     void outputLimitsKillOnlyOurChild()
     {
-        QFETCH(QByteArray,mode);qputenv("ASTRA_FAKE_CLI_MODE",mode);
+        QFETCH(QByteArray,mode);qputenv("COMMONS_FAKE_CLI_MODE",mode);
         QTemporaryDir temp;const QString wallet=makeTestnetWallet(temp);LogosCliClient client;QString error;QVERIFY(client.configure(fakeCliPath(),wallet,&error));
         QSignalSpy failures(&client,&LogosCliClient::failed);QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
         QTRY_COMPARE_WITH_TIMEOUT(failures.count(),1,5000);QVERIFY(!client.isBusy());const QString message=firstFailureMessage(failures);QVERIFY(message.contains("output limit"));QVERIFY(message.size()<200);
     }
     void concurrentRequestsAndConfigurationChangesAreRefused()
     {
-        qputenv("ASTRA_FAKE_CLI_MODE","hang");QTemporaryDir temp;const QString wallet=makeTestnetWallet(temp);LogosCliClient client(nullptr,150);QString error;QVERIFY(client.configure(fakeCliPath(),wallet,&error));
+        qputenv("COMMONS_FAKE_CLI_MODE","hang");QTemporaryDir temp;const QString wallet=makeTestnetWallet(temp);LogosCliClient client(nullptr,150);QString error;QVERIFY(client.configure(fakeCliPath(),wallet,&error));
         QSignalSpy failures(&client,&LogosCliClient::failed);auto first=client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}});QVERIFY(first.accepted);
         QVERIFY(!client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
         QVERIFY(!client.configure(fakeCliPath(),wallet,&error));client.clearConfiguration();QVERIFY(client.isConfigured());QVERIFY(client.isBusy());
@@ -320,7 +320,7 @@ private slots:
     }
     void processDoesNotInheritUnrelatedEnvironment()
     {
-        qputenv("ASTRA_TEST_SECRET","SYNTHETIC_ENVIRONMENT_CANARY_NOT_A_CREDENTIAL");
+        qputenv("COMMONS_TEST_SECRET","SYNTHETIC_ENVIRONMENT_CANARY_NOT_A_CREDENTIAL");
         QTemporaryDir temp;const QString wallet=makeTestnetWallet(temp);LogosCliClient client;QString error;QVERIFY(client.configure(fakeCliPath(),wallet,&error));
         QSignalSpy success(&client,&LogosCliClient::completed);QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
         QTRY_COMPARE_WITH_TIMEOUT(success.count(),1,4000);QVERIFY(!firstCompletedResult(success).value("environment_canary_present").toBool());
@@ -361,5 +361,5 @@ private slots:
 
 };
 
-QTEST_MAIN(AstraLogosCliClientTest)
-#include "astra_logos_cli_client_test.moc"
+QTEST_MAIN(CommonsLogosCliClientTest)
+#include "commons_logos_cli_client_test.moc"

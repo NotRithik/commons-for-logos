@@ -4,7 +4,7 @@
 #include <QString>
 #include <QStringList>
 
-namespace AstraLogos {
+namespace CommonsLogos {
 
 enum class PrimitiveOperation {
     AllowlistCreateDistribution,
@@ -38,4 +38,4 @@ QString sanitizeForUi(const QString& message, const QStringList& sensitivePaths 
 QJsonObject redactSensitiveJsonObject(const QJsonObject& object,
                                       const QStringList& sensitivePaths = {});
 
-} // namespace AstraLogos
+} // namespace CommonsLogos

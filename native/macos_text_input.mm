@@ -5,18 +5,18 @@
 #include <cstdlib>
 #include <cstring>
 
-extern "C" bool astraNeedsLegacyAutoFillWorkaround(long major, long minor)
+extern "C" bool commonsNeedsLegacyAutoFillWorkaround(long major, long minor)
 {
     return major == 26 && minor < 2;
 }
 
-__attribute__((constructor)) static void astraConfigureNativeTextInput()
+__attribute__((constructor)) static void commonsConfigureNativeTextInput()
 {
-    const char* enabled = std::getenv("ASTRA_DISABLE_NATIVE_AUTOFILL");
+    const char* enabled = std::getenv("COMMONS_DISABLE_NATIVE_AUTOFILL");
     if (!enabled || std::strcmp(enabled, "1") != 0) return;
     @autoreleasepool {
         const NSOperatingSystemVersion os = [[NSProcessInfo processInfo] operatingSystemVersion];
-        if (!astraNeedsLegacyAutoFillWorkaround(os.majorVersion, os.minorVersion)) return;
+        if (!commonsNeedsLegacyAutoFillWorkaround(os.majorVersion, os.minorVersion)) return;
         NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
         NSMutableDictionary* domain = [[defaults volatileDomainForName:NSArgumentDomain] mutableCopy];
         if (!domain) domain = [NSMutableDictionary dictionary];

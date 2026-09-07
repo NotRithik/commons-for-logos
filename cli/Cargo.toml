@@ -1,14 +1,14 @@
 [workspace]
 
 [package]
-name = "astra-logos-cli"
+name = "commons-logos-cli"
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-astra-logos-testnet-primitives = { path = "../testnet/crates/primitives", features = ["host"] }
-astra-logos-testnet-sdk = { path = "../testnet/crates/sdk" }
+commons-logos-testnet-primitives = { path = "../testnet/crates/primitives", features = ["host"] }
+commons-logos-testnet-sdk = { path = "../testnet/crates/sdk" }
 wallet = { git = "https://github.com/logos-blockchain/logos-execution-zone", rev = "47eba256479f6f785acbd138834340703cd03401" }
 lee = { git = "https://github.com/logos-blockchain/logos-execution-zone", rev = "47eba256479f6f785acbd138834340703cd03401" }
 lee_core = { git = "https://github.com/logos-blockchain/logos-execution-zone", rev = "47eba256479f6f785acbd138834340703cd03401", features = ["host"] }

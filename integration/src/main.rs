@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail, ensure};
-use astra_logos_testnet_primitives::*;
 use borsh::BorshDeserialize;
+use commons_logos_testnet_primitives::*;
 use key_protocol::key_management::group_key_holder::GroupKeyHolder;
 use lee::{
     AccountId, privacy_preserving_transaction::circuit::ProgramWithDependencies, program::Program,
@@ -33,7 +33,7 @@ impl WalletLock {
             .truncate(false)
             .mode(0o600)
             .custom_flags(libc::O_NOFOLLOW)
-            .open(dir.join(".astra-cli.lock"))?;
+            .open(dir.join(".commons-cli.lock"))?;
         // SAFETY: file holds a valid descriptor throughout this guard's lifetime.
         ensure!(
             unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0,
@@ -313,7 +313,7 @@ async fn witnesses(
         result.push(MemberWitness {
             leaf: MemberLeaf {
                 account_id: member,
-                salt: hash_parts(b"astra/demo/salt", &[&secret]),
+                salt: hash_parts(b"commons/demo/salt", &[&secret]),
                 entitlement: 1,
             },
             nullifier_secret_key: secret,
@@ -366,7 +366,7 @@ async fn main() -> Result<()> {
     let mode = args.next().context("expected mode; run with --help")?;
     if mode == "--help" || mode == "help" {
         println!(
-            "Astra Logos E2E runner (testnet only)\n\
+            "Commons Logos E2E runner (testnet only)\n\
 prepare-local DIR (offline keys for a fresh local genesis)\n\
 prepare DIR [http://127.0.0.1:34341|https://testnet.lez.logos.co]\n\
 deploy DIR ARTIFACT_DIRECTORY\n\
@@ -376,7 +376,7 @@ threshold DIR THRESHOLD_ARTIFACT\n\
 verify DIR [minimum_claims=20]\n\
 GUI membership setup: setup-gui DIR [allowlist|threshold]\n\
 Member-only wallet: member-profile DIR ORDINAL [threshold|allowlist]\n\
-Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requires ASTRA_ALLOW_PUBLIC_TESTNET=1."
+Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requires COMMONS_ALLOW_PUBLIC_TESTNET=1."
         );
         return Ok(());
     }
@@ -447,7 +447,7 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
         save(&dir.join("statistics.json"), &json!({}))?;
         save(&dir.join("public-plan.json"), &plan)?;
         fs::write(
-            dir.join(".astra-logos-testnet-wallet"),
+            dir.join(".commons-logos-testnet-wallet"),
             b"LOCAL ONLY fresh fixture. No mainnet value. Plaintext owner-only wallet storage.\n",
         )?;
         event(
@@ -482,7 +482,7 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
             dir.join("storage.json"),
             dir.join("statistics.json"),
             None,
-            "astra-local-fixture-only-never-use-for-money",
+            "commons-local-fixture-only-never-use-for-money",
         )
         .await?;
         // Only this brand-new wallet may use a birthday checkpoint. It has no
@@ -508,7 +508,7 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(dir.join("storage.json"), fs::Permissions::from_mode(0o600))?;
         fs::write(
-            dir.join(".astra-logos-testnet-wallet"),
+            dir.join(".commons-logos-testnet-wallet"),
             b"Fresh testnet-only fixture. Never fund with real value.\n",
         )?;
         save(&dir.join("public-plan.json"), &plan)?;
@@ -537,7 +537,7 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
     }
     if mode == "pack" {
         let raw = PathBuf::from(args.next().context("expected raw guest directory")?);
-        for file in ["astra_allowlist", "astra_threshold"] {
+        for file in ["commons_allowlist", "commons_threshold"] {
             let user = fs::read(raw.join(file))?;
             let packed =
                 risc0_binfmt::ProgramBinary::new(&user, risc0_zkos_v1compat::V1COMPAT_ELF).encode();
@@ -561,7 +561,7 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
     );
     if is_public_testnet {
         ensure!(
-            std::env::var("ASTRA_ALLOW_PUBLIC_TESTNET").as_deref() == Ok("1"),
+            std::env::var("COMMONS_ALLOW_PUBLIC_TESTNET").as_deref() == Ok("1"),
             "public TESTNET flag required"
         );
         let ids = w.get_program_ids().await?;
@@ -703,11 +703,11 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
             fs::copy(dir.join(filename), destination.join(filename))?;
         }
         fs::write(
-            destination.join(".astra-logos-testnet-wallet"),
+            destination.join(".commons-logos-testnet-wallet"),
             b"Single-member TESTNET fixture. Plaintext owner-only key storage; no real funds.\n",
         )?;
         fs::create_dir(destination.join("artifacts"))?;
-        for artifact in ["astra_allowlist", "astra_threshold"] {
+        for artifact in ["commons_allowlist", "commons_threshold"] {
             fs::copy(
                 dir.join("artifacts").join(artifact),
                 destination.join("artifacts").join(artifact),
@@ -784,8 +784,8 @@ Proofs require RISC0_DEV_MODE=0, RISC0_PROVER=ipc; public use additionally requi
             json!({})
         };
         for (name, file) in [
-            ("allowlist", "astra_allowlist"),
-            ("threshold", "astra_threshold"),
+            ("allowlist", "commons_allowlist"),
+            ("threshold", "commons_threshold"),
         ] {
             if deployed.get(name).is_some() {
                 continue;

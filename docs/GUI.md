@@ -1,4 +1,4 @@
-# Astra Primitives Basecamp GUI
+# Commons Primitives Basecamp GUI
 
 This repository now includes a loadable Logos Basecamp `ui_qml` module for the
 LP-0002 threshold parameter workflow and the LP-0003 allowlist registration
@@ -10,13 +10,13 @@ workflow.
   - `metadata.json`
   - `flake.nix`
   - `CMakeLists.txt`
-  - `src/astra_primitives_ui.rep`
-  - `src/astra_primitives_backend.{h,cpp}`
+  - `src/commons_primitives_ui.rep`
+  - `src/commons_primitives_backend.{h,cpp}`
   - `src/qml/Main.qml`
 - `sdk/` contains the reusable Qt SDK layer:
-  - `src/AstraLogosCliClient.{h,cpp}`
-  - `src/AstraLogosSchemas.{h,cpp}`
-  - `schema/astra-logos-cli.schema.json`
+  - `src/CommonsLogosCliClient.{h,cpp}`
+  - `src/CommonsLogosSchemas.{h,cpp}`
+  - `schema/commons-logos-cli.schema.json`
   - `CLI-CONTRACT.md`
 - `module/tests/` contains Qt unit tests and the builder-discovered UI test.
 - `ui-tests/` contains a repository-level test harness wrapper.
@@ -24,13 +24,13 @@ workflow.
 ## Runtime Policy
 
 The GUI never constructs or signs live private transactions itself. It only
-delegates to an explicitly configured absolute `astra-logos-cli` executable.
+delegates to an explicitly configured absolute `commons-logos-cli` executable.
 The backend:
 
-- requires the executable to be named `astra-logos-cli` or `astra-logos-cli.exe`;
+- requires the executable to be named `commons-logos-cli` or `commons-logos-cli.exe`;
 - starts it with `QProcess::setProgram()` and fixed argument lists;
 - sends operation inputs as JSON stdin;
-- forces `RISC0_DEV_MODE=0` and `ASTRA_LOGOS_NETWORK=testnet`;
+- forces `RISC0_DEV_MODE=0` and `COMMONS_LOGOS_NETWORK=testnet`;
 - requires a wallet directory that is visibly testnet-only by path or marker;
 - treats malformed CLI output as failure and does not display raw stdout/stderr;
 - redacts sensitive witness, secret, key, seed, mnemonic, password, and selected
@@ -43,7 +43,7 @@ successful JSON response.
 ## CLI Contract
 
 The CLI request and response contract is documented in `sdk/CLI-CONTRACT.md`.
-The SDK exposes the same schema through `AstraLogos::contractSchemaJson()`.
+The SDK exposes the same schema through `CommonsLogos::contractSchemaJson()`.
 
 Fixed operations:
 
@@ -91,7 +91,7 @@ reviewed script.
 ## Tests
 
 Qt unit tests are built from `module/CMakeLists.txt` when
-`ASTRA_LOGOS_BUILD_TESTS=ON`. They cover:
+`COMMONS_LOGOS_BUILD_TESTS=ON`. They cover:
 
 - CLI executable and testnet wallet validation;
 - fixed argv for allowlisted operations;
@@ -109,7 +109,7 @@ objectName through the Logos Qt inspector. It verifies:
 - invalid configuration is handled by the backend;
 - the threshold tab exposes proposal, approve, execute, and inspect controls.
 
-The repository wrapper `ui-tests/astra_primitives_ui.test.mjs` imports the same
+The repository wrapper `ui-tests/commons_primitives_ui.test.mjs` imports the same
 suite for manual runs.
 
 ## Current Local Blockers

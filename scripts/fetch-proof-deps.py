@@ -72,7 +72,7 @@ def main():
             if temporary.stat().st_size!=item['bytes'] or sha256(temporary)!=item['sha256']:
                 raise RuntimeError('Pinned asset verification failed: '+kind)
             temporary.replace(archive)
-        destination=base/kind;receipt=destination/'.astra-pinned-asset.json'
+        destination=base/kind;receipt=destination/'.commons-pinned-asset.json'
         if destination.exists():
             if not receipt.is_file() or json.loads(receipt.read_text())!=item:
                 raise RuntimeError('Refusing unknown existing dependency directory: '+str(destination))
@@ -80,7 +80,7 @@ def main():
             staging=pathlib.Path(tempfile.mkdtemp(prefix=kind+'-',dir=base))
             try:
                 safe_extract(archive,staging)
-                (staging/'.astra-pinned-asset.json').write_text(json.dumps(item,indent=2)+'\n')
+                (staging/'.commons-pinned-asset.json').write_text(json.dumps(item,indent=2)+'\n')
                 staging.rename(destination)
             finally:
                 if staging.exists():shutil.rmtree(staging)

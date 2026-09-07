@@ -1,11 +1,11 @@
-//! Small host-side SDK for constructing v0.2.4 Astra program instructions.
+//! Small host-side SDK for constructing v0.2.4 Commons program instructions.
 //!
 //! The LEZ v0.2.4 wallet serializes instructions with `risc0_zkvm::serde::to_vec`.
 //! These helpers keep instruction construction typed while sharing the exact
 //! instruction/state definitions with the guest programs.
 
-pub use astra_logos_testnet_primitives as primitives;
-use astra_logos_testnet_primitives::{
+pub use commons_logos_testnet_primitives as primitives;
+use commons_logos_testnet_primitives::{
     DistributionInstruction, GroupInstruction, Hash32, MemberWitness,
 };
 use lee_core::program::InstructionData;

@@ -1,5 +1,10 @@
 # Native Basecamp evidence
 
-`allowlist-live-testnet.png` was captured by the running module itself using Qt Quick `grabToImage`, after a computer-use action invoked the real CLI and read the official public testnet. It is not a mock or a rendered design. It shows the initial distribution before claim completion; later evidence is kept separately. Only the module view was captured.
+This directory contains captures of the installed Commons module in the native
+Logos Basecamp application. Captures must identify the corresponding release and
+network state. A unit-test fixture, a mock UI, or a still-running proof is not a
+confirmed network operation.
 
-The screenshot includes public test account identifiers and local project paths, not wallet key or witness contents.
+Connection settings are collapsed during capture. Wallet contents, membership
+credentials and inner proof journals are not included. Recorded demonstrations
+show the actual workflow and label any time cuts during proof generation.

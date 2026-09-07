@@ -1,5 +1,5 @@
-use astra_logos_testnet_primitives::*;
 use borsh::BorshDeserialize;
+use commons_logos_testnet_primitives::*;
 use lee_core::{
     NullifierPublicKey,
     account::{Account, AccountId, AccountWithMetadata, Nonce},
@@ -730,7 +730,7 @@ fn stable_error_codes_and_messages_contain_no_secret_data() {
     assert_eq!(Error::DuplicateApproval as u32, 1014);
     assert_eq!(
         Error::ThresholdNotMet.to_string(),
-        "ASTRA_ERROR_1015:ThresholdNotMet"
+        "COMMONS_ERROR_1015:ThresholdNotMet"
     );
 }
 

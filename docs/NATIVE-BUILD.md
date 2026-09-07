@@ -13,17 +13,17 @@ python3 scripts/fetch-qt.py "$PWD/.build-deps/qt"
 python3 scripts/fetch-native-deps.py "$PWD/.build-deps/logos"
 export QT_PREFIX="$PWD/.build-deps/qt/prefix"
 export LOGOS_DEPS_DIR="$PWD/.build-deps/logos"
-export ASTRA_BUILD_JOBS=2
+export COMMONS_BUILD_JOBS=2
 /bin/sh scripts/build-native.sh
 ```
 
 Downloads and builds are separate. Inspect the small scripts before using them; no downloaded installer or pipe-to-shell command is used. The native build script itself does not need network access. The Qt archive fetcher verifies all inputs before extraction and refuses an unknown nonempty SDK destination.
 
-Outputs default to `out/native` and `out/module`. Override `ASTRA_BUILD_DIR` and `ASTRA_INSTALL_DIR` for another directory. The test-only executable is built in a separate `test-only` directory and is **not installed**.
+Outputs default to `out/native` and `out/module`. Override `COMMONS_BUILD_DIR` and `COMMONS_INSTALL_DIR` for another directory. The test-only executable is built in a separate `test-only` directory and is **not installed**.
 
 ## Use with Basecamp
 
-The installed output contains the plugin, replica factory, metadata and QML. Basecamp supplies its compatible Qt runtime. The Rust `astra-logos-cli` is a separate executable built from `cli/Cargo.toml`; the GUI never falls back to the fake test executable.
+The installed output contains the plugin, replica factory, metadata and QML. Basecamp supplies its compatible Qt runtime. The Rust `commons-logos-cli` is a separate executable built from `cli/Cargo.toml`; the GUI never falls back to the fake test executable.
 
 Configure the GUI with the actual production CLI path and a dedicated, marked testnet wallet directory. This requires real program artifacts and the correct `programs.json`, not arbitrary addresses pasted into a mock backend. See `sdk/CLI-CONTRACT.md` and `docs/GUI.md`.
 
@@ -43,7 +43,7 @@ Use a visible Cocoa window for interactive tests, not `QT_QPA_PLATFORM=offscreen
 Tests that create a window should say whether they use the actual app or a unit
 fixture. A screenshot of a fixture is not evidence of a live network action.
 
-The optional process-local `ASTRA_DISABLE_NATIVE_AUTOFILL=1` workaround applies
+The optional process-local `COMMONS_DISABLE_NATIVE_AUTOFILL=1` workaround applies
 only to macOS 26.0 and 26.1. Its preference was removed in 26.2; the initializer
 and regression test are version-gated accordingly. It does not modify persistent
 user defaults. See Chromium's upstream notes in

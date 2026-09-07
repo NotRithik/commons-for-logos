@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(AstraPrimitivesUiPlugin LANGUAGES CXX)
+project(CommonsPrimitivesUiPlugin LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,75 +11,75 @@ else()
     message(FATAL_ERROR "LogosModule.cmake not found. Set LOGOS_MODULE_BUILDER_ROOT.")
 endif()
 
-set(ASTRA_LOGOS_SDK_DIR "" CACHE PATH "Path to the Astra Logos GUI SDK")
-if(NOT ASTRA_LOGOS_SDK_DIR)
+set(COMMONS_LOGOS_SDK_DIR "" CACHE PATH "Path to the Commons Logos GUI SDK")
+if(NOT COMMONS_LOGOS_SDK_DIR)
     foreach(_candidate
             "${CMAKE_CURRENT_SOURCE_DIR}/../sdk"
             "${CMAKE_CURRENT_SOURCE_DIR}/sdk")
-        if(EXISTS "${_candidate}/src/AstraLogosCliClient.h")
-            set(ASTRA_LOGOS_SDK_DIR "${_candidate}")
+        if(EXISTS "${_candidate}/src/CommonsLogosCliClient.h")
+            set(COMMONS_LOGOS_SDK_DIR "${_candidate}")
             break()
         endif()
     endforeach()
 endif()
-if(NOT ASTRA_LOGOS_SDK_DIR)
-    message(FATAL_ERROR "Astra Logos SDK not found. Set ASTRA_LOGOS_SDK_DIR.")
+if(NOT COMMONS_LOGOS_SDK_DIR)
+    message(FATAL_ERROR "Commons Logos SDK not found. Set COMMONS_LOGOS_SDK_DIR.")
 endif()
 
-set(ASTRA_LOGOS_SDK_SOURCES
-    ${ASTRA_LOGOS_SDK_DIR}/src/AstraLogosCliClient.h
-    ${ASTRA_LOGOS_SDK_DIR}/src/AstraLogosCliClient.cpp
-    ${ASTRA_LOGOS_SDK_DIR}/src/AstraLogosSchemas.h
-    ${ASTRA_LOGOS_SDK_DIR}/src/AstraLogosSchemas.cpp
+set(COMMONS_LOGOS_SDK_SOURCES
+    ${COMMONS_LOGOS_SDK_DIR}/src/CommonsLogosCliClient.h
+    ${COMMONS_LOGOS_SDK_DIR}/src/CommonsLogosCliClient.cpp
+    ${COMMONS_LOGOS_SDK_DIR}/src/CommonsLogosSchemas.h
+    ${COMMONS_LOGOS_SDK_DIR}/src/CommonsLogosSchemas.cpp
 )
 
 logos_module(
-    NAME astra_primitives_ui
-    REP_FILE src/astra_primitives_ui.rep
+    NAME commons_primitives_ui
+    REP_FILE src/commons_primitives_ui.rep
     SOURCES
-        src/astra_primitives_backend.h
-        src/astra_primitives_backend.cpp
-        ${ASTRA_LOGOS_SDK_SOURCES}
+        src/commons_primitives_backend.h
+        src/commons_primitives_backend.cpp
+        ${COMMONS_LOGOS_SDK_SOURCES}
     INCLUDE_DIRS
         src
-        ${ASTRA_LOGOS_SDK_DIR}/src
+        ${COMMONS_LOGOS_SDK_DIR}/src
 )
 
-option(ASTRA_LOGOS_BUILD_TESTS "Build Astra Logos GUI SDK unit tests" ON)
-if(ASTRA_LOGOS_BUILD_TESTS)
+option(COMMONS_LOGOS_BUILD_TESTS "Build Commons Logos GUI SDK unit tests" ON)
+if(COMMONS_LOGOS_BUILD_TESTS)
     enable_testing()
 
     find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Test)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test)
 
-    add_executable(astra_test_fake_cli
-        tests/fake_astra_logos_cli.cpp
+    add_executable(commons_test_fake_cli
+        tests/fake_commons_logos_cli.cpp
     )
-    set_target_properties(astra_test_fake_cli PROPERTIES
-        OUTPUT_NAME astra-logos-cli
+    set_target_properties(commons_test_fake_cli PROPERTIES
+        OUTPUT_NAME commons-logos-cli
     )
-    target_link_libraries(astra_test_fake_cli PRIVATE
+    target_link_libraries(commons_test_fake_cli PRIVATE
         Qt${QT_VERSION_MAJOR}::Core
     )
 
-    add_executable(astra_logos_cli_client_test
-        tests/astra_logos_cli_client_test.cpp
-        ${ASTRA_LOGOS_SDK_SOURCES}
+    add_executable(commons_logos_cli_client_test
+        tests/commons_logos_cli_client_test.cpp
+        ${COMMONS_LOGOS_SDK_SOURCES}
     )
-    target_include_directories(astra_logos_cli_client_test PRIVATE
-        ${ASTRA_LOGOS_SDK_DIR}/src
+    target_include_directories(commons_logos_cli_client_test PRIVATE
+        ${COMMONS_LOGOS_SDK_DIR}/src
     )
-    target_compile_definitions(astra_logos_cli_client_test PRIVATE
-        "ASTRA_TEST_FAKE_CLI=\"$<TARGET_FILE:astra_test_fake_cli>\""
+    target_compile_definitions(commons_logos_cli_client_test PRIVATE
+        "COMMONS_TEST_FAKE_CLI=\"$<TARGET_FILE:commons_test_fake_cli>\""
     )
-    target_link_libraries(astra_logos_cli_client_test PRIVATE
+    target_link_libraries(commons_logos_cli_client_test PRIVATE
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Test
     )
-    add_dependencies(astra_logos_cli_client_test astra_test_fake_cli)
-    add_test(NAME astra_logos_cli_client_test COMMAND astra_logos_cli_client_test)
+    add_dependencies(commons_logos_cli_client_test commons_test_fake_cli)
+    add_test(NAME commons_logos_cli_client_test COMMAND commons_logos_cli_client_test)
 endif()
 
-if(TARGET astra_logos_cli_client_test)
- target_compile_definitions(astra_logos_cli_client_test PRIVATE ASTRA_SDK_TESTING)
+if(TARGET commons_logos_cli_client_test)
+ target_compile_definitions(commons_logos_cli_client_test PRIVATE COMMONS_SDK_TESTING)
 endif()
