@@ -15,7 +15,7 @@ concurrency:
 jobs:
   allowlist:
     if: github.event.repository.private == false && inputs.confirm_testnet
-    name: Ten independent test identities (distribution ${{ matrix.distribution }})
+    name: Real public claim smoke (distribution ${{ matrix.distribution }})
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     strategy:
@@ -47,8 +47,8 @@ jobs:
         run: python3 scripts/fetch-release-programs.py
       - name: Build release artifacts and clients offline
         run: /bin/sh scripts/prepare-local.sh build
-      - name: Verify ten fresh private claims against the deployed release
-        run: python3 scripts/demo-public.py --confirm-public-testnet --published-programs out/published-programs --timeout-seconds 18000
+      - name: Verify one fresh private claim against the deployed release
+        run: python3 scripts/demo-public.py --confirm-public-testnet --published-programs out/published-programs --claims 1 --timeout-seconds 18000
       - name: Publish public receipts only
         if: always()
         run: |

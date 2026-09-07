@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify ten fresh allowlist claims against the published testnet release.
+"""Verify an explicit number of fresh private claims against the testnet release.
 
 This is an explicit acceptance test, not an automatic or scheduled task. It
 creates its own disposable test identities; it never imports an existing wallet.
@@ -116,18 +116,38 @@ def stop(process: subprocess.Popen | None) -> None:
     except ProcessLookupError:
         pass
 
+def validate_claim_records(records: list[dict], required: int) -> list[dict]:
+    if type(required) is not int or not 1 <= required <= 10:
+        raise ValueError('Required claim count must be 1..10')
+    claims = [row for row in records if row.get('status') == 'confirmed'
+              and row.get('private') is True
+              and str(row.get('stage', '')).startswith('claim_distribution_a_')]
+    if len(claims) != required or len({row.get('tx_hash') for row in claims}) != required:
+        raise RuntimeError('The requested number of unique private claims was not confirmed')
+    # The existing driver accurately labels a limited run as claims_partial.
+    # A CI smoke pass must not relabel that event as full ten-claim completion.
+    stage = 'claims_complete' if required == 10 else 'claims_partial'
+    if not any(row.get('stage') == stage and row.get('unique_private_claims') == required
+               and row.get('required_for_this_mode') == 10 for row in records):
+        raise RuntimeError('Final on-chain claim count was not verified')
+    return claims
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--confirm-public-testnet', action='store_true', required=True)
     parser.add_argument('--out', type=Path, default=ROOT / 'out')
     parser.add_argument('--published-programs', type=Path, help='Explicit verified release-program directory; otherwise use this build')
-    parser.add_argument('--timeout-seconds', type=int, default=4 * 3600)
+    parser.add_argument('--claims', type=int, default=10, help='Number of real claims in this run, 1..10; CI uses one, full acceptance uses ten')
+    parser.add_argument('--timeout-seconds', type=int, default=12 * 3600)
     args = parser.parse_args()
     out = args.out.resolve()
     if out == ROOT or not out.is_relative_to(ROOT):
         parser.error('output must stay inside this checkout')
-    if not 60 <= args.timeout_seconds <= 5 * 3600:
-        parser.error('timeout must be 60 seconds to 5 hours')
+    if not 1 <= args.claims <= 10:
+        parser.error('claims must be between 1 and 10')
+    if not 60 <= args.timeout_seconds <= 24 * 3600:
+        parser.error('timeout must be 60 seconds to 24 hours')
     artifact_dir = args.published_programs.resolve() if args.published_programs else out / 'artifacts'
     if not artifact_dir.is_relative_to(out):
         parser.error('program artifacts must stay inside the output directory')
@@ -173,14 +193,9 @@ def main() -> None:
     try:
         stage('prepare-fresh-test-identities', *prepare_arguments(wallet))
         (wallet / 'programs.json').write_text(json.dumps({k: v['image_id'] for k, v in programs.items()}) + '\n')
-        stage('ten-real-allowlist-claims', 'claims-a', str(wallet), str(artifact_dir / 'commons_allowlist'), '10')
+        stage('real-allowlist-claims', 'claims-a', str(wallet), str(artifact_dir / 'commons_allowlist'), str(args.claims))
         records = public_events(wallet)
-        claims = [row for row in records if row.get('status') == 'confirmed' and row.get('private') is True
-                  and str(row.get('stage', '')).startswith('claim_distribution_a_')]
-        if len({row.get('tx_hash') for row in claims}) != 10:
-            raise RuntimeError('Expected ten distinct confirmed private transactions')
-        if not any(row.get('stage') == 'claims_complete' and row.get('unique_private_claims') == 10 for row in records):
-            raise RuntimeError('Final on-chain claim count was not verified')
+        claims = validate_claim_records(records, args.claims)
         for claim in claims:
             result = rpc('getTransaction', [claim['tx_hash']])
             if not isinstance(result, list) or len(result) != 2 or result[1] != claim['block_id']:
@@ -192,14 +207,15 @@ def main() -> None:
         records = public_events(wallet)
         report = {'status': state, 'network': URL, 'lez_revision': PIN, 'risc0_dev_mode': '0',
                   'prover': 'local-ipc', 'guest_source': 'published-release' if args.published_programs else 'rebuilt', 'identity_source': 'fresh test identities created within this run',
-                  'human_adoption_claimed': False, 'programs': {k: v['image_id'] for k, v in programs.items()},
+                  'human_adoption_claimed': False, 'required_claims_for_this_run': args.claims,
+                  'test_scope': 'single-claim CI smoke' if args.claims == 1 else 'multi-claim acceptance', 'programs': {k: v['image_id'] for k, v in programs.items()},
                   'events': records, 'independently_checked_transactions': checked,
                   'failed_stage': failed_stage, 'failure_categories': diagnostics}
         text = json.dumps(report, indent=2) + '\n'
         (run / 'public/report.json').write_text(text)
         (out / 'latest-public-report.json').write_text(text)
         print('Public report: ' + str(run / 'public/report.json'), flush=True)
-    print('PASS: ten distinct private claims verified on official testnet.', flush=True)
+    print(f'PASS: {args.claims} distinct private claim(s) verified on official testnet.', flush=True)
 
 if __name__ == '__main__':
     main()

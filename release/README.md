@@ -37,3 +37,15 @@ counts are printed in the report.
 
 The resulting report states which program files were used. Compilation alone is
 not a successful acceptance test; the final report must show confirmed claims.
+
+
+The public Actions workflow is a one-claim smoke test in each of two fresh
+instances. Replaying ten sequential private proofs on a short-lived hosted
+runner exceeded its five-hour deadline. Full-scale evidence is instead the
+completed 20-claim laptop run under `evidence/testnet-completed.json`, independently
+checked against public testnet. The standalone real-proof CI still exercises the
+complete local workflows.
+
+For a fresh ten-claim public run on persistent local hardware, use
+`--claims 10 --timeout-seconds 43200`. Its report states the required count for
+that run. A one-claim smoke pass is never reported as 20-claim acceptance.
