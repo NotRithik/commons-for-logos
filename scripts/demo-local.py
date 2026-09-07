@@ -61,6 +61,25 @@ def child_env(out: Path, run: Path, paths: dict[str, str]) -> dict[str, str]:
     return env
 
 
+def read_public_events(path: Path) -> list[dict]:
+    """Only known public event fields leave private runner logs."""
+    if not path.is_file():
+        return []
+    if path.stat().st_size > 2_000_000:
+        raise RuntimeError('Unexpectedly large event log')
+    result = []
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        value = json.loads(line)
+        if not isinstance(value, dict):
+            raise RuntimeError('Malformed event record')
+        record = {k: v for k, v in value.items() if k in PUBLIC_FIELDS}
+        if record:
+            result.append(record)
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=['threshold', 'allowlist-smoke', 'all'], default='all')
@@ -99,6 +118,7 @@ def main() -> None:
 
     def stage(label: str, *parameters: str) -> None:
         nonlocal command_process
+        shown_events = 0
         print(json.dumps({'stage': label, 'status': 'started', 'RISC0_DEV_MODE': '0', 'prover': 'local-ipc'}), flush=True)
         with stage_log.open('ab') as log:
             command_process = subprocess.Popen([str(driver), *parameters], cwd=ROOT, env=env,
@@ -110,6 +130,10 @@ def main() -> None:
                     raise TimeoutError('Local proof deadline reached during ' + label)
                 if time.monotonic() - previous > 60:
                     print(json.dumps({'stage': label, 'status': 'running', 'real_proofs': True}), flush=True)
+                    public_events = read_public_events(run / 'wallet/evidence.jsonl')
+                    for event in public_events[shown_events:]:
+                        print(json.dumps({'public_event': event}), flush=True)
+                    shown_events = len(public_events)
                     previous = time.monotonic()
                 time.sleep(2)
             if command_process.returncode:
@@ -150,11 +174,7 @@ def main() -> None:
             stage('real-private-allowlist-claims', 'claims-smoke', str(run / 'wallet'), str(out / 'artifacts/commons_allowlist'))
         if args.mode in ['threshold', 'all']:
             stage('real-private-threshold-lifecycle', 'threshold', str(run / 'wallet'), str(out / 'artifacts/commons_threshold'))
-        for line in (run / 'wallet/evidence.jsonl').read_text().splitlines():
-            value = json.loads(line)
-            record = {k: v for k, v in value.items() if k in PUBLIC_FIELDS}
-            if record:
-                records.append(record)
+        records = read_public_events(run / 'wallet/evidence.jsonl')
         confirmed = [r for r in records if r.get('status') == 'confirmed' and r.get('private') is True]
         required = (2 if args.mode in ['all', 'allowlist-smoke'] else 0) + (3 if args.mode in ['all', 'threshold'] else 0)
         if len(confirmed) < required:
@@ -165,6 +185,9 @@ def main() -> None:
     finally:
         stop(command_process)
         stop(node_process)
+        # Keep actual completed checkpoints even when a later proof times out.
+        # An incomplete workflow still reports status=failed.
+        records = read_public_events(run / 'wallet/evidence.jsonl')
         report = {'status': state, 'mode': args.mode, 'network': 'local-standalone-only',
                   'lez_revision': PIN, 'risc0_dev_mode': '0', 'prover': 'local-ipc', 'events': records}
         (run / 'public/report.json').write_text(json.dumps(report, indent=2) + '\n')

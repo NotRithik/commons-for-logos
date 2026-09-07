@@ -15,8 +15,13 @@ concurrency:
 jobs:
   real-sequencer:
     if: github.event.repository.private == false
+    name: real-${{ matrix.mode }}
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ${{ fromJSON(inputs.mode == 'all' && '["threshold","allowlist-smoke"]' || format('["{0}"]', inputs.mode)) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 360
+    timeout-minutes: 350
     env:
       CARGO_BUILD_JOBS: '3'
       CARGO_INCREMENTAL: '0'
@@ -45,8 +50,8 @@ jobs:
         run: /bin/sh scripts/prepare-local.sh build
       - name: Run real local sequencer and private-proof integration
         env:
-          DEMO_MODE: ${{ inputs.mode }}
-        run: python3 scripts/demo-local.py --mode "$DEMO_MODE" --timeout-seconds 14400
+          DEMO_MODE: ${{ matrix.mode }}
+        run: python3 scripts/demo-local.py --mode "$DEMO_MODE" --timeout-seconds 18000
       - name: Publish only the sanitized result in the job summary
         if: always()
         run: |
