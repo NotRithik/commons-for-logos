@@ -1,0 +1,77 @@
+{
+  "release": "Commons for Logos",
+  "as_of_utc": "2026-09-07T10:32:15.180054+00:00",
+  "submission_status": "not_submitted",
+  "network": "https://testnet.lez.logos.co/",
+  "lez_revision": "47eba256479f6f785acbd138834340703cd03401",
+  "risc0_dev_mode": "0",
+  "prover": "local IPC",
+  "public_deployments": [
+    {
+      "block_id": 41496,
+      "image_id": [
+        3816033674,
+        2500793447,
+        1215349872,
+        102087640,
+        1651927134,
+        831107197,
+        1943011595,
+        3527160458
+      ],
+      "program": "allowlist",
+      "seconds": 67.206842583,
+      "stage": "deployed",
+      "tx_hash": "ed3f4f0dfe3a888ee926e871606fbcc2fc08bbbcb3d6607e9d2b77810f987d22",
+      "independently_found_on_public_rpc": true,
+      "binary_sha256": "ec6f52607c0571d14214025b559a6ba471d0182f9c97f4c04f159685d9adf1ba"
+    },
+    {
+      "block_id": 41497,
+      "image_id": [
+        1291048702,
+        4282566755,
+        3866883445,
+        3651144008,
+        4149086774,
+        1989112511,
+        3122331903,
+        1918944211
+      ],
+      "program": "threshold",
+      "seconds": 56.862479791,
+      "stage": "deployed",
+      "tx_hash": "21a48cebc07a7343469665ca8debb2010622a22a776b6396828010ed3438b25e",
+      "independently_found_on_public_rpc": true,
+      "binary_sha256": "85aaf8e36f55b03b73ba9d4688cd9f979575c326832d9100c8d28acde31f0950"
+    }
+  ],
+  "public_confirmations": [],
+  "verified_tests": {
+    "primitive_cases": 55,
+    "sdk_cases": 2,
+    "cli_cases": 21,
+    "spel_idl_cases": 3,
+    "local_runner_cases": 7,
+    "native_ctest_suites": 3
+  },
+  "pending": [
+    "confirmed public threshold lifecycle for these program images",
+    "20 unique claims across two distributions for these program images",
+    "narrated end-to-end demonstration",
+    "final-revision real-proof CI"
+  ],
+  "native_gui_confirmations": [
+    {
+      "operation": "allowlist.create_distribution",
+      "method": "visible native Basecamp UI",
+      "network": "https://testnet.lez.logos.co/",
+      "block_id": 41504,
+      "tx_hash": "cf84cf3335732aead4ac6a424fcd9cea5346b2a530c3b9811764e4164d4a4a65",
+      "state_account": "829bd46c8b4b77af6de06767ea6ed365d1bc409770a42e602983610bb098b7e2",
+      "member_count": 10,
+      "claims_count": 0,
+      "independent_rpc_confirmation": true
+    }
+  ]
+}

@@ -1,77 +1,105 @@
 {
-  "release": "Commons for Logos",
-  "as_of_utc": "2026-09-07T10:32:15.180054+00:00",
+  "as_of_utc": "2026-09-07T12:30:28.512653+00:00",
   "submission_status": "not_submitted",
-  "network": "https://testnet.lez.logos.co/",
-  "lez_revision": "47eba256479f6f785acbd138834340703cd03401",
+  "award_status": "no_award_verified",
+  "public_endpoint": "https://testnet.lez.logos.co/",
+  "public_lez_revision": "47eba256479f6f785acbd138834340703cd03401",
   "risc0_dev_mode": "0",
   "prover": "local IPC",
-  "public_deployments": [
+  "canonical_programs": {
+    "allowlist": [
+      2845804935,
+      2808498389,
+      3889940433,
+      1867540510,
+      1021644695,
+      1925904071,
+      3360686415,
+      3553088831
+    ],
+    "threshold": [
+      3889587528,
+      4072157194,
+      1675466154,
+      3386074792,
+      1392369498,
+      2156404430,
+      3280262519,
+      3599087292
+    ]
+  },
+  "deployment": {
+    "endpoint": "https://testnet.lez.logos.co/",
+    "distributions": [
+      "D7RGc18T5NnP6j5mkSNSCtCZDrc5CF6yGhRSNBknWSim",
+      "CNsx32sAGebTc88Sqw1synSz4Jd8jrs9K5gC7ARck97V"
+    ],
+    "threshold_group": "DdVsxpch4oFvjbEeUyfqePmSjpTbjFunwML266WRyg4U",
+    "program_deployment_transactions": {
+      "allowlist": "22f1c60325e06dc516c1a663913989c883cd96588df8b024517b095adb8e7634",
+      "threshold": "f0f3b3a231c1ed197e803c07a096403290f1681ed38509ed73447dfe7c136e2a"
+    }
+  },
+  "latest_public_state": "public-state-latest.json",
+  "confirmed_final_release_private_transactions": [
     {
-      "block_id": 41496,
-      "image_id": [
-        3816033674,
-        2500793447,
-        1215349872,
-        102087640,
-        1651927134,
-        831107197,
-        1943011595,
-        3527160458
-      ],
-      "program": "allowlist",
-      "seconds": 67.206842583,
-      "stage": "deployed",
-      "tx_hash": "ed3f4f0dfe3a888ee926e871606fbcc2fc08bbbcb3d6607e9d2b77810f987d22",
-      "independently_found_on_public_rpc": true,
-      "binary_sha256": "ec6f52607c0571d14214025b559a6ba471d0182f9c97f4c04f159685d9adf1ba"
+      "stage": "propose",
+      "status": "confirmed",
+      "tx_hash": "4b896d939501f63cd4366b08f8f0ea719a692ffdf05333177d26ff46295b28a9",
+      "block_id": 41576,
+      "private": true,
+      "seconds": 2720.104298375
     },
     {
-      "block_id": 41497,
-      "image_id": [
-        1291048702,
-        4282566755,
-        3866883445,
-        3651144008,
-        4149086774,
-        1989112511,
-        3122331903,
-        1918944211
-      ],
-      "program": "threshold",
-      "seconds": 56.862479791,
-      "stage": "deployed",
-      "tx_hash": "21a48cebc07a7343469665ca8debb2010622a22a776b6396828010ed3438b25e",
-      "independently_found_on_public_rpc": true,
-      "binary_sha256": "85aaf8e36f55b03b73ba9d4688cd9f979575c326832d9100c8d28acde31f0950"
-    }
-  ],
-  "public_confirmations": [],
-  "verified_tests": {
-    "primitive_cases": 55,
-    "sdk_cases": 2,
-    "cli_cases": 21,
-    "spel_idl_cases": 3,
-    "local_runner_cases": 7,
-    "native_ctest_suites": 3
-  },
-  "pending": [
-    "confirmed public threshold lifecycle for these program images",
-    "20 unique claims across two distributions for these program images",
-    "narrated end-to-end demonstration",
-    "final-revision real-proof CI"
-  ],
-  "native_gui_confirmations": [
+      "stage": "approve_0",
+      "status": "confirmed",
+      "tx_hash": "348f9d2c2fee80977311eacd5823ce7937854afd1fa85f92ff4ec5c19bd3e6e7",
+      "block_id": 41616,
+      "private": true,
+      "seconds": 2420.871208667
+    },
     {
-      "operation": "allowlist.create_distribution",
-      "method": "visible native Basecamp UI",
-      "network": "https://testnet.lez.logos.co/",
-      "block_id": 41504,
-      "tx_hash": "cf84cf3335732aead4ac6a424fcd9cea5346b2a530c3b9811764e4164d4a4a65",
-      "state_account": "829bd46c8b4b77af6de06767ea6ed365d1bc409770a42e602983610bb098b7e2",
-      "member_count": 10,
-      "claims_count": 0,
-      "independent_rpc_confirmation": true
+      "stage": "claim_distribution_a_0",
+      "status": "confirmed",
+      "tx_hash": "3799a13707b9a051eb774fb052c88c85165e484cb40f2787735b78baa1c0518d",
+      "block_id": 41577,
+      "private": true,
+      "seconds": 2777.344245458
+    },
+    {
+      "stage": "claim_distribution_a_1",
+      "status": "confirmed",
+      "tx_hash": "5530dcaae4cf1973f57679268db881a7bc57e0976d2d14e51a5acea17bcd0bb4",
+      "block_id": 41619,
+      "private": true,
+      "seconds": 2532.407312542
+    },
+    {
+      "stage": "claim_distribution_b_0",
+      "status": "confirmed",
+      "tx_hash": "814c74a02e28245c5806c7ed9d1f37b2f83ae6c1de832c51d4a0583ee6c7c686",
+      "block_id": 41577,
+      "private": true,
+      "seconds": 2771.822213042
+    },
+    {
+      "stage": "claim_distribution_b_1",
+      "status": "confirmed",
+      "tx_hash": "f8b1447ac5b6a184dee4da01e0a5eeea267fd8291b5071dcabd3c2f0a5d085d1",
+      "block_id": 41619,
+      "private": true,
+      "seconds": 2539.422395208
     }
-  ]
+  ],
+  "chain_criteria": {
+    "LP-0002": false,
+    "LP-0003": false
+  },
+  "pending_requirements": [
+    "builder-narrated end-to-end video",
+    "passing standalone real-proof CI",
+    "final release public threshold execution",
+    "20 unique public claims across at least two distributions"
+  ],
+  "historical_development_evidence": "archives/verification-before-commons-release.json"
 }

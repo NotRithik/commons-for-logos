@@ -30,3 +30,18 @@ Use the same packed program images as the deployment ledger. The raw output incl
 Confirmed integration events record proof-plus-submission wall time and accepted block IDs. Those measurements depend on the prover hardware and network load. They are recorded separately from these deterministic execution-cycle counts.
 
 Counter definition: `risc0-zkvm` 3.0.5, `src/host/api/mod.rs`, `SessionInfo::cycles`. Source: https://github.com/risc0/risc0/blob/v3.0.5/risc0/zkvm/src/host/api/mod.rs
+
+## Testnet CU reporting
+
+The pinned v0.2.4 sequencer RPC exposes `getTransaction` as a serialized
+transaction plus accepted block ID. It does not return a billed-CU counter or a
+fee receipt. Its declared methods are in
+`lez/sequencer/service/rpc/src/lib.rs` at the pinned revision. The public executor
+limits execution to 32 million cycles in `lee/state_machine/src/program/mod.rs`;
+that limit is not evidence of how many units a specific transaction consumed.
+
+For this deployment, a per-operation billed-CU value is **not available through
+that interface**. The table above documents the reproducible guest-cycle
+measurements instead. The inner membership guest, outer privacy circuit, proof
+compression and network confirmation are different costs and are not summed
+into a made-up CU figure.

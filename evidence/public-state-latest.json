@@ -1,0 +1,79 @@
+{
+  "checked_at": "2026-09-07T12:30:28.512653+00:00",
+  "endpoint": "https://testnet.lez.logos.co/",
+  "observed_block_range": [
+    41627,
+    41627
+  ],
+  "wallet_loaded": false,
+  "transactions_submitted": 0,
+  "programs": {
+    "allowlist": [
+      2845804935,
+      2808498389,
+      3889940433,
+      1867540510,
+      1021644695,
+      1925904071,
+      3360686415,
+      3553088831
+    ],
+    "threshold": [
+      3889587528,
+      4072157194,
+      1675466154,
+      3386074792,
+      1392369498,
+      2156404430,
+      3280262519,
+      3599087292
+    ]
+  },
+  "distributions": [
+    {
+      "address": "D7RGc18T5NnP6j5mkSNSCtCZDrc5CF6yGhRSNBknWSim",
+      "hex": "b3f12b468fdeb9acbc7e97d4452db11fe16202ff8f62fb29f008f36e17765232",
+      "state": {
+        "root": "8b028721a16c39f4729857e89b5f6ed7a7fc162db29f3153275d4b794a708d21",
+        "member_count": 10,
+        "unique_claims": 2
+      }
+    },
+    {
+      "address": "CNsx32sAGebTc88Sqw1synSz4Jd8jrs9K5gC7ARck97V",
+      "hex": "a90b5c7bb5d542d782430f2838d9f847d2ae788bb524e58a14b18d47c35b57c0",
+      "state": {
+        "root": "3af37a17a023bf586a495bbffea07b0124d4ab09865a4d949afd4845190953a0",
+        "member_count": 10,
+        "unique_claims": 2
+      }
+    }
+  ],
+  "threshold": {
+    "address": "DdVsxpch4oFvjbEeUyfqePmSjpTbjFunwML266WRyg4U",
+    "hex": "bba5ce32066795d84deebab88fa45e4da20a51088eb6bad3fb83bf237c3bd965",
+    "state": {
+      "root": "f9d79a2d49be315cea0a9b487ec8e6b20d61a9e75c079ba23d2b8d131afd5804",
+      "member_count": 3,
+      "threshold": 2,
+      "value": 7,
+      "sequence": 1,
+      "proposal": {
+        "sequence": 1,
+        "next_value": 42,
+        "unique_approvals": 1,
+        "executed": false
+      }
+    }
+  },
+  "chain_criteria": {
+    "LP-0002": false,
+    "LP-0003": false
+  },
+  "not_checked_here": [
+    "narrated video",
+    "green standalone proof CI",
+    "authorship and legal eligibility",
+    "prize award"
+  ]
+}
