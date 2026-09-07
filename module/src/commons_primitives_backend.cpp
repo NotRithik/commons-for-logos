@@ -1,6 +1,7 @@
 #include "commons_primitives_backend.h"
 
 #include <QFileInfo>
+#include <QTimer>
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -55,6 +56,14 @@ void insertIfPresent(QStringList& parts, const QString& label, const QString& va
 
 CommonsPrimitivesBackend::CommonsPrimitivesBackend()
 {
+    // An optional operator-provided profile avoids re-entering paths on every
+    // Basecamp restart. Normal validation still runs before accepting it.
+    const auto defaultCli = qEnvironmentVariable("COMMONS_DEFAULT_CLI");
+    const auto defaultWallet = qEnvironmentVariable("COMMONS_DEFAULT_WALLET");
+    if (!defaultCli.isEmpty() && !defaultWallet.isEmpty())
+        QTimer::singleShot(0, this, [this, defaultCli, defaultWallet]() {
+            configure(defaultCli, defaultWallet);
+        });
     connect(&m_client,
             &CommonsLogos::LogosCliClient::completed,
             this,

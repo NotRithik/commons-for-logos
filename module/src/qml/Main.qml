@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
+import Logos.Theme
+import Logos.Controls
 
 Item {
     id: root
@@ -112,71 +114,58 @@ Item {
     }
     Component.onCompleted: root.ready = root.backend !== null && logos.isViewModuleReady("commons_primitives_ui")
 
-    component CopyLabel: Label {
-        color: "#b1b5bd"
-        font.pixelSize: 13
+    component CopyLabel: LogosText {
+        color: Theme.palette.textSecondary
         wrapMode: Text.WordWrap
     }
-    component Caption: Label {
-        color: "#858b96"
-        font.pixelSize: 11
-        font.weight: Font.Medium
+    component Caption: LogosText {
+        color: Theme.palette.textTertiary
+        font.pixelSize: Theme.typography.secondaryText
+        font.weight: Theme.typography.weightMedium
     }
+    // Keep a native TextField so the editable value stays accessible through
+    // Basecamp's Qt accessibility tree, with the shared design-system tokens.
     component Field: TextField {
         implicitHeight: 40
-        font.pixelSize: 13
-        color: "#f0f1f4"
-        placeholderTextColor: "#686f7d"
-        selectionColor: "#525d71"
-        selectedTextColor: "#ffffff"
+        font.family: Theme.typography.publicSans
+        font.pixelSize: Theme.typography.primaryText
+        color: Theme.palette.text
+        placeholderTextColor: Theme.palette.textTertiary
+        selectionColor: Theme.palette.overlayOrange
+        selectedTextColor: Theme.palette.text
         selectByMouse: true
-        leftPadding: 12
-        rightPadding: 12
+        leftPadding: Theme.spacing.medium
+        rightPadding: Theme.spacing.medium
         background: Rectangle {
-            radius: 7
-            color: "#101319"
-            border.color: parent.activeFocus ? "#9bb5c3" : "#333943"
+            radius: Theme.spacing.radiusSmall
+            color: Theme.palette.backgroundSecondary
+            border.color: parent.activeFocus ? Theme.palette.overlayOrange : Theme.palette.backgroundElevated
         }
     }
-    component Action: Button {
+    component Action: LogosButton {
         property bool primary: false
-        implicitHeight: 38
-        leftPadding: 16; rightPadding: 16
-        opacity: enabled ? 1 : 0.40
-        contentItem: Text {
-            text: parent.text
-            color: parent.primary ? "#14181e" : "#dde1e7"
-            font.pixelSize: 12
-            font.weight: Font.DemiBold
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-        }
-        background: Rectangle {
-            radius: 7
-            color: parent.primary ? (parent.down ? "#c6d3d7" : "#e1e7e8")
-                                 : (parent.hovered ? "#303640" : "#232932")
-            border.color: parent.activeFocus ? "#a8c4d0" : (parent.primary ? "#e1e7e8" : "#3b424e")
-        }
+        variant: primary ? LogosButton.Variant.Primary : LogosButton.Variant.Secondary
+        radius: Theme.spacing.radiusXlarge
     }
     component Card: Pane {
         padding: 20
-        background: Rectangle { color: "#191e25"; radius: 10; border.color: "#303640" }
+        background: Rectangle { color: Theme.palette.surfaceRaised; radius: Theme.spacing.radiusXlarge }
     }
     component CountInput: SpinBox {
         implicitHeight: 38
         from: 1; to: 256; value: 10
         editable: true
-        palette.text: "#edf0f5"
-        palette.base: "#101319"
-        palette.button: "#252c36"
-        palette.buttonText: "#edf0f5"
-        palette.highlight: "#586b80"
-        background: Rectangle { radius: 7; color: "#101319"; border.color: "#333943" }
+        palette.text: Theme.palette.text
+        palette.base: Theme.palette.backgroundSecondary
+        palette.button: Theme.palette.backgroundSecondary
+        palette.buttonText: Theme.palette.text
+        palette.highlight: Theme.palette.primary
+        background: Rectangle { radius: 7; color: Theme.palette.backgroundSecondary; border.color: Theme.palette.border }
     }
-    component SectionHeading: Label {
-        font.pixelSize: 20
-        font.weight: Font.DemiBold
-        color: "#f2f3f5"
+    component SectionHeading: LogosText {
+        font.pixelSize: Theme.typography.panelTitleText
+        font.weight: Theme.typography.weightMedium
+        color: Theme.palette.text
     }
 
     FileDialog {
@@ -199,10 +188,10 @@ Item {
         modal: true
         anchors.centerIn: parent
         width: Math.min(parent.width - 40, 650)
-        palette.window: "#191e25"
-        palette.windowText: "#f2f3f5"
-        palette.button: "#303640"
-        palette.buttonText: "#f2f3f5"
+        palette.window: Theme.palette.surfaceRaised
+        palette.windowText: Theme.palette.text
+        palette.button: Theme.palette.border
+        palette.buttonText: Theme.palette.text
         standardButtons: Dialog.Ok | Dialog.Cancel
         onOpened: { witnessPathInput.text = ""; witnessPathInput.forceActiveFocus() }
         onAccepted: {
@@ -224,28 +213,28 @@ Item {
         }
     }
 
-    Rectangle { anchors.fill: parent; color: "#11151b" }
+    Rectangle { anchors.fill: parent; color: Theme.palette.background }
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
+        anchors.margins: Theme.spacing.xxlarge
         spacing: 18
         RowLayout {
             spacing: 14
             Rectangle {
                 implicitWidth: 40; implicitHeight: 40; radius: 10
-                color: "#253139"; border.color: "#53636b"
-                Label { anchors.centerIn: parent; text: "C"; font.pixelSize: 26; font.weight: Font.Medium; color: "#e3e9eb" }
+                color: Theme.palette.surfaceRaised; border.color: Theme.palette.border
+                LogosText { anchors.centerIn: parent; text: "C"; font.pixelSize: 26; font.weight: Font.Medium; color: Theme.palette.text }
             }
             ColumnLayout {
                 spacing: 3
-                Label { text: "Commons for Logos"; font.pixelSize: 23; font.weight: Font.DemiBold; color: "#f5f6f7" }
+                LogosText { text: "Commons for Logos"; font.pixelSize: Theme.typography.pageTitleText; font.weight: Theme.typography.weightMedium; color: Theme.palette.text }
                 CopyLabel { text: "Private membership and shared approvals"; font.pixelSize: 12 }
             }
             Item { Layout.fillWidth: true }
             Rectangle {
                 implicitWidth: 72; implicitHeight: 26; radius: 13
-                color: "#30291c"; border.color: "#695532"
-                Label { anchors.centerIn: parent; text: "TESTNET"; color: "#d9bb80"; font.pixelSize: 10; font.weight: Font.DemiBold; font.letterSpacing: 1 }
+                color: Theme.palette.backgroundMuted; border.color: Theme.palette.borderSubtle
+                LogosText { anchors.centerIn: parent; text: "TESTNET"; color: Theme.palette.warning; font.pixelSize: 10; font.weight: Font.DemiBold; font.letterSpacing: 1 }
             }
         }
 
@@ -255,8 +244,8 @@ Item {
             contentItem: ColumnLayout {
                 spacing: 14
                 RowLayout {
-                    Rectangle { implicitWidth: 7; implicitHeight: 7; radius: 4; color: root.configured ? "#82bda7" : "#c3a36a" }
-                    CopyLabel { text: root.configured ? "Client connected" : "Not configured"; color: "#d6dce4" }
+                    Rectangle { implicitWidth: 7; implicitHeight: 7; radius: 4; color: root.configured ? Theme.palette.success : Theme.palette.warning }
+                    CopyLabel { text: root.configured ? "Client connected" : "Not configured"; color: Theme.palette.text }
                     Item { Layout.fillWidth: true }
                     Action { text: root.connectionExpanded ? "Hide settings" : "Connection settings"; implicitHeight: 30; onClicked: root.connectionExpanded = !root.connectionExpanded }
                 }
@@ -292,25 +281,21 @@ Item {
             }
         }
 
-        TabBar {
+        LogosTabBar {
             id: tabs
             Layout.fillWidth: true
-            spacing: 6
-            background: Rectangle { color: "transparent" }
-            TabButton {
+            LogosTabButton {
                 objectName: "tabs.allowlist"
-                text: "Allowlist"; Accessible.name: "Allowlist tab"
-                width: 170
-                contentItem: Text { text: parent.text; color: parent.checked ? "#f5f6f7" : "#8d96a4"; font.pixelSize: 14; font.weight: Font.DemiBold; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                background: Rectangle { implicitHeight: 40; radius: 7; color: parent.checked ? "#29323c" : "#171c23"; border.color: parent.checked ? "#566875" : "#252d38" }
+                text: "Private membership"
+                Accessible.name: "Allowlist tab"
+                width: implicitWidth + Theme.spacing.xlarge
                 Accessible.onPressAction: tabs.currentIndex = 0
             }
-            TabButton {
+            LogosTabButton {
                 objectName: "tabs.threshold"
-                text: "Shared approvals"; Accessible.name: "Threshold tab"
-                width: 190
-                contentItem: Text { text: parent.text; color: parent.checked ? "#f5f6f7" : "#8d96a4"; font.pixelSize: 14; font.weight: Font.DemiBold; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                background: Rectangle { implicitHeight: 40; radius: 7; color: parent.checked ? "#29323c" : "#171c23"; border.color: parent.checked ? "#566875" : "#252d38" }
+                text: "Shared approvals"
+                Accessible.name: "Threshold tab"
+                width: implicitWidth + Theme.spacing.xlarge
                 Accessible.onPressAction: tabs.currentIndex = 1
             }
         }
@@ -347,10 +332,10 @@ Item {
                             Rectangle {
                                 Layout.fillWidth: true
                                 implicitHeight: allowSummary.implicitHeight + 28
-                                color: "#142725"; radius: 7; border.color: "#30524a"
+                                color: Theme.palette.backgroundMuted; radius: 7; border.color: Theme.palette.borderSubtle
                                 CopyLabel {
                                     id: allowSummary; objectName: "allowlist.summary"; Accessible.name: text
-                                    anchors.fill: parent; anchors.margins: 14; color: "#aad2c5"
+                                    anchors.fill: parent; anchors.margins: 14; color: Theme.palette.textSecondary
                                     text: !root.backend ? "No distribution loaded."
                                         : root.backend.distributionStateAccount && allowState.text.trim() !== root.backend.distributionStateAccount
                                           ? "Account changed. Inspect to load this distribution."
@@ -369,7 +354,7 @@ Item {
                             ColumnLayout {
                                 visible: root.allowCreateExpanded
                                 spacing: 12; Layout.fillWidth: true
-                                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: "#343d48" }
+                                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.palette.border }
                                 Caption { text: "NEW DISTRIBUTION" }
                                 CopyLabel { text: "Use an unused account from your wallet and the commitment root generated for the eligible members."; Layout.fillWidth: true }
                                 Field { id: allowRoot; objectName: "allowlist.root"; Accessible.name: "Allowlist Merkle root"; placeholderText: "Membership commitment root (64-character hex)"; Layout.fillWidth: true }
@@ -402,10 +387,10 @@ Item {
                             Rectangle {
                                 Layout.fillWidth: true
                                 implicitHeight: groupSummary.implicitHeight + 28
-                                color: "#142725"; radius: 7; border.color: "#30524a"
+                                color: Theme.palette.backgroundMuted; radius: 7; border.color: Theme.palette.borderSubtle
                                 CopyLabel {
                                     id: groupSummary; objectName: "threshold.summary"; Accessible.name: text
-                                    anchors.fill: parent; anchors.margins: 14; color: "#aad2c5"
+                                    anchors.fill: parent; anchors.margins: 14; color: Theme.palette.textSecondary
                                     text: !root.backend ? "No group loaded."
                                         : root.backend.groupStateAccount && groupState.text.trim() !== root.backend.groupStateAccount
                                           ? "Account changed. Inspect to load this group."
@@ -429,7 +414,7 @@ Item {
                             ColumnLayout {
                                 visible: root.groupCreateExpanded
                                 spacing: 12; Layout.fillWidth: true
-                                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: "#343d48" }
+                                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.palette.border }
                                 Caption { text: "NEW GROUP" }
                                 Field { id: groupRoot; objectName: "threshold.root"; Accessible.name: "Threshold membership root"; placeholderText: "Membership commitment root (64-character hex)"; Layout.fillWidth: true }
                                 RowLayout {
@@ -448,32 +433,32 @@ Item {
                     Layout.fillWidth: true
                     text: "Membership addresses stay out of public application state. Group settings, activity timing and proof transactions remain observable."
                     font.pixelSize: 11
-                    color: "#8d96a4"
+                    color: Theme.palette.textTertiary
                 }
             }
         }
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: statusLabel.implicitHeight + 26
-            color: root.backend && root.backend.lastError ? "#302023" : "#1b252b"
-            border.color: root.backend && root.backend.lastError ? "#724247" : "#334852"
+            color: root.backend && root.backend.lastError ? Theme.palette.backgroundMuted : Theme.palette.surfaceRaised
+            border.color: root.backend && root.backend.lastError ? Theme.palette.borderSubtle : Theme.palette.borderSubtle
             radius: 8
             CopyLabel {
                 id: statusLabel; objectName: "status.text"; Accessible.name: text
                 anchors.fill: parent; anchors.margins: 13
-                color: root.backend && root.backend.lastError ? "#ecb2b7" : "#c7d5da"
+                color: root.backend && root.backend.lastError ? Theme.palette.error : Theme.palette.text
                 text: (root.backend ? root.backend.statusText : "Waiting for the client...")
                     + (root.busy ? "  " + Math.floor(root.elapsedSeconds / 60) + "m " + (root.elapsedSeconds % 60) + "s elapsed" : "")
             }
         }
         RowLayout {
-            CopyLabel { text: "Built for Logos Basecamp"; font.pixelSize: 11; color: "#707b89" }
+            CopyLabel { text: "Built for Logos Basecamp"; font.pixelSize: 11; color: Theme.palette.textTertiary }
             Item { Layout.fillWidth: true }
             CopyLabel {
                 text: root.captureStatus
                 visible: root.technicalExpanded && root.captureStatus.length > 0
                 font.pixelSize: 11
-                color: "#a5b9c0"
+                color: Theme.palette.textSecondary
             }
             Action {
                 objectName: "evidence.snapshot"
@@ -504,13 +489,13 @@ Item {
                 readOnly: true
                 selectByMouse: true
                 text: root.backend ? root.backend.lastResultJson : "{}"
-                color: "#b5c3cc"
+                color: Theme.palette.textSecondary
                 font.family: "Menlo"
                 font.pixelSize: 11
                 wrapMode: TextEdit.Wrap
-                background: Rectangle { color: "#0d1116"; radius: 7 }
+                background: Rectangle { color: Theme.palette.background; radius: 7 }
             }
         }
-        Label { id: transientError; objectName: "result.error"; visible: false }
+        LogosText { id: transientError; objectName: "result.error"; visible: false }
     }
 }

@@ -77,3 +77,15 @@ python3 scripts/package-lgx.py --lgx-lib /path/to/liblgx.dylib \
 `package-lgx.py` includes only named module files. `check-native-package.py`
 verifies integrity, performs the deliberately corrupted-copy rejection test,
 and installs into a new test directory. It never replaces an existing install.
+
+## Basecamp theme and shared instance
+
+The views import `Logos.Theme` and `Logos.Controls` from the installed Basecamp
+host. Buttons, tabs, typography, background surfaces and status colors use the
+same design tokens as Basecamp's own applications. No font files or substitute
+theme are shipped. Private membership and shared approvals are tabs in the same
+Commons module; the Steward owner view is a separate module in the same host.
+
+An operator can set `COMMONS_DEFAULT_CLI` and `COMMONS_DEFAULT_WALLET` in the
+Basecamp launch environment. They are validated exactly like manually entered
+settings and contain paths, not keys. With no defaults, the app starts unconfigured.
