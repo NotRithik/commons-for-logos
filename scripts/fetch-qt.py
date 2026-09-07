@@ -68,7 +68,12 @@ def run(destination: pathlib.Path, selected: str) -> None:
         for item in archives:
             # libarchive retains its default protections against absolute paths,
             # traversal and writes through symlinked parent directories.
-            subprocess.run([tar,'-xf',str(cache/item['name']),'-C',str(temporary),'--no-same-owner'],check=True)
+            # Qt's ICU add-on archive contains bare libicu*.so names. The
+            # official installer places it in Qt's lib directory; preserve that
+            # layout rather than leaving the libraries at the prefix root.
+            extract_to = temporary / 'lib' if item['name'].startswith('icu-') else temporary
+            extract_to.mkdir(exist_ok=True)
+            subprocess.run([tar,'-xf',str(cache/item['name']),'-C',str(extract_to),'--no-same-owner'],check=True)
         (temporary/'.astra-qt-pins.json').write_text(json.dumps(archives,indent=2)+'\n')
         temporary.rename(prefix)
     finally:
