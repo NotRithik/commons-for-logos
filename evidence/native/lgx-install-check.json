@@ -1,0 +1,17 @@
+{
+  "package": "commons-macos-arm64-0.1.0-rc.1.lgx",
+  "original_verification": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "tampering_rejected": true,
+  "tamper_errors": [
+    "Content hash mismatch: package content does not match manifest hashes"
+  ],
+  "install_type": "ui_qml",
+  "installed_file_count": 7,
+  "main_plugin": "commons_primitives_ui_plugin.dylib",
+  "installation": "new isolated directory",
+  "plugin_executed_by_this_test": false
+}

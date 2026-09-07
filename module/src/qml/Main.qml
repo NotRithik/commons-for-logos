@@ -18,6 +18,38 @@ Item {
     property double operationStartedAt: 0
     property int elapsedSeconds: 0
     property bool captureInFlight: false
+    property bool captureRecording: false
+    property int captureFrames: 0
+    property string captureStatus: ""
+    onConfiguredChanged: if (!configured) captureRecording = false
+    Timer {
+        interval: 1500
+        repeat: true
+        running: root.captureRecording && root.configured
+        onTriggered: {
+            if (root.captureFrames >= 2400) {
+                root.captureRecording = false
+                root.captureStatus = "Recording stopped at the one-hour limit."
+            } else root.captureOwnView()
+        }
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+F10"
+        context: Qt.ApplicationShortcut
+        enabled: root.configured
+        onActivated: root.toggleCaptureRecording()
+    }
+    function toggleCaptureRecording() {
+        if (root.captureRecording) {
+            root.captureRecording = false
+            root.captureStatus = "Recording stopped. " + root.captureFrames + " frames saved."
+        } else {
+            root.captureFrames = 0
+            root.captureRecording = true
+            root.captureStatus = "Recording this module only."
+            root.captureOwnView()
+        }
+    }
 
     onBusyChanged: if (busy) { operationStartedAt = Date.now(); elapsedSeconds = 0 }
     Timer {
@@ -26,17 +58,33 @@ Item {
     }
     Shortcut { sequence: "Alt+1"; onActivated: tabs.currentIndex = 0 }
     Shortcut { sequence: "Alt+2"; onActivated: tabs.currentIndex = 1 }
-    // Development capture has no button, toolbar, recording indicator, or network output.
-    Shortcut { sequence: "Ctrl+Shift+F9"; enabled: root.configured; onActivated: root.captureOwnView() }
+    // Captures only this module, not other windows or the desktop.
+    Shortcut { sequence: "Ctrl+Shift+F9"; context: Qt.ApplicationShortcut; enabled: root.configured; onActivated: root.captureOwnView() }
     function captureOwnView() {
         if (root.captureInFlight || !root.backend || !root.backend.captureDirectory) return
         root.captureInFlight = true
-        const scale = Math.min(1, 1440 / Math.max(1, root.width))
-        if (!root.grabToImage(function(image) {
-            image.saveToFile(root.backend.captureDirectory + "/commons-view-" + Date.now() + ".png")
-            root.captureInFlight = false
-        }, Qt.size(Math.max(1, Math.round(root.width * scale)), Math.max(1, Math.round(root.height * scale)))))
-            root.captureInFlight = false
+        root.connectionExpanded = false
+        Qt.callLater(function() {
+            const scale = Math.min(1, 1440 / Math.max(1, root.width))
+            const accepted = root.grabToImage(function(image) {
+                const saved = image.saveToFile(root.backend.captureDirectory + "/commons-view-" + Date.now() + ".png")
+                if (saved) {
+                    root.captureFrames += 1
+                    root.captureStatus = root.captureRecording
+                        ? "Recording this module only. " + root.captureFrames + " frames saved."
+                        : "Module view saved."
+                } else {
+                    root.captureRecording = false
+                    root.captureStatus = "Could not save the module view. Check the wallet evidence directory."
+                }
+                root.captureInFlight = false
+            }, Qt.size(Math.max(1, Math.round(root.width * scale)), Math.max(1, Math.round(root.height * scale))))
+            if (!accepted) {
+                root.captureInFlight = false
+                root.captureRecording = false
+                root.captureStatus = "The module must be visible before it can be captured."
+            }
+        })
     }
     function localPath(url) {
         const text = String(url || "")
@@ -184,7 +232,7 @@ Item {
         RowLayout {
             spacing: 14
             Rectangle {
-                width: 40; height: 40; radius: 10
+                implicitWidth: 40; implicitHeight: 40; radius: 10
                 color: "#253139"; border.color: "#53636b"
                 Label { anchors.centerIn: parent; text: "C"; font.pixelSize: 26; font.weight: Font.Medium; color: "#e3e9eb" }
             }
@@ -207,7 +255,7 @@ Item {
             contentItem: ColumnLayout {
                 spacing: 14
                 RowLayout {
-                    Rectangle { width: 7; height: 7; radius: 4; color: root.configured ? "#82bda7" : "#c3a36a" }
+                    Rectangle { implicitWidth: 7; implicitHeight: 7; radius: 4; color: root.configured ? "#82bda7" : "#c3a36a" }
                     CopyLabel { text: root.configured ? "Client connected" : "Not configured"; color: "#d6dce4" }
                     Item { Layout.fillWidth: true }
                     Action { text: root.connectionExpanded ? "Hide settings" : "Connection settings"; implicitHeight: 30; onClicked: root.connectionExpanded = !root.connectionExpanded }
@@ -321,7 +369,7 @@ Item {
                             ColumnLayout {
                                 visible: root.allowCreateExpanded
                                 spacing: 12; Layout.fillWidth: true
-                                Rectangle { Layout.fillWidth: true; height: 1; color: "#343d48" }
+                                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: "#343d48" }
                                 Caption { text: "NEW DISTRIBUTION" }
                                 CopyLabel { text: "Use an unused account from your wallet and the commitment root generated for the eligible members."; Layout.fillWidth: true }
                                 Field { id: allowRoot; objectName: "allowlist.root"; Accessible.name: "Allowlist Merkle root"; placeholderText: "Membership commitment root (64-character hex)"; Layout.fillWidth: true }
@@ -381,7 +429,7 @@ Item {
                             ColumnLayout {
                                 visible: root.groupCreateExpanded
                                 spacing: 12; Layout.fillWidth: true
-                                Rectangle { Layout.fillWidth: true; height: 1; color: "#343d48" }
+                                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: "#343d48" }
                                 Caption { text: "NEW GROUP" }
                                 Field { id: groupRoot; objectName: "threshold.root"; Accessible.name: "Threshold membership root"; placeholderText: "Membership commitment root (64-character hex)"; Layout.fillWidth: true }
                                 RowLayout {
@@ -421,6 +469,30 @@ Item {
         RowLayout {
             CopyLabel { text: "Built for Logos Basecamp"; font.pixelSize: 11; color: "#707b89" }
             Item { Layout.fillWidth: true }
+            CopyLabel {
+                text: root.captureStatus
+                visible: root.technicalExpanded && root.captureStatus.length > 0
+                font.pixelSize: 11
+                color: "#a5b9c0"
+            }
+            Action {
+                objectName: "evidence.snapshot"
+                text: "Save view"
+                Accessible.name: "Save only this module view"
+                visible: root.technicalExpanded && root.configured
+                enabled: !root.captureInFlight && root.backend && root.backend.captureDirectory.length > 0
+                implicitHeight: 28
+                onClicked: root.captureOwnView()
+            }
+            Action {
+                objectName: "evidence.record"
+                text: root.captureRecording ? "Stop recording" : "Record view"
+                Accessible.name: "Record only this module view"
+                visible: root.technicalExpanded && root.configured
+                enabled: root.backend && root.backend.captureDirectory.length > 0
+                implicitHeight: 28
+                onClicked: root.toggleCaptureRecording()
+            }
             Action { text: root.technicalExpanded ? "Hide technical details" : "Technical details"; implicitHeight: 28; onClicked: root.technicalExpanded = !root.technicalExpanded }
         }
         ScrollView {

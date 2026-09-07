@@ -1,0 +1,20 @@
+{
+  "file": "commons-macos-arm64-0.1.0-rc.1.lgx",
+  "bytes": 100722,
+  "sha256": "b21afb1544b0a5093101a0bbc1b3507fc4f88fb035a4dd204efe7dcf9177e22e",
+  "variant": "darwin-arm64",
+  "files": [
+    "commons_primitives_ui_plugin.dylib",
+    "commons_primitives_ui_replica_factory.dylib",
+    "metadata.json",
+    "qml/Main.qml",
+    "icons/commons.svg",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "verification": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  }
+}

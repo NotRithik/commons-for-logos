@@ -1,125 +1,79 @@
-# Commons Primitives Basecamp GUI
+# Commons Basecamp app
 
-This repository now includes a loadable Logos Basecamp `ui_qml` module for the
-LP-0002 threshold parameter workflow and the LP-0003 allowlist registration
-workflow.
+Commons runs as a native QML module in Logos Basecamp. It uses Qt Remote Objects
+to reach its backend and a typed client to launch `commons-logos-cli` with fixed
+arguments. It does not render a browser mock-up or display synthetic transactions
+as live data.
 
-## Files
+## Install
 
-- `module/` contains the Basecamp QML module:
-  - `metadata.json`
-  - `flake.nix`
-  - `CMakeLists.txt`
-  - `src/commons_primitives_ui.rep`
-  - `src/commons_primitives_backend.{h,cpp}`
-  - `src/qml/Main.qml`
-- `sdk/` contains the reusable Qt SDK layer:
-  - `src/CommonsLogosCliClient.{h,cpp}`
-  - `src/CommonsLogosSchemas.{h,cpp}`
-  - `schema/commons-logos-cli.schema.json`
-  - `CLI-CONTRACT.md`
-- `module/tests/` contains Qt unit tests and the builder-discovered UI test.
-- `ui-tests/` contains a repository-level test harness wrapper.
+Open Basecamp's Package Manager and install the macOS ARM64 `.lgx` from this
+repository's release. The package includes the UI plugin, replica factory, QML,
+icon and licenses. It does not include a wallet, witness, fake CLI, Qt SDK or fonts.
 
-## Runtime Policy
+The CLI is a separate executable. Build it using `scripts/prepare-local.sh`, or
+use a verified CLI download provided with the release. Configure its absolute
+path and a dedicated testnet wallet in **Connection settings**. The wallet must
+have the expected testnet marker, configuration and `programs.json`.
 
-The GUI never constructs or signs live private transactions itself. It only
-delegates to an explicitly configured absolute `commons-logos-cli` executable.
-The backend:
+The standard app uses the official LEZ endpoint. A local sequencer is needed only
+for the separate reproducible development/CI test. Proof generation happens on
+the user's machine through RISC Zero; no hosted model or prover API is used.
 
-- requires the executable to be named `commons-logos-cli` or `commons-logos-cli.exe`;
-- starts it with `QProcess::setProgram()` and fixed argument lists;
-- sends operation inputs as JSON stdin;
-- forces `RISC0_DEV_MODE=0` and `COMMONS_LOGOS_NETWORK=testnet`;
-- requires a wallet directory that is visibly testnet-only by path or marker;
-- treats malformed CLI output as failure and does not display raw stdout/stderr;
-- redacts sensitive witness, secret, key, seed, mnemonic, password, and selected
-  path fields from JSON displayed in the UI.
+## Workflows
 
-No mock transaction data is rendered as live state. The summary panels remain in
-their default "No live state loaded" state until the configured CLI returns a
-successful JSON response.
+**Membership:** create a distribution from an eligibility root, load the public
+state account, select an eligible member's witness file, and claim privately.
+**Shared approvals:** create a threshold group, propose a value, gather distinct
+private approvals, then execute the approved change. Read the state again to
+confirm the result.
 
-## CLI Contract
+A testnet submission can take several minutes while its local proof is generated.
+Do not treat a pending operation as confirmed. The app displays success only
+after its CLI returns a confirmed result. Witness files and test wallets must not
+be shared publicly. See `PRIVACY.md` and `sdk/CLI-CONTRACT.md`.
 
-The CLI request and response contract is documented in `sdk/CLI-CONTRACT.md`.
-The SDK exposes the same schema through `CommonsLogos::contractSchemaJson()`.
+## Local evidence capture
 
-Fixed operations:
+Expand **Technical details** for **Save view** and **Record view**. They capture
+only this module, not the desktop or another application. Connection settings
+are collapsed before capture. Files are stored inside the configured test
+wallet's `evidence` directory; no upload occurs.
 
-- `allowlist.create_distribution`
-- `allowlist.claim`
-- `allowlist.inspect_state`
-- `threshold.create_group`
-- `threshold.propose`
-- `threshold.approve`
-- `threshold.execute`
-- `threshold.inspect_state`
+Recording saves a frame every 1.5 seconds and stops after 2,400 saved frames
+(one hour). **Stop recording** ends it immediately; changing configuration also
+stops it. The counter advances only when an image was successfully written.
+A short recording test saved 24 frames and verified that Stop changed the UI to
+its stopped state. This is recording-tool validation, not the full prize demo.
 
-Witness file contents are never passed on argv. Witness paths are carried in the
-stdin JSON request.
+## Verification performed
 
-## Build
+The visible macOS app was driven through its real controls. Checks covered
+configuration, wrong-format account rejection, recovery to a valid live read,
+allowlist/threshold navigation, module-only screenshots, and recording/start/stop.
+The final release's allowlist and group were read from the public testnet.
 
-The module flake pins `logos-module-builder` to the checked-out builder commit:
+The LGX file passed the official library's integrity verification. Modifying a
+QML file without changing its manifest hash was rejected. The actual package
+manager library installed it into a fresh isolated plugin directory, and every
+installed payload byte matched the package. The install-check script does not
+claim that it exercised the Package Manager GUI.
 
-```text
-1c2532b2de614c0cd2fc68544fc7b1efed944363
+Native process-boundary unit tests use an explicitly labeled fake CLI for error
+cases; those tests are separate from the real CLI and testnet reads. No fake CLI
+is included in the installed module.
+
+## Build and reproduce
+
+See `NATIVE-BUILD.md` for the pinned native build inputs. Package a built output
+using the official LGX library from Basecamp:
+
+```sh
+python3 scripts/package-lgx.py --lgx-lib /path/to/liblgx.dylib \
+  --native-dir out/module --variant darwin-arm64 \
+  --output out/releases/commons-macos-arm64.lgx
 ```
 
-When Nix is available:
-
-```bash
-cd module
-nix build .#default
-nix build .#ui-dev
-nix build .#integration-test -L
-```
-
-For local testing in this repository, run those commands through the repository
-sandbox wrapper:
-
-```bash
-/bin/sh ../../tools/run-isolated.sh local nix build ./module#default
-/bin/sh ../../tools/run-isolated.sh local nix build ./module#integration-test -L
-```
-
-The wrapper path is not executable in this checkout, so direct execution may
-fail with `permission denied`; invoking it through `/bin/sh` still uses the same
-reviewed script.
-
-## Tests
-
-Qt unit tests are built from `module/CMakeLists.txt` when
-`COMMONS_LOGOS_BUILD_TESTS=ON`. They cover:
-
-- CLI executable and testnet wallet validation;
-- fixed argv for allowlisted operations;
-- JSON stdin transport for witness paths;
-- `RISC0_DEV_MODE=0` enforcement;
-- invalid JSON failure handling;
-- redaction of wallet and witness paths in failures;
-- threshold bound validation before spawning a process.
-
-The UI test at `module/tests/ui-tests.mjs` covers real QML controls by
-objectName through the Logos Qt inspector. It verifies:
-
-- the module loads in explicit `Not configured` state;
-- transaction buttons are disabled before configuration;
-- invalid configuration is handled by the backend;
-- the threshold tab exposes proposal, approve, execute, and inspect controls.
-
-The repository wrapper `ui-tests/commons_primitives_ui.test.mjs` imports the same
-suite for manual runs.
-
-## Current Local Blockers
-
-This managed environment cannot apply the sandbox profile:
-
-```text
-sandbox-exec: sandbox_apply: Operation not permitted
-```
-
-Because local compilation and tests must go through `../../tools/run-isolated.sh`,
-the Rust tests, Nix build, Qt unit tests, and QML integration tests were not run
-locally from this environment. `git diff --check` passed.
+`package-lgx.py` includes only named module files. `check-native-package.py`
+verifies integrity, performs the deliberately corrupted-copy rejection test,
+and installs into a new test directory. It never replaces an existing install.
