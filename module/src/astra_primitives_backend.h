@@ -24,6 +24,8 @@ public:
     QString schemaJson() override;
 
 private:
+    void resetSessionState();
+    void clearStateForOperation(const QString& operation);
     QString selectWitnessFile(const QString& rawPath, bool thresholdWitness);
     QString queue(AstraLogos::PrimitiveOperation operation, const QJsonObject& arguments);
     QString reject(AstraLogos::PrimitiveOperation operation, const QString& message);

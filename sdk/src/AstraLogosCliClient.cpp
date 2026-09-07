@@ -233,7 +233,7 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
     const QStringList allowed = {QStringLiteral("HOME"), QStringLiteral("PATH"), QStringLiteral("TMPDIR"),
         QStringLiteral("RUSTUP_HOME"), QStringLiteral("CARGO_HOME"), QStringLiteral("RISC0_HOME"),
         QStringLiteral("DYLD_LIBRARY_PATH"), QStringLiteral("SSL_CERT_FILE"), QStringLiteral("LANG"),
-        QStringLiteral("LC_ALL"), QStringLiteral("RISC0_BINARY_PATH"), QStringLiteral("RAYON_NUM_THREADS")};
+        QStringLiteral("LC_ALL"), QStringLiteral("RISC0_SERVER_PATH"), QStringLiteral("RAYON_NUM_THREADS")};
     for (const auto& key : allowed) if (inherited.contains(key)) env.insert(key, inherited.value(key));
 #ifdef ASTRA_SDK_TESTING
     if (inherited.contains(QStringLiteral("ASTRA_FAKE_CLI_MODE")))

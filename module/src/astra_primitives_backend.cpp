@@ -69,12 +69,42 @@ AstraPrimitivesBackend::AstraPrimitivesBackend()
             });
 }
 
+void AstraPrimitivesBackend::resetSessionState()
+{
+    m_allowlistWitnessPath.clear();
+    m_thresholdWitnessPath.clear();
+    setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
+    setThresholdWitnessLabel(QStringLiteral("No witness selected"));
+    setDistributionStateAccount(QString());
+    setGroupStateAccount(QString());
+    setDistributionSummary(QStringLiteral("No live distribution state loaded."));
+    setGroupSummary(QStringLiteral("No live group state loaded."));
+    setCaptureDirectory(QString());
+    setLastOperation(QString());
+    setActiveOperation(QString());
+    setLastError(QString());
+    setLastResultJson(QStringLiteral("{}"));
+}
+
+void AstraPrimitivesBackend::clearStateForOperation(const QString& operation)
+{
+    if (operation.startsWith(QStringLiteral("allowlist."))) {
+        setDistributionStateAccount(QString());
+        setDistributionSummary(QStringLiteral("Inspect a distribution to load its current state."));
+    } else if (operation.startsWith(QStringLiteral("threshold."))) {
+        setGroupStateAccount(QString());
+        setGroupSummary(QStringLiteral("Inspect a group to load its current state."));
+    }
+}
+
 QString AstraPrimitivesBackend::configure(QString cliPath, QString walletDir)
 {
     if (m_client.isBusy())
         return reject(AstraLogos::PrimitiveOperation::AllowlistInspect,
                       QStringLiteral("Wait for the current CLI operation to finish."));
 
+    // A new profile must not retain the previous profile's witness or results.
+    resetSessionState();
     QString error;
     if (!m_client.configure(cliPath, walletDir, &error)) {
         m_client.clearConfiguration();
@@ -85,6 +115,8 @@ QString AstraPrimitivesBackend::configure(QString cliPath, QString walletDir)
         QJsonObject response;
         response.insert(QStringLiteral("configured"), false);
         response.insert(QStringLiteral("error"), error);
+        setLastResultJson(prettyJson(response));
+        Q_EMIT operationFailed(QStringLiteral("configure"), error);
         return compactJson(response);
     }
 
@@ -102,6 +134,8 @@ QString AstraPrimitivesBackend::configure(QString cliPath, QString walletDir)
     response.insert(QStringLiteral("configured"), true);
     response.insert(QStringLiteral("network"), QStringLiteral("testnet"));
     response.insert(QStringLiteral("schema_version"), 1);
+    setLastResultJson(prettyJson(response));
+    Q_EMIT operationFinished(QStringLiteral("configure"), compactJson(response));
     return compactJson(response);
 }
 
@@ -206,6 +240,18 @@ QString AstraPrimitivesBackend::schemaJson()
 
 QString AstraPrimitivesBackend::selectWitnessFile(const QString& rawPath, const bool thresholdWitness)
 {
+    if (m_client.isBusy()) {
+        return compactJson(QJsonObject{{QStringLiteral("selected"), false},
+            {QStringLiteral("error"), QStringLiteral("Wait for the current operation to finish.")}});
+    }
+    // Failed replacement must not leave an earlier witness armed.
+    if (thresholdWitness) {
+        m_thresholdWitnessPath.clear();
+        setThresholdWitnessLabel(QStringLiteral("No witness selected"));
+    } else {
+        m_allowlistWitnessPath.clear();
+        setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
+    }
     const QString path = AstraLogos::localPathFromUi(rawPath);
     const QFileInfo info(path);
     if (m_client.isBusy() || !m_client.isConfigured() || !info.isAbsolute() || !info.exists() || !info.isFile() || info.isSymLink() || !info.canonicalFilePath().startsWith(m_client.walletDir() + QLatin1Char('/'))) {
@@ -215,6 +261,8 @@ QString AstraPrimitivesBackend::selectWitnessFile(const QString& rawPath, const 
         QJsonObject response;
         response.insert(QStringLiteral("selected"), false);
         response.insert(QStringLiteral("error"), message);
+        setLastResultJson(prettyJson(response));
+        Q_EMIT operationFailed(QStringLiteral("select_witness"), message);
         return compactJson(response);
     }
 
@@ -233,12 +281,16 @@ QString AstraPrimitivesBackend::selectWitnessFile(const QString& rawPath, const 
     QJsonObject response;
     response.insert(QStringLiteral("selected"), true);
     response.insert(QStringLiteral("label"), label);
+    setLastResultJson(prettyJson(response));
+    Q_EMIT operationFinished(QStringLiteral("select_witness"), compactJson(response));
     return compactJson(response);
 }
 
 QString AstraPrimitivesBackend::queue(AstraLogos::PrimitiveOperation operation,
                                       const QJsonObject& arguments)
 {
+    if (!m_client.isBusy())
+        clearStateForOperation(AstraLogos::operationId(operation));
     const AstraLogos::StartResult result = m_client.start(operation, arguments);
     if (!result.accepted) {
         setLastOperation(result.operation);
@@ -255,7 +307,14 @@ QString AstraPrimitivesBackend::queue(AstraLogos::PrimitiveOperation operation,
     setActiveOperation(displayName);
     setLastOperation(result.operation);
     setLastError(QString());
-    setStatusText(QStringLiteral("%1 sent to astra-logos-cli.").arg(displayName));
+    const bool reading = operation == AstraLogos::PrimitiveOperation::AllowlistInspect
+        || operation == AstraLogos::PrimitiveOperation::ThresholdInspect;
+    const bool proving = operation == AstraLogos::PrimitiveOperation::AllowlistClaim
+        || operation == AstraLogos::PrimitiveOperation::ThresholdPropose
+        || operation == AstraLogos::PrimitiveOperation::ThresholdApprove;
+    setStatusText(reading ? QStringLiteral("Reading testnet state...")
+        : proving ? QStringLiteral("Generating a private proof locally, then submitting to testnet...")
+                  : QStringLiteral("Submitting to testnet and waiting for confirmation..."));
     return result.toJson();
 }
 
@@ -263,6 +322,7 @@ QString AstraPrimitivesBackend::reject(AstraLogos::PrimitiveOperation operation,
                                        const QString& message)
 {
     const QString operationName = AstraLogos::operationId(operation);
+    if (!m_client.isBusy()) clearStateForOperation(operationName);
     setLastOperation(operationName);
     setLastError(message);
     setStatusText(message);
@@ -285,7 +345,16 @@ void AstraPrimitivesBackend::completeOperation(const QString& operation,
     setLastOperation(operation);
     setLastError(QString());
     setLastResultJson(prettyJson(result));
-    setStatusText(QStringLiteral("%1 completed.").arg(operation));
+    const bool reading = operation.endsWith(QStringLiteral(".inspect_state"));
+    const auto block = result.value(QStringLiteral("block_id"));
+    if (reading)
+        setStatusText(block.isDouble()
+            ? QStringLiteral("Testnet state read at block %1.").arg(block.toInteger())
+            : QStringLiteral("Testnet state loaded."));
+    else
+        setStatusText(block.isDouble()
+            ? QStringLiteral("Confirmed in testnet block %1.").arg(block.toInteger())
+            : QStringLiteral("Operation completed."));
 
     if (operation.startsWith(QStringLiteral("allowlist.")))
         updateDistributionState(result);
@@ -301,6 +370,7 @@ void AstraPrimitivesBackend::failOperation(const QString& operation,
     setBusy(false);
     setActiveOperation(QString());
     setLastOperation(operation);
+    clearStateForOperation(operation);
     setLastError(errorMessage);
     setStatusText(errorMessage);
     setLastResultJson(prettyJson(QJsonObject{{QStringLiteral("success"), false},

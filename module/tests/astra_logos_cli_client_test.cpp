@@ -89,8 +89,20 @@ private slots:
         LogosCliClient client;
         QString error;
         QVERIFY(!client.configure(QStringLiteral("/bin/sh"), wallet, &error));
-        QVERIFY(error.contains(QStringLiteral("astra-logos-cli")));
+        QVERIFY(error.contains(QStringLiteral("commons-logos-cli")));
         QVERIFY(!client.isConfigured());
+    }
+
+    void configurationAcceptsCommonsExecutableName()
+    {
+        QTemporaryDir temp;
+        QVERIFY(temp.isValid());
+        const QString renamed = QDir(temp.path()).filePath(QStringLiteral("commons-logos-cli"));
+        QVERIFY(QFile::copy(fakeCliPath(), renamed));
+        QFile(renamed).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+        LogosCliClient client;
+        QString error;
+        QVERIFY(client.configure(renamed, makeTestnetWallet(temp), &error));
     }
 
     void configurationAcceptsTestnetWallet()

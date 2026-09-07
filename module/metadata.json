@@ -1,11 +1,11 @@
 {
   "name": "astra_primitives_ui",
-  "display_name": "Astra Primitives",
+  "display_name": "Commons for Logos",
   "version": "0.1.0",
   "type": "ui_qml",
   "interface": "universal",
   "category": "wallet",
-  "description": "Basecamp GUI for Astra Logos Lambda Prize primitive transactions",
+  "description": "Private allowlists and threshold approvals for Logos Basecamp",
   "main": "astra_primitives_ui_plugin",
   "icon": "",
   "view": "qml/Main.qml",

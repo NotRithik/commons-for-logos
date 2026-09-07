@@ -588,21 +588,23 @@ bool validateCliPath(const QString& rawCliPath, QString* errorMessage)
 {
     const QString cliPath = localPathFromUi(rawCliPath);
     if (cliPath.isEmpty())
-        return setError(errorMessage, QStringLiteral("Select an astra-logos-cli executable."));
+        return setError(errorMessage, QStringLiteral("Select the Commons CLI executable."));
 
     const QFileInfo info(cliPath);
     if (!info.isAbsolute())
         return setError(errorMessage, QStringLiteral("The CLI path must be absolute."));
     if (!info.exists() || !info.isFile())
-        return setError(errorMessage, QStringLiteral("The configured astra-logos-cli file does not exist."));
+        return setError(errorMessage, QStringLiteral("The configured client file does not exist."));
     if (!info.isExecutable())
-        return setError(errorMessage, QStringLiteral("The configured astra-logos-cli file is not executable."));
+        return setError(errorMessage, QStringLiteral("The configured client file is not executable."));
 
     const QString fileName = info.fileName();
-    if (fileName != QStringLiteral("astra-logos-cli")
+    if (fileName != QStringLiteral("commons-logos-cli")
+        && fileName != QStringLiteral("commons-logos-cli.exe")
+        && fileName != QStringLiteral("astra-logos-cli")
         && fileName != QStringLiteral("astra-logos-cli.exe")) {
         return setError(errorMessage,
-                        QStringLiteral("The executable must be named astra-logos-cli."));
+                        QStringLiteral("Select the commons-logos-cli executable."));
     }
 
     return true;

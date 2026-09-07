@@ -29,17 +29,31 @@ Configure the GUI with the actual production CLI path and a dedicated, marked te
 
 Do not distribute the full Qt development SDK or its font assets with this project. Do not remove operating-system verification globally to open an application. Locally built macOS plugins may be ad-hoc signed as developer artifacts; that is not a notarization claim.
 
-## macOS 26 AutoFill troubleshooting in a restricted test environment
+## macOS window registration and AutoFill
 
-One observed GUI stall was an AppKit/SafariPlatformSupport AutoFill helper reconnect loop, confirmed with a stack sample, not an on-chain failure. Rather than granting a restricted test app access to Safari's helper, this process-local launch setting was tested:
+The published Basecamp 0.2.3 macOS bundle uses a shell launcher named
+`LogosBasecamp`, which executes `LogosBasecamp.bin`. When launched directly under
+our restricted test runner, macOS reported an empty running-app bundle ID and
+computer-use tools could not attach by bundle identifier. A separate local
+developer copy with `CFBundleExecutable=LogosBasecamp.bin` and a distinct bundle
+ID fixed attachment. The original download was kept unchanged. The developer
+copy was ad-hoc signed and is not a notarized release.
 
-```sh
-/path/to/LogosBasecamp.app/Contents/MacOS/LogosBasecamp.bin \
-  --user-dir /absolute/path/to/isolated-basecamp \
-  -- -NSAutoFillHeuristicControllerEnabled NO
-```
+Use a visible Cocoa window for interactive tests, not `QT_QPA_PLATFORM=offscreen`.
+Tests that create a window should say whether they use the actual app or a unit
+fixture. A screenshot of a fixture is not evidence of a live network action.
 
-This changes the argument-domain preference for that process only, not a global user default. It does not bypass code signing or alter transaction/proof checks. This is a development workaround for an observed OS/app interaction, not a requirement that all users change their system settings.
+The optional process-local `ASTRA_DISABLE_NATIVE_AUTOFILL=1` workaround applies
+only to macOS 26.0 and 26.1. Its preference was removed in 26.2; the initializer
+and regression test are version-gated accordingly. It does not modify persistent
+user defaults. See Chromium's upstream notes in
+`https://chromium.googlesource.com/chromium/src/+/main/content/app/mac_init.mm`.
+
+On the newer OS used for this run, denying the AppKit
+`com.apple.SafariPlatformSupport.Helper` connection produced a retry loop. The
+GUI-only sandbox allowed that specific OS helper, after which idle CPU dropped
+to near zero. It still did not grant access to Safari's files, user wallet files,
+or general home-directory contents. Build and proof profiles were unchanged.
 
 ## Verification boundary
 

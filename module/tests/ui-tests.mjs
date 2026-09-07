@@ -42,12 +42,12 @@ async function click(app, objectName) {
   if (res.error) throw new Error(`click ${objectName} failed: ${res.error}`);
 }
 
-test("astra primitives: loads in explicit not-configured state", async (app) => {
+test("Commons: loads in explicit not-configured state", async (app) => {
   await app.waitFor(
     async () => {
-      await app.expectTexts(["Astra Primitives", "Not configured", "Allowlist", "Threshold"]);
+      await app.expectTexts(["Commons for Logos", "Not configured", "Allowlist", "Shared approvals"]);
     },
-    { timeout: 15000, interval: 500, description: "Astra Primitives UI to load" },
+    { timeout: 15000, interval: 500, description: "Commons UI to load" },
   );
 
   const createEnabled = await readProperty(app, "allowlist.create", "enabled");
@@ -56,7 +56,7 @@ test("astra primitives: loads in explicit not-configured state", async (app) => 
   }
 });
 
-test("astra primitives: invalid configuration is handled by backend", async (app) => {
+test("Commons: invalid configuration is handled by backend", async (app) => {
   await app.waitFor(
     async () => {
       const enabled = await readProperty(app, "config.apply", "enabled");
@@ -71,13 +71,13 @@ test("astra primitives: invalid configuration is handled by backend", async (app
 
   await app.waitFor(
     async () => {
-      await app.expectTexts(["The executable must be named astra-logos-cli."]);
+      await app.expectTexts(["Select the commons-logos-cli executable."]);
     },
     { timeout: 5000, interval: 250, description: "configuration error to render" },
   );
 });
 
-test("astra primitives: threshold tab exposes real workflow controls", async (app) => {
+test("Commons: threshold tab exposes real workflow controls", async (app) => {
   await click(app, "tabs.threshold");
 
   await app.waitFor(
