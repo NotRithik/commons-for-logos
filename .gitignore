@@ -5,3 +5,9 @@
 /secrets/
 *.log
 node_modules/
+
+**/target/
+**/.build/
+**/build/
+**/__pycache__/
+**/*.pyc

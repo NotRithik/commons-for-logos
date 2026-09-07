@@ -1,0 +1,33 @@
+{
+  "name": "astra_primitives_ui",
+  "display_name": "Astra Primitives",
+  "version": "0.1.0",
+  "type": "ui_qml",
+  "interface": "universal",
+  "category": "wallet",
+  "description": "Basecamp GUI for Astra Logos Lambda Prize primitive transactions",
+  "main": "astra_primitives_ui_plugin",
+  "icon": "",
+  "view": "qml/Main.qml",
+  "dependencies": [],
+  "provides": [],
+  "uses": [],
+  "codegen": {
+    "rep": "src/astra_primitives_ui.rep",
+    "backend_class": "AstraPrimitivesBackend",
+    "backend_header": "astra_primitives_backend.h"
+  },
+  "nix": {
+    "packages": {
+      "build": [],
+      "runtime": []
+    },
+    "external_libraries": [],
+    "cmake": {
+      "find_packages": [],
+      "extra_sources": [],
+      "extra_include_dirs": [],
+      "extra_link_libraries": []
+    }
+  }
+}

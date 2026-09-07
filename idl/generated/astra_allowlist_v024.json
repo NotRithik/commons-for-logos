@@ -1,0 +1,416 @@
+{
+  "version": "0.1.0",
+  "name": "astra_allowlist_v024",
+  "instructions": [
+    {
+      "name": "create",
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "signer": true,
+          "init": true,
+          "visibility": [
+            "public"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "member_count",
+          "type": "u32"
+        }
+      ],
+      "execution": {
+        "public": true,
+        "private_owned": false
+      },
+      "variant": "Create"
+    },
+    {
+      "name": "claim",
+      "accounts": [
+        {
+          "name": "state",
+          "writable": true,
+          "signer": false,
+          "init": false,
+          "visibility": [
+            "public"
+          ]
+        },
+        {
+          "name": "member",
+          "writable": false,
+          "signer": true,
+          "init": false,
+          "visibility": [
+            "private"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "witness",
+          "type": {
+            "defined": "MemberWitness"
+          }
+        }
+      ],
+      "execution": {
+        "public": false,
+        "private_owned": true
+      },
+      "variant": "Claim"
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Distribution",
+      "type": {
+        "name": "Distribution",
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "magic",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "member_count",
+            "type": "u32"
+          },
+          {
+            "name": "claims",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "MemberLeaf",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "account_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "salt",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "entitlement",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "MemberWitness",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "leaf",
+          "type": {
+            "defined": "MemberLeaf"
+          }
+        },
+        {
+          "name": "nullifier_secret_key",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "viewing_public_key",
+          "type": {
+            "vec": "u8"
+          }
+        },
+        {
+          "name": "identifier",
+          "type": {
+            "defined": "Identifier"
+          }
+        },
+        {
+          "name": "leaf_index",
+          "type": "u32"
+        },
+        {
+          "name": "siblings",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Distribution",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "magic",
+          "type": {
+            "array": [
+              "u8",
+              8
+            ]
+          }
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "member_count",
+          "type": "u32"
+        },
+        {
+          "name": "claims",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proposal",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "sequence",
+          "type": "u64"
+        },
+        {
+          "name": "next_value",
+          "type": "i64"
+        },
+        {
+          "name": "approvals",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "executed",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "Group",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "magic",
+          "type": {
+            "array": [
+              "u8",
+              8
+            ]
+          }
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "member_count",
+          "type": "u32"
+        },
+        {
+          "name": "threshold",
+          "type": "u32"
+        },
+        {
+          "name": "value",
+          "type": "i64"
+        },
+        {
+          "name": "sequence",
+          "type": "u64"
+        },
+        {
+          "name": "proposal",
+          "type": {
+            "option": {
+              "defined": "Proposal"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 1001,
+      "name": "AccountCount",
+      "msg": "ASTRA_ERROR_1001:AccountCount"
+    },
+    {
+      "code": 1002,
+      "name": "Unauthorized",
+      "msg": "ASTRA_ERROR_1002:Unauthorized"
+    },
+    {
+      "code": 1003,
+      "name": "AlreadyInitialized",
+      "msg": "ASTRA_ERROR_1003:AlreadyInitialized"
+    },
+    {
+      "code": 1004,
+      "name": "WrongOwner",
+      "msg": "ASTRA_ERROR_1004:WrongOwner"
+    },
+    {
+      "code": 1005,
+      "name": "InvalidState",
+      "msg": "ASTRA_ERROR_1005:InvalidState"
+    },
+    {
+      "code": 1006,
+      "name": "InvalidSize",
+      "msg": "ASTRA_ERROR_1006:InvalidSize"
+    },
+    {
+      "code": 1007,
+      "name": "IdentityMismatch",
+      "msg": "ASTRA_ERROR_1007:IdentityMismatch"
+    },
+    {
+      "code": 1008,
+      "name": "InvalidMembership",
+      "msg": "ASTRA_ERROR_1008:InvalidMembership"
+    },
+    {
+      "code": 1009,
+      "name": "DuplicateClaim",
+      "msg": "ASTRA_ERROR_1009:DuplicateClaim"
+    },
+    {
+      "code": 1010,
+      "name": "CapacityReached",
+      "msg": "ASTRA_ERROR_1010:CapacityReached"
+    },
+    {
+      "code": 1011,
+      "name": "InvalidThreshold",
+      "msg": "ASTRA_ERROR_1011:InvalidThreshold"
+    },
+    {
+      "code": 1012,
+      "name": "PendingProposal",
+      "msg": "ASTRA_ERROR_1012:PendingProposal"
+    },
+    {
+      "code": 1013,
+      "name": "NoProposal",
+      "msg": "ASTRA_ERROR_1013:NoProposal"
+    },
+    {
+      "code": 1014,
+      "name": "DuplicateApproval",
+      "msg": "ASTRA_ERROR_1014:DuplicateApproval"
+    },
+    {
+      "code": 1015,
+      "name": "ThresholdNotMet",
+      "msg": "ASTRA_ERROR_1015:ThresholdNotMet"
+    },
+    {
+      "code": 1016,
+      "name": "AlreadyExecuted",
+      "msg": "ASTRA_ERROR_1016:AlreadyExecuted"
+    },
+    {
+      "code": 1017,
+      "name": "ThresholdAlreadyMet",
+      "msg": "ASTRA_ERROR_1017:ThresholdAlreadyMet"
+    },
+    {
+      "code": 1018,
+      "name": "SequenceOverflow",
+      "msg": "ASTRA_ERROR_1018:SequenceOverflow"
+    },
+    {
+      "code": 1019,
+      "name": "DataTooLarge",
+      "msg": "ASTRA_ERROR_1019:DataTooLarge"
+    },
+    {
+      "code": 1020,
+      "name": "InvalidViewingPublicKey",
+      "msg": "ASTRA_ERROR_1020:InvalidViewingPublicKey"
+    }
+  ],
+  "metadata": {
+    "name": "astra_allowlist_v024",
+    "version": "0.1.0"
+  },
+  "instruction_type": "astra_logos_testnet_primitives::DistributionInstruction"
+}

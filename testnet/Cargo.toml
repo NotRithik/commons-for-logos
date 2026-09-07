@@ -1,0 +1,29 @@
+[workspace]
+resolver = "3"
+members = ["crates/primitives", "crates/guest", "crates/sdk"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+lee_core = { git = "https://github.com/logos-blockchain/logos-execution-zone", rev = "47eba256479f6f785acbd138834340703cd03401", default-features = false }
+risc0-zkvm = { version = "=3.0.5", default-features = false, features = ["std"] }
+risc0-binfmt = "=3.0.4"
+risc0-zkos-v1compat = "=2.2.2"
+borsh = { version = "1.6", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.10.9"
+
+[patch.crates-io]
+keccak = { git = "https://github.com/logos-blockchain/sponges", rev = "3a56e99771beedf04946eab21a4a62adc2951377" }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"
+
+[profile.release]
+lto = "thin"

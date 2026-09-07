@@ -1,0 +1,14 @@
+{
+  "instruction_encoding": "risc0_zkvm::serde Vec<u32>; enum tag is its zero-based declaration-order u32, not SHA8",
+  "lez_revision": "47eba256479f6f785acbd138834340703cd03401",
+  "private_only": [
+    "allowlist.Claim",
+    "threshold.Propose",
+    "threshold.Approve"
+  ],
+  "protocol": "LEZ v0.2.4",
+  "spel_revision": "5126b7ed8a9b78d4c666073fa91a66713c5f2a2b",
+  "state_encoding": "borsh v1; state magic is the first 8 bytes",
+  "viewing_public_key": "Vec<u8> constrained to exactly 1184 bytes; not a variable-length arbitrary key",
+  "warning": "Private instructions carry secret witnesses. Never submit their bytes as public transactions or publish an inner guest journal."
+}
