@@ -11,3 +11,9 @@ node_modules/
 **/build/
 **/__pycache__/
 **/*.pyc
+
+/out/
+/dist/
+/.native-deps/
+
+/.build-deps/

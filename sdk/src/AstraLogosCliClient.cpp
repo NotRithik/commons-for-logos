@@ -111,7 +111,7 @@ QString StartResult::toJson() const
 }
 
 LogosCliClient::LogosCliClient(QObject* parent, int timeoutMs)
-    : QObject(parent), m_timeoutMs(qBound(1, timeoutMs, 30 * 60 * 1000))
+    : QObject(parent), m_timeoutMs(qBound(1, timeoutMs, 4 * 60 * 60 * 1000))
 {
     m_timeout.setSingleShot(true);
     connect(&m_timeout, &QTimer::timeout, this, [this]() {
@@ -240,6 +240,8 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
         env.insert(QStringLiteral("ASTRA_FAKE_CLI_MODE"), inherited.value(QStringLiteral("ASTRA_FAKE_CLI_MODE")));
 #endif
     env.insert(QStringLiteral("RISC0_DEV_MODE"), QStringLiteral("0"));
+    env.insert(QStringLiteral("RISC0_PROVER"), QStringLiteral("ipc"));
+    env.insert(QStringLiteral("RISC0_EXECUTOR"), QStringLiteral("ipc"));
     env.insert(QStringLiteral("ASTRA_LOGOS_NETWORK"), QStringLiteral("testnet"));
     process->setProcessEnvironment(env);
 #ifdef Q_OS_UNIX

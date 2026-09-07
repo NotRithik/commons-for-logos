@@ -1,0 +1,86 @@
+name: Portable testnet and native verification
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: portable-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  testnet-core-and-idl:
+    name: Testnet primitives, SDK and SPEL IDL (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      RISC0_DEV_MODE: '0'
+      RISC0_PROVER: ipc
+      RISC0_EXECUTOR: ipc
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Select the pinned host compiler
+        run: rustup toolchain install 1.94.0 --profile minimal --component rustfmt
+      - name: Check exact testnet source formatting
+        run: cargo +1.94.0 fmt --manifest-path testnet/Cargo.toml --all -- --check
+      - name: Fetch locked dependencies, separate from execution
+        run: |
+          cargo +1.94.0 fetch --locked --manifest-path testnet/Cargo.toml
+          cargo +1.94.0 fetch --locked --manifest-path idl/Cargo.toml
+      - name: Run v0.2.4 host and serialization tests
+        run: cargo +1.94.0 test --locked --offline --manifest-path testnet/Cargo.toml -p astra-logos-testnet-primitives -p astra-logos-testnet-sdk
+      - name: Test and regenerate the actual SPEL IDLs
+        run: |
+          cargo +1.94.0 test --locked --offline --manifest-path idl/Cargo.toml
+          cargo +1.94.0 run --locked --offline --manifest-path idl/Cargo.toml
+          git diff --exit-code -- idl/generated
+      - name: State the verification boundary
+        run: echo 'Host, wire-format and IDL tests are not zero-knowledge proof, sequencer or testnet transaction evidence. Real-proof integration is verified separately, not by this job.'
+  native-module:
+    name: Native Basecamp plugin and process boundary (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    env:
+      QT_QPA_PLATFORM: offscreen
+      RISC0_DEV_MODE: '0'
+      RISC0_PROVER: ipc
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Linux system build prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libarchive-tools libgl1-mesa-dev libfontconfig1-dev libxkbcommon-dev libxcb-cursor0 libdbus-1-3
+      - name: Fetch SHA256-pinned official Qt archives without running an installer
+        run: python3 scripts/fetch-qt.py "$RUNNER_TEMP/astra-qt"
+      - name: Fetch immutable official Logos source revisions without hooks
+        run: python3 scripts/fetch-native-deps.py "$RUNNER_TEMP/astra-logos-deps"
+      - name: Build the actual native plugin and run its process-boundary tests
+        env:
+          ASTRA_BUILD_JOBS: 2
+        run: |
+          export QT_PREFIX="$RUNNER_TEMP/astra-qt/prefix"
+          export LOGOS_DEPS_DIR="$RUNNER_TEMP/astra-logos-deps"
+          /bin/sh scripts/build-native.sh
+      - name: Verify produced deliverables and no fixture executable in installation
+        run: |
+          test -f out/module/metadata.json
+          test -f out/module/qml/Main.qml
+          test ! -e out/module/astra-logos-cli
+          find out/module -maxdepth 2 -type f
+      - name: State the verification boundary
+        run: echo 'The Qt test executable uses explicitly labeled fixtures to test the process boundary. Real native GUI and on-chain demonstrations are recorded separately. No paid runner, artifact-storage action, hosted prover or model API is used.'

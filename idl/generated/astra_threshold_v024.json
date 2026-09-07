@@ -483,6 +483,11 @@
       "code": 1020,
       "name": "InvalidViewingPublicKey",
       "msg": "ASTRA_ERROR_1020:InvalidViewingPublicKey"
+    },
+    {
+      "code": 1021,
+      "name": "UninitializedMember",
+      "msg": "ASTRA_ERROR_1021:UninitializedMember"
     }
   ],
   "metadata": {

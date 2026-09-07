@@ -51,6 +51,7 @@ pub enum Error {
     SequenceOverflow = 1018,
     DataTooLarge = 1019,
     InvalidViewingPublicKey = 1020,
+    UninitializedMember = 1021,
 }
 
 impl fmt::Display for Error {
@@ -240,6 +241,14 @@ impl MemberWitness {
     ) -> Result<(), Error> {
         if !member.is_authorized {
             return Err(Error::Unauthorized);
+        }
+        // v0.2.4 rejects a default-owner account after its first private nonce
+        // rotation. Fresh accounts are explicitly claimed in output(); malformed
+        // legacy accounts must not be accepted and turned into unusable members.
+        if member.account.program_owner == lee_core::program::DEFAULT_PROGRAM_ID
+            && member.account != Account::default()
+        {
+            return Err(Error::UninitializedMember);
         }
         let npk = NullifierPublicKey::from(&self.nullifier_secret_key);
         let derived = regular_private_account_id(&npk, &self.viewing_public_key, self.identifier)?;
@@ -443,6 +452,13 @@ fn output(
                 if claim_state_account {
                     return AccountPostState::new_claimed(post, Claim::Authorized);
                 }
+            }
+            // Every private use rotates its nonce, even when balance/data are
+            // unchanged. Claim a brand-new, authorized zero-value member now so
+            // later proposals/approvals can reuse that identity. Existing member
+            // ownership, data and balance are never changed by this program.
+            if index > 0 && post == Account::default() {
+                return AccountPostState::new_claimed(post, Claim::Authorized);
             }
             AccountPostState::new(post)
         })

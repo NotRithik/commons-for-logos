@@ -244,6 +244,8 @@ QString AstraPrimitivesBackend::queue(AstraLogos::PrimitiveOperation operation,
         setLastOperation(result.operation);
         setLastError(result.errorMessage);
         setStatusText(result.errorMessage);
+        setLastResultJson(prettyJson(QJsonObject{{QStringLiteral("success"), false},
+            {QStringLiteral("operation"), result.operation}, {QStringLiteral("error"), result.errorMessage}}));
         Q_EMIT operationFailed(result.operation, result.errorMessage);
         return result.toJson();
     }
@@ -264,6 +266,8 @@ QString AstraPrimitivesBackend::reject(AstraLogos::PrimitiveOperation operation,
     setLastOperation(operationName);
     setLastError(message);
     setStatusText(message);
+    setLastResultJson(prettyJson(QJsonObject{{QStringLiteral("success"), false},
+        {QStringLiteral("operation"), operationName}, {QStringLiteral("error"), message}}));
     Q_EMIT operationFailed(operationName, message);
 
     QJsonObject response;
@@ -299,6 +303,8 @@ void AstraPrimitivesBackend::failOperation(const QString& operation,
     setLastOperation(operation);
     setLastError(errorMessage);
     setStatusText(errorMessage);
+    setLastResultJson(prettyJson(QJsonObject{{QStringLiteral("success"), false},
+        {QStringLiteral("operation"), operation}, {QStringLiteral("error"), errorMessage}}));
     Q_EMIT operationFailed(operation, errorMessage);
 }
 

@@ -11,18 +11,45 @@ Item {
     property bool ready: false
     property bool recordingEvidence: false
     property int capturedFrames: 0
-    function captureOwnView() {
-        if (!root.backend || !root.backend.captureDirectory) return
-        root.grabToImage(function(image) {
-            const filename = root.backend.captureDirectory + "/astra-view-" + Date.now() + ".png"
-            if (image.saveToFile(filename)) root.capturedFrames++
-        })
+    property int recordedFrames: 0
+    property bool captureInFlight: false
+    property double recordingStartedAt: 0
+    property double operationStartedAt: 0
+    property int elapsedSeconds: 0
+    onBusyChanged: {
+        if (busy) { operationStartedAt = Date.now(); elapsedSeconds = 0 }
     }
     Timer {
-        interval: 1000
+        interval: 1000; repeat: true; running: root.busy
+        onTriggered: root.elapsedSeconds = Math.floor((Date.now() - root.operationStartedAt) / 1000)
+    }
+    Shortcut { sequence: "Alt+1"; onActivated: tabs.currentIndex = 0 }
+    Shortcut { sequence: "Alt+2"; onActivated: tabs.currentIndex = 1 }
+    function captureOwnView() {
+        if (root.captureInFlight || !root.backend || !root.backend.captureDirectory) return
+        root.captureInFlight = true
+        // Do not queue unlimited GPU readbacks while a local CPU proof is running.
+        // Capture this module only, at a bounded resolution and rate.
+        const scale = Math.min(1, 1440 / Math.max(1, root.width))
+        const accepted = root.grabToImage(function(image) {
+            const filename = root.backend.captureDirectory + "/astra-view-" + Date.now() + ".png"
+            if (image.saveToFile(filename)) {
+                root.capturedFrames++
+                if (root.recordingEvidence) root.recordedFrames++
+            }
+            root.captureInFlight = false
+            if (root.recordedFrames >= 180) root.recordingEvidence = false
+        }, Qt.size(Math.max(1, Math.round(root.width * scale)), Math.max(1, Math.round(root.height * scale))))
+        if (!accepted) root.captureInFlight = false
+    }
+    Timer {
+        interval: 2000
         repeat: true
         running: root.recordingEvidence && root.configured
-        onTriggered: root.captureOwnView()
+        onTriggered: {
+            if (Date.now() - root.recordingStartedAt >= 360000) root.recordingEvidence = false
+            else root.captureOwnView()
+        }
     }
     readonly property bool configured: ready && backend && backend.configured
     readonly property bool busy: ready && backend && backend.busy
@@ -136,7 +163,7 @@ Item {
                 Accessible.name: "Record only this module view"
                 text: root.recordingEvidence ? "Stop recording" : "Record demo"
                 enabled: root.configured && !!root.backend.captureDirectory
-                onClicked: { root.recordingEvidence = !root.recordingEvidence; root.captureOwnView() }
+                onClicked: { root.recordingEvidence = !root.recordingEvidence; if (root.recordingEvidence) { root.recordedFrames = 0; root.recordingStartedAt = Date.now() }; root.captureOwnView() }
             }
             Label {
                 text: root.capturedFrames ? root.capturedFrames + " frames saved" : ""
@@ -226,7 +253,8 @@ Item {
                             Accessible.name: text
                 anchors.fill: parent
                 anchors.margins: 11
-                text: root.backend ? root.backend.statusText : "Offline. Waiting for backend."
+                text: (root.backend ? root.backend.statusText : "Offline. Waiting for backend.")
+                      + (root.busy ? "  Elapsed: " + Math.floor(root.elapsedSeconds / 60) + "m " + (root.elapsedSeconds % 60) + "s. Real proof generation may take tens of minutes; no confirmation is claimed until the node accepts it." : "")
                 color: root.backend && root.backend.lastError && root.backend.lastError.length > 0 ? "#ffb4a8" : "#cbd5d7"
                 wrapMode: Text.Wrap
                 font.pixelSize: 13
@@ -236,8 +264,18 @@ Item {
         TabBar {
             id: tabs
             Layout.fillWidth: true
-            TabButton { objectName: "tabs.allowlist"; text: "Allowlist" }
-            TabButton { objectName: "tabs.threshold"; text: "Threshold" }
+            TabButton {
+                objectName: "tabs.allowlist"; text: "Allowlist"
+                Accessible.name: "Allowlist tab"
+                Accessible.role: Accessible.PageTab
+                Accessible.onPressAction: tabs.currentIndex = 0
+            }
+            TabButton {
+                objectName: "tabs.threshold"; text: "Threshold"
+                Accessible.name: "Threshold tab"
+                Accessible.role: Accessible.PageTab
+                Accessible.onPressAction: tabs.currentIndex = 1
+            }
         }
 
         StackLayout {

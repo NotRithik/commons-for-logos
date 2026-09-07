@@ -23,7 +23,7 @@ class LogosCliClient : public QObject {
     Q_OBJECT
 
 public:
-    explicit LogosCliClient(QObject* parent = nullptr, int timeoutMs = 30 * 60 * 1000);
+    explicit LogosCliClient(QObject* parent = nullptr, int timeoutMs = 4 * 60 * 60 * 1000);
     ~LogosCliClient() override;
 
     bool configure(const QString& cliPath,

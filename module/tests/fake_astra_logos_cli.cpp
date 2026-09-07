@@ -76,6 +76,9 @@ int main(int argc, char** argv)
     out.insert(QStringLiteral("operation"), request.value(QStringLiteral("operation")).toString());
     out.insert(QStringLiteral("network"), request.value(QStringLiteral("network")).toString());
     out.insert(QStringLiteral("risc0_dev_mode"), qEnvironmentVariable("RISC0_DEV_MODE"));
+    out.insert(QStringLiteral("risc0_prover"), qEnvironmentVariable("RISC0_PROVER"));
+    out.insert(QStringLiteral("risc0_executor"), qEnvironmentVariable("RISC0_EXECUTOR"));
+    out.insert(QStringLiteral("hosted_prover_credentials_present"), qEnvironmentVariableIsSet("BONSAI_API_KEY") || qEnvironmentVariableIsSet("BONSAI_API_URL"));
     out.insert(QStringLiteral("argv"), argvOut);
     out.insert(QStringLiteral("argv_contains_selected_file"), argvContainsSelectedFile);
     out.insert(QStringLiteral("stdin_contains_selected_file"),

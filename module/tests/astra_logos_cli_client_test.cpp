@@ -313,6 +313,35 @@ private slots:
         QSignalSpy success(&client,&LogosCliClient::completed);QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,QJsonObject{{"state_account",hex32()}}).accepted);
         QTRY_COMPARE_WITH_TIMEOUT(success.count(),1,4000);QVERIFY(!firstCompletedResult(success).value("environment_canary_present").toBool());
     }
+    void forcesLocalProofsRegardlessOfParentEnvironment()
+    {
+        // Synthetic sentinels only: no credential or hosted request is used.
+        const QByteArray oldProver = qgetenv("RISC0_PROVER");
+        const QByteArray oldMode = qgetenv("RISC0_DEV_MODE");
+        qputenv("RISC0_PROVER", "bonsai");
+        qputenv("RISC0_DEV_MODE", "1");
+        qputenv("BONSAI_API_KEY", "SYNTHETIC_TEST_SENTINEL_NOT_A_KEY");
+        qputenv("BONSAI_API_URL", "https://invalid.example");
+        QTemporaryDir temp;
+        const QString wallet = makeTestnetWallet(temp);
+        LogosCliClient client;
+        QString error;
+        QVERIFY(client.configure(fakeCliPath(), wallet, &error));
+        QSignalSpy success(&client, &LogosCliClient::completed);
+        QVERIFY(client.start(PrimitiveOperation::AllowlistInspect,
+                QJsonObject{{"state_account", hex32()}}).accepted);
+        QTRY_COMPARE_WITH_TIMEOUT(success.count(), 1, 4000);
+        const auto result = firstCompletedResult(success);
+        QCOMPARE(result.value("risc0_prover").toString(), QStringLiteral("ipc"));
+        QCOMPARE(result.value("risc0_executor").toString(), QStringLiteral("ipc"));
+        QCOMPARE(result.value("risc0_dev_mode").toString(), QStringLiteral("0"));
+        QVERIFY(!result.value("hosted_prover_credentials_present").toBool());
+        qunsetenv("BONSAI_API_KEY");
+        qunsetenv("BONSAI_API_URL");
+        if (oldProver.isNull()) qunsetenv("RISC0_PROVER"); else qputenv("RISC0_PROVER", oldProver);
+        if (oldMode.isNull()) qunsetenv("RISC0_DEV_MODE"); else qputenv("RISC0_DEV_MODE", oldMode);
+    }
+
     void unsupportedEnumDoesNotBecomeACommand()
     {
         QString error;QVERIFY(!LogosCliClient::validateOperationArguments(static_cast<PrimitiveOperation>(999),QJsonObject{{"state_account",hex32()}},&error));

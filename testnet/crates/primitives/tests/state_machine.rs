@@ -845,3 +845,116 @@ fn same_member_can_claim_two_distributions_with_distinct_context_nullifiers() {
 
     assert_ne!(first_nullifier, second.read_distribution().claims[0]);
 }
+
+#[test]
+fn fresh_private_member_is_explicitly_claimed_before_nonce_rotation() {
+    let mut f = Fixture::new(3);
+    f.members[0].account = Account::default();
+    f.group(2);
+    let before = f.members[0].account.clone();
+    let posts = f
+        .execute_group_checked(
+            &[f.state.clone(), f.members[0].clone()],
+            GroupInstruction::Propose {
+                witness: f.witnesses[0].clone(),
+                next_value: 42,
+            },
+        )
+        .unwrap();
+    assert_eq!(posts[1].account(), &before);
+    assert!(matches!(posts[1].required_claim(), Some(Claim::Authorized)));
+}
+
+#[test]
+fn fresh_proposer_can_approve_after_realistic_private_nonce_rotation() {
+    let mut f = Fixture::new(3);
+    f.members[0].account = Account::default();
+    f.group(2);
+    let posts = f
+        .execute_group_checked(
+            &[f.state.clone(), f.members[0].clone()],
+            GroupInstruction::Propose {
+                witness: f.witnesses[0].clone(),
+                next_value: 42,
+            },
+        )
+        .unwrap();
+    let mut member_after = posts[1].account().clone();
+    assert!(matches!(posts[1].required_claim(), Some(Claim::Authorized)));
+    // Mirror the protocol's claim assignment and private nonce rotation, not
+    // merely the app-state update that missed this regression previously.
+    member_after.program_owner = f.program;
+    member_after.nonce = member_after
+        .nonce
+        .private_account_nonce_increment(&f.witnesses[0].nullifier_secret_key);
+    f.members[0].account = member_after;
+    f.apply(posts, false);
+    let approved = f
+        .execute_group_checked(
+            &[f.state.clone(), f.members[0].clone()],
+            GroupInstruction::Approve {
+                witness: f.witnesses[0].clone(),
+            },
+        )
+        .unwrap();
+    assert_eq!(approved[1].account(), &f.members[0].account);
+    assert!(approved[1].required_claim().is_none());
+    f.apply(approved, false);
+    assert_eq!(f.read_group().proposal.unwrap().approvals.len(), 1);
+}
+
+#[test]
+fn fresh_allowlist_member_claim_assigns_owner_without_changing_balance() {
+    let mut f = Fixture::new(1);
+    f.members[0].account = Account::default();
+    f.distribution();
+    let posts = f.claim_with(0, f.witnesses[0].clone()).unwrap();
+    assert!(matches!(posts[1].required_claim(), Some(Claim::Authorized)));
+    assert_eq!(posts[1].account(), &Account::default());
+}
+
+#[test]
+fn legacy_default_owner_with_rotated_nonce_is_rejected_without_state_changes() {
+    let mut f = Fixture::new(1);
+    f.distribution();
+    f.members[0].account = Account::default();
+    f.members[0].account.nonce = 7_u128.into();
+    let before = f.state.account.data.clone();
+    assert!(matches!(
+        f.claim_with(0, f.witnesses[0].clone()),
+        Err(Error::UninitializedMember)
+    ));
+    assert_eq!(f.state.account.data, before);
+}
+
+#[test]
+fn completed_threshold_can_execute_without_creator_authorization() {
+    let mut f = Fixture::new(3);
+    f.group(2);
+    f.propose(0, 42).unwrap();
+    f.approve(0).unwrap();
+    f.approve(1).unwrap();
+    f.state.is_authorized = false;
+    let output = f
+        .execute_group_checked(&[f.state.clone()], GroupInstruction::Execute)
+        .unwrap();
+    f.apply(output, false);
+    let state = f.read_group();
+    assert_eq!(state.value, 42);
+    assert!(state.proposal.unwrap().executed);
+}
+
+#[test]
+fn signature_free_executor_cannot_bypass_incomplete_threshold() {
+    let mut f = Fixture::new(3);
+    f.group(2);
+    f.propose(0, 42).unwrap();
+    f.approve(0).unwrap();
+    f.state.is_authorized = false;
+    let before = f.state.account.clone();
+    assert!(matches!(
+        f.execute_group_checked(&[f.state.clone()], GroupInstruction::Execute),
+        Err(Error::ThresholdNotMet)
+    ));
+    assert_eq!(f.state.account, before);
+}
