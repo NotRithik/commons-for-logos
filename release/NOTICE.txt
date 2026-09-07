@@ -1,0 +1,11 @@
+Commons for Logos - LEZ program release
+
+Project source is dual licensed under MIT and Apache-2.0.
+See LICENSE-MIT and LICENSE-APACHE in the source repository.
+
+The guest programs use the Logos Execution Zone (LEZ) v0.2.4 core and RISC Zero
+zkVM libraries and compatibility runtime. Those projects and other Rust
+library dependencies retain their own copyright and license notices.
+Pinned source revisions and dependency versions are recorded in the repository
+and Cargo lockfiles. The distributed program files contain no private wallets,
+credentials, test witness files, Qt development SDK, or font files.

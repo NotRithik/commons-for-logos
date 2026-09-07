@@ -101,6 +101,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--confirm-public-testnet', action='store_true', required=True)
     parser.add_argument('--out', type=Path, default=ROOT / 'out')
+    parser.add_argument('--published-programs', type=Path, help='Explicit verified release-program directory; otherwise use this build')
     parser.add_argument('--timeout-seconds', type=int, default=4 * 3600)
     args = parser.parse_args()
     out = args.out.resolve()
@@ -108,7 +109,11 @@ def main() -> None:
         parser.error('output must stay inside this checkout')
     if not 60 <= args.timeout_seconds <= 5 * 3600:
         parser.error('timeout must be 60 seconds to 5 hours')
-    programs = release_programs(ROOT / 'release/manifest.json', out / 'artifacts')
+    artifact_dir = args.published_programs.resolve() if args.published_programs else out / 'artifacts'
+    if not artifact_dir.is_relative_to(out):
+        parser.error('program artifacts must stay inside the output directory')
+    programs = release_programs(ROOT / 'release/manifest.json', artifact_dir)
+    print('Using checksum-verified ' + ('published' if args.published_programs else 'rebuilt') + ' program files.', flush=True)
     paths = json.loads((out / 'proof-deps/paths.json').read_text())
     driver = out / 'clients/debug/commons-logos-e2e'
     for binary in [driver, Path(paths['r0vm'])]:
@@ -144,7 +149,7 @@ def main() -> None:
     try:
         stage('prepare-fresh-test-identities', 'prepare', str(wallet), URL)
         (wallet / 'programs.json').write_text(json.dumps({k: v['image_id'] for k, v in programs.items()}) + '\n')
-        stage('ten-real-allowlist-claims', 'claims-a', str(wallet), str(out / 'artifacts/commons_allowlist'), '10')
+        stage('ten-real-allowlist-claims', 'claims-a', str(wallet), str(artifact_dir / 'commons_allowlist'), '10')
         records = public_events(wallet)
         claims = [row for row in records if row.get('status') == 'confirmed' and row.get('private') is True
                   and str(row.get('stage', '')).startswith('claim_distribution_a_')]
@@ -162,7 +167,7 @@ def main() -> None:
         stop(process)
         records = public_events(wallet)
         report = {'status': state, 'network': URL, 'lez_revision': PIN, 'risc0_dev_mode': '0',
-                  'prover': 'local-ipc', 'identity_source': 'fresh test identities created within this run',
+                  'prover': 'local-ipc', 'guest_source': 'published-release' if args.published_programs else 'rebuilt', 'identity_source': 'fresh test identities created within this run',
                   'human_adoption_claimed': False, 'programs': {k: v['image_id'] for k, v in programs.items()},
                   'events': records, 'independently_checked_transactions': checked}
         text = json.dumps(report, indent=2) + '\n'

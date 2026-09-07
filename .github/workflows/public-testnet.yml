@@ -43,10 +43,12 @@ jobs:
         run: python3 -m unittest discover -s tests/tooling -v
       - name: Fetch verified toolchain and locked dependencies
         run: /bin/sh scripts/prepare-local.sh fetch
+      - name: Fetch and verify the already-deployed guest release
+        run: python3 scripts/fetch-release-programs.py
       - name: Build release artifacts and clients offline
         run: /bin/sh scripts/prepare-local.sh build
       - name: Verify ten fresh private claims against the deployed release
-        run: python3 scripts/demo-public.py --confirm-public-testnet --timeout-seconds 14400
+        run: python3 scripts/demo-public.py --confirm-public-testnet --published-programs out/published-programs --timeout-seconds 18000
       - name: Publish public receipts only
         if: always()
         run: |

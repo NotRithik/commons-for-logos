@@ -34,5 +34,9 @@
         3599087292
       ]
     }
-  }
+  },
+  "release_tag": "v0.1.0-rc.1",
+  "guest_build_host": "aarch64-apple-darwin",
+  "guest_compiler": "r0.1.94.1",
+  "source_build_note": "Source rebuilds were byte-identical in two macOS checkout locations. Linux compiler distributions produced different image IDs; published testnet clients use the pinned release files."
 }

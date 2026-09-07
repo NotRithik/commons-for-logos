@@ -1,25 +1,39 @@
-# Release program identity
+# Published testnet programs
 
-`manifest.json` identifies the packaged LEZ v0.2.4 programs deployed for the
-0.1.0 release candidate. The SHA256 hashes cover the complete files accepted by
-the sequencer, including the pinned RISC0 v1-compatibility wrapper.
+`manifest.json` identifies the LEZ v0.2.4 program files deployed for release
+`v0.1.0-rc.1`. Its hashes cover the complete files accepted by the sequencer,
+including the pinned RISC0 compatibility wrapper. Both macOS and Linux clients
+use these same guest files to interact with the listed program IDs.
 
-Build them through `scripts/build-rust.py` or `scripts/prepare-local.sh`. The
-helper normalizes checkout and Cargo-cache paths before invoking the guest
-compiler. Calling Cargo directly from a different path can produce a different
-image ID even when the Rust logic is unchanged.
+```sh
+python3 scripts/fetch-release-programs.py
+```
 
-Two separate local checkouts produced byte-identical guest ELF files. The
-comparison is recorded in `evidence/reproducibility/path-reproducibility.json`. Public
-acceptance tests also require the rebuilt packaged files to match this
-manifest before submitting any transaction.
+The fetcher accepts only the two named files from this repository's release. It
+checks their exact sizes and SHA256 hashes before writing them, and refuses to
+overwrite a file that has different contents. It does not execute an installer.
 
-The `Public testnet allowlist acceptance` workflow is manual and only runs on a
-public repository using standard GitHub-hosted Ubuntu runners. Each of its two
-jobs creates its own fresh test identities and ten claims in a distinct
-allowlist. It does not import a maintainer's wallet, upload private logs or
-credentials, use model APIs, or claim independent human adoption. The output is
-a public transaction receipt report, not a payment claim.
+## Building from source
 
-A green compilation job alone does not establish completed testnet activity.
-Read the final acceptance result and independently check the listed transactions.
+Use `scripts/build-rust.py` or `scripts/prepare-local.sh`. The helper normalizes
+checkout and Cargo-cache paths before invoking the compiler. Two separate macOS
+checkouts produced identical guest ELF files; the comparison is recorded in
+`evidence/reproducibility/path-reproducibility.json`.
+
+The Linux compiler distribution produced different guest image IDs. A source
+build on Linux is therefore used for a fresh local deployment, not silently
+substituted for an already-deployed testnet program. The public acceptance test
+uses the published files explicitly and still verifies every byte against the
+manifest before submitting a transaction.
+
+## Public acceptance
+
+The manual `Public testnet allowlist acceptance` workflow runs on standard
+GitHub-hosted Ubuntu runners in this public repository. Each job creates its own
+fresh test identities and distinct allowlist, then checks private claims against
+the official testnet. No maintainer wallet or model API is used. Private logs and
+wallet data remain inside the runner; only public transaction references and
+counts are printed in the report.
+
+The resulting report states which program files were used. Compilation alone is
+not a successful acceptance test; the final report must show confirmed claims.
