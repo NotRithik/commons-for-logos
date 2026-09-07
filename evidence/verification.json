@@ -1,11 +1,8 @@
 {
-  "as_of_utc": "2026-09-07T12:30:28.512653+00:00",
+  "as_of_utc": "2026-09-07T17:21:12.561893+00:00",
   "submission_status": "not_submitted",
   "award_status": "no_award_verified",
   "public_endpoint": "https://testnet.lez.logos.co/",
-  "public_lez_revision": "47eba256479f6f785acbd138834340703cd03401",
-  "risc0_dev_mode": "0",
-  "prover": "local IPC",
   "canonical_programs": {
     "allowlist": [
       2845804935,
@@ -40,66 +37,15 @@
       "threshold": "f0f3b3a231c1ed197e803c07a096403290f1681ed38509ed73447dfe7c136e2a"
     }
   },
-  "latest_public_state": "public-state-latest.json",
-  "confirmed_final_release_private_transactions": [
-    {
-      "stage": "propose",
-      "status": "confirmed",
-      "tx_hash": "4b896d939501f63cd4366b08f8f0ea719a692ffdf05333177d26ff46295b28a9",
-      "block_id": 41576,
-      "private": true,
-      "seconds": 2720.104298375
-    },
-    {
-      "stage": "approve_0",
-      "status": "confirmed",
-      "tx_hash": "348f9d2c2fee80977311eacd5823ce7937854afd1fa85f92ff4ec5c19bd3e6e7",
-      "block_id": 41616,
-      "private": true,
-      "seconds": 2420.871208667
-    },
-    {
-      "stage": "claim_distribution_a_0",
-      "status": "confirmed",
-      "tx_hash": "3799a13707b9a051eb774fb052c88c85165e484cb40f2787735b78baa1c0518d",
-      "block_id": 41577,
-      "private": true,
-      "seconds": 2777.344245458
-    },
-    {
-      "stage": "claim_distribution_a_1",
-      "status": "confirmed",
-      "tx_hash": "5530dcaae4cf1973f57679268db881a7bc57e0976d2d14e51a5acea17bcd0bb4",
-      "block_id": 41619,
-      "private": true,
-      "seconds": 2532.407312542
-    },
-    {
-      "stage": "claim_distribution_b_0",
-      "status": "confirmed",
-      "tx_hash": "814c74a02e28245c5806c7ed9d1f37b2f83ae6c1de832c51d4a0583ee6c7c686",
-      "block_id": 41577,
-      "private": true,
-      "seconds": 2771.822213042
-    },
-    {
-      "stage": "claim_distribution_b_1",
-      "status": "confirmed",
-      "tx_hash": "f8b1447ac5b6a184dee4da01e0a5eeea267fd8291b5071dcabd3c2f0a5d085d1",
-      "block_id": 41619,
-      "private": true,
-      "seconds": 2539.422395208
-    }
-  ],
   "chain_criteria": {
-    "LP-0002": false,
-    "LP-0003": false
+    "LP-0002": true,
+    "LP-0003": true
   },
-  "pending_requirements": [
-    "builder-narrated end-to-end video",
-    "passing standalone real-proof CI",
-    "final release public threshold execution",
-    "20 unique public claims across at least two distributions"
-  ],
-  "historical_development_evidence": "archives/verification-before-commons-release.json"
+  "completed_transaction_evidence": "testnet-completed.json",
+  "latest_public_state": "public-state-latest.json",
+  "remaining_requirements": [
+    "passing complete standalone real-proof CI",
+    "builder-narrated end-to-end demonstration",
+    "final submission with accepted terms"
+  ]
 }

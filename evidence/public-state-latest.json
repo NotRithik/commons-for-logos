@@ -1,9 +1,9 @@
 {
-  "checked_at": "2026-09-07T12:30:28.512653+00:00",
+  "checked_at": "2026-09-07T17:20:55.300361+00:00",
   "endpoint": "https://testnet.lez.logos.co/",
   "observed_block_range": [
-    41627,
-    41627
+    41914,
+    41914
   ],
   "wallet_loaded": false,
   "transactions_submitted": 0,
@@ -36,7 +36,7 @@
       "state": {
         "root": "8b028721a16c39f4729857e89b5f6ed7a7fc162db29f3153275d4b794a708d21",
         "member_count": 10,
-        "unique_claims": 2
+        "unique_claims": 10
       }
     },
     {
@@ -45,7 +45,7 @@
       "state": {
         "root": "3af37a17a023bf586a495bbffea07b0124d4ab09865a4d949afd4845190953a0",
         "member_count": 10,
-        "unique_claims": 2
+        "unique_claims": 10
       }
     }
   ],
@@ -56,19 +56,19 @@
       "root": "f9d79a2d49be315cea0a9b487ec8e6b20d61a9e75c079ba23d2b8d131afd5804",
       "member_count": 3,
       "threshold": 2,
-      "value": 7,
+      "value": 42,
       "sequence": 1,
       "proposal": {
         "sequence": 1,
         "next_value": 42,
-        "unique_approvals": 1,
-        "executed": false
+        "unique_approvals": 2,
+        "executed": true
       }
     }
   },
   "chain_criteria": {
-    "LP-0002": false,
-    "LP-0003": false
+    "LP-0002": true,
+    "LP-0003": true
   },
   "not_checked_here": [
     "narrated video",

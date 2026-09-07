@@ -1,0 +1,254 @@
+{
+  "checked_at": "2026-09-07T17:21:12.561893+00:00",
+  "network": "https://testnet.lez.logos.co/",
+  "source_programs": {
+    "allowlist": [
+      2845804935,
+      2808498389,
+      3889940433,
+      1867540510,
+      1021644695,
+      1925904071,
+      3360686415,
+      3553088831
+    ],
+    "threshold": [
+      3889587528,
+      4072157194,
+      1675466154,
+      3386074792,
+      1392369498,
+      2156404430,
+      3280262519,
+      3599087292
+    ]
+  },
+  "program_revision": "47eba256479f6f785acbd138834340703cd03401",
+  "risc0_dev_mode": "0",
+  "prover": "local IPC",
+  "host": "Apple Silicon laptop, CPU prover",
+  "verified_private_transactions": 23,
+  "claim_count": 20,
+  "distribution_count": 2,
+  "threshold_value": 42,
+  "threshold_executed": true,
+  "events": [
+    {
+      "stage": "propose",
+      "status": "confirmed",
+      "tx_hash": "4b896d939501f63cd4366b08f8f0ea719a692ffdf05333177d26ff46295b28a9",
+      "block_id": 41576,
+      "private": true,
+      "seconds": 2720.104298375,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "approve_0",
+      "status": "confirmed",
+      "tx_hash": "348f9d2c2fee80977311eacd5823ce7937854afd1fa85f92ff4ec5c19bd3e6e7",
+      "block_id": 41616,
+      "private": true,
+      "seconds": 2420.871208667,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "approve_1",
+      "status": "confirmed",
+      "tx_hash": "b830c588308862646514834ea11cdc0e579fb0c234fa0b227242e7c0324e85bf",
+      "block_id": 41655,
+      "private": true,
+      "seconds": 2360.772571208,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_0",
+      "status": "confirmed",
+      "tx_hash": "3799a13707b9a051eb774fb052c88c85165e484cb40f2787735b78baa1c0518d",
+      "block_id": 41577,
+      "private": true,
+      "seconds": 2777.344245458,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_1",
+      "status": "confirmed",
+      "tx_hash": "5530dcaae4cf1973f57679268db881a7bc57e0976d2d14e51a5acea17bcd0bb4",
+      "block_id": 41619,
+      "private": true,
+      "seconds": 2532.407312542,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_2",
+      "status": "confirmed",
+      "tx_hash": "f87250366f5f3e3d018151a2bff791bb6609b21fbaa161df60deb1ed53cfd170",
+      "block_id": 41658,
+      "private": true,
+      "seconds": 2350.298121542,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_3",
+      "status": "confirmed",
+      "tx_hash": "6d8b0bf9e19863c5354a289bc72a3ab4baf98c2b67031a7a79de81a13d6d63e4",
+      "block_id": 41691,
+      "private": true,
+      "seconds": 1994.750043875,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_4",
+      "status": "confirmed",
+      "tx_hash": "eb7ffeb151cae64a5b284264874c521d7b41dccf8661d121c86978fbc2e628c8",
+      "block_id": 41727,
+      "private": true,
+      "seconds": 2179.430000875,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_5",
+      "status": "confirmed",
+      "tx_hash": "d9062589fdd692cb6b49400cc5eb01cdd6aa9a1d2c32b80e188bd885436bdfa7",
+      "block_id": 41763,
+      "private": true,
+      "seconds": 2176.910464417,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_6",
+      "status": "confirmed",
+      "tx_hash": "55e879e34631d6127508fc910aa2768d83d506c94147cbf1f9ec48a3e612adeb",
+      "block_id": 41799,
+      "private": true,
+      "seconds": 2173.76093075,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_7",
+      "status": "confirmed",
+      "tx_hash": "8c9a69b5fe02d5b27173dc29cd02006f153d0f8e289d91ff8f2a64ff5a19d2eb",
+      "block_id": 41835,
+      "private": true,
+      "seconds": 2184.838259375,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_8",
+      "status": "confirmed",
+      "tx_hash": "afe32d30d0d08405ba873886a919e4c92cd3288c055c6574fec1bd0fa6548b95",
+      "block_id": 41872,
+      "private": true,
+      "seconds": 2241.696464291,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_a_9",
+      "status": "confirmed",
+      "tx_hash": "4a49c68a59fb910342761eeb0010aa58f536dcb236934f4136c682bfe45ffb5d",
+      "block_id": 41912,
+      "private": true,
+      "seconds": 2418.030281,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_0",
+      "status": "confirmed",
+      "tx_hash": "814c74a02e28245c5806c7ed9d1f37b2f83ae6c1de832c51d4a0583ee6c7c686",
+      "block_id": 41577,
+      "private": true,
+      "seconds": 2771.822213042,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_1",
+      "status": "confirmed",
+      "tx_hash": "f8b1447ac5b6a184dee4da01e0a5eeea267fd8291b5071dcabd3c2f0a5d085d1",
+      "block_id": 41619,
+      "private": true,
+      "seconds": 2539.422395208,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_2",
+      "status": "confirmed",
+      "tx_hash": "3a4ba1fb8d5f97a79bf5876a2755daef44000867c21f6444d61ba73110667546",
+      "block_id": 41658,
+      "private": true,
+      "seconds": 2362.652976667,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_3",
+      "status": "confirmed",
+      "tx_hash": "54d3af745f58d9f07f7ef19b1a3f2cccb7c571839e5d07e3080f0aaab442d928",
+      "block_id": 41691,
+      "private": true,
+      "seconds": 1990.120874375,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_4",
+      "status": "confirmed",
+      "tx_hash": "f27e7d84c3f9db182caab45ecdedefc23d68ae024df8de5eee23e8805bc222ce",
+      "block_id": 41727,
+      "private": true,
+      "seconds": 2178.213431709,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_5",
+      "status": "confirmed",
+      "tx_hash": "459664b3af52027d16e8059a9220eb9bbb6b1b2334d39d94de40f53397705004",
+      "block_id": 41764,
+      "private": true,
+      "seconds": 2237.194369083,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_6",
+      "status": "confirmed",
+      "tx_hash": "fee1fd9508c0090597d2c64b659a110a207c2625e8f634a548d3a94a54542fe5",
+      "block_id": 41800,
+      "private": true,
+      "seconds": 2171.543547458,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_7",
+      "status": "confirmed",
+      "tx_hash": "12c50409a5d2cc0b4f54139dc3de2dded02bf3938affc5374e50f2ed4b7c8548",
+      "block_id": 41836,
+      "private": true,
+      "seconds": 2177.06912625,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_8",
+      "status": "confirmed",
+      "tx_hash": "06f81557f5bf6e38c59f3af0ad4feb2dc4dcc7fda62627d48758ffb988adcca6",
+      "block_id": 41873,
+      "private": true,
+      "seconds": 2233.537377083,
+      "independently_found_on_testnet": true
+    },
+    {
+      "stage": "claim_distribution_b_9",
+      "status": "confirmed",
+      "tx_hash": "4e26fc76b82a788f9f12b6e2334630c418ad0ba3525a1dc09ba5b0e38108a112",
+      "block_id": 41913,
+      "private": true,
+      "seconds": 2420.270106292,
+      "independently_found_on_testnet": true
+    }
+  ],
+  "private_proof_plus_submission_seconds": {
+    "minimum": 1990.120874375,
+    "median": 2241.696464291,
+    "maximum": 2777.344245458
+  },
+  "notes": [
+    "Test identities, not independently recruited users.",
+    "No wallet keys or private proof journals are included.",
+    "Guest cycles and billed CU are separate metrics; see docs/PERFORMANCE.md."
+  ]
+}
