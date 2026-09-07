@@ -21,6 +21,25 @@ ROOT = Path(__file__).resolve().parents[1]
 URL = 'https://testnet.lez.logos.co/'
 PIN = '47eba256479f6f785acbd138834340703cd03401'
 PROTOCOL = [1334328888, 3910590567, 1244219104, 3671232111, 3138827701, 405554639, 4064616947, 1864368340]
+DRIVER_URL = URL.removesuffix('/')
+
+def prepare_arguments(wallet: Path) -> tuple[str, str, str]:
+    # The pinned integration CLI expects this exact spelling, without a slash.
+    return ('prepare', str(wallet), DRIVER_URL)
+
+def failure_codes(log_path: Path) -> list[str]:
+    try:
+        text = log_path.read_text(errors='replace')[-100_000:]
+    except OSError:
+        return ['NO_DIAGNOSTIC_LOG']
+    known = [('unsupported endpoint', 'ENDPOINT_ARGUMENT_REJECTED'),
+             ('error while loading shared libraries', 'MISSING_RUNTIME_LIBRARY'),
+             ('refusing to replace an existing test wallet', 'EXISTING_WALLET_REFUSED'),
+             ('public testnet requires', 'PUBLIC_NETWORK_APPROVAL_MISSING'),
+             ('certificate', 'TLS_SETUP_ERROR'),
+             ('error sending request', 'NETWORK_REQUEST_FAILED')]
+    return [code for phrase, code in known if phrase in text] or ['STAGE_FAILED']
+
 PUBLIC_FIELDS = frozenset(['stage', 'status', 'private', 'tx_hash', 'block_id', 'seconds',
                           'RISC0_DEV_MODE', 'mode', 'distributions', 'unique_private_claims',
                           'required_for_this_mode', 'network', 'guest_user_cycles', 'proof'])
@@ -133,8 +152,10 @@ def main() -> None:
     state = 'failed'
     checked = []
     records = []
+    failed_stage = None
+    diagnostics = []
     def stage(label: str, *arguments: str) -> None:
-        nonlocal process
+        nonlocal process, failed_stage, diagnostics
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Public acceptance test deadline reached')
@@ -144,10 +165,13 @@ def main() -> None:
                                        stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
             rc = process.wait(timeout=remaining)
             if rc:
+                failed_stage = label
+                diagnostics = failure_codes(run / 'logs' / (label + '.log'))
+                print('Failure categories: ' + ', '.join(diagnostics), flush=True)
                 raise RuntimeError(label + ' failed; private diagnostics retained only in run directory')
         process = None
     try:
-        stage('prepare-fresh-test-identities', 'prepare', str(wallet), URL)
+        stage('prepare-fresh-test-identities', *prepare_arguments(wallet))
         (wallet / 'programs.json').write_text(json.dumps({k: v['image_id'] for k, v in programs.items()}) + '\n')
         stage('ten-real-allowlist-claims', 'claims-a', str(wallet), str(artifact_dir / 'commons_allowlist'), '10')
         records = public_events(wallet)
@@ -169,7 +193,8 @@ def main() -> None:
         report = {'status': state, 'network': URL, 'lez_revision': PIN, 'risc0_dev_mode': '0',
                   'prover': 'local-ipc', 'guest_source': 'published-release' if args.published_programs else 'rebuilt', 'identity_source': 'fresh test identities created within this run',
                   'human_adoption_claimed': False, 'programs': {k: v['image_id'] for k, v in programs.items()},
-                  'events': records, 'independently_checked_transactions': checked}
+                  'events': records, 'independently_checked_transactions': checked,
+                  'failed_stage': failed_stage, 'failure_categories': diagnostics}
         text = json.dumps(report, indent=2) + '\n'
         (run / 'public/report.json').write_text(text)
         (out / 'latest-public-report.json').write_text(text)

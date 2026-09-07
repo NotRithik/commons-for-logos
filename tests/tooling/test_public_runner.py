@@ -83,6 +83,18 @@ class PublicRunnerTests(unittest.TestCase):
     def test_missing_report_is_empty_not_success(self):
         with tempfile.TemporaryDirectory() as d: self.assertEqual(module.public_events(Path(d)), [])
 
+    def test_prepare_matches_the_pinned_cli_endpoint_spelling(self):
+        self.assertEqual(module.prepare_arguments(Path('/isolated/wallet')),
+                         ('prepare', '/isolated/wallet', 'https://testnet.lez.logos.co'))
+
+    def test_error_categories_do_not_publish_private_diagnostics(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'private.log'
+            p.write_text('Error: unsupported endpoint\nprivate secret material never printed')
+            result=module.failure_codes(p)
+            self.assertEqual(result,['ENDPOINT_ARGUMENT_REJECTED'])
+            self.assertNotIn('secret',str(result))
+
     def test_no_stop_action_without_process(self):
         module.stop(None)
 
