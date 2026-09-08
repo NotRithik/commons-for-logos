@@ -89,3 +89,26 @@ Commons module; the Steward owner view is a separate module in the same host.
 An operator can set `COMMONS_DEFAULT_CLI` and `COMMONS_DEFAULT_WALLET` in the
 Basecamp launch environment. They are validated exactly like manually entered
 settings and contain paths, not keys. With no defaults, the app starts unconfigured.
+
+
+## Beginner walkthrough and safe viewing
+
+Use **How to use Commons** in the installed app for the difference between private
+membership and shared approvals. Commons is not the agent chat interface. The
+membership implementation is an allowlist gate, not a token-airdrop payout.
+
+Opening a saved workspace only reads its public testnet state. A workspace with
+`.commons-readonly` is a key-free viewer: native controls and the CLI both reject
+writes. It can contain the testnet marker, endpoint configuration and program IDs
+without `storage.json`, private member keys or credentials. The label indicates
+view-only mode; the last successful read includes its block number.
+
+To register or approve, configure an actual member wallet and choose the private
+credential supplied by its organizer. Review the action and wait for a confirmed
+receipt. Private proving can take many minutes; a busy screen is not permission to
+send the same transaction twice. Organizer setup remains an advanced flow: an
+unused state account and genuine prepared membership commitment are required.
+
+After the public testnet reset on 8 September, old catalog entries are labelled
+as archives and a fresh live viewing workspace is separate. Historical receipts
+are preserved; they are not used to draw a fake successful current state.

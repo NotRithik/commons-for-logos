@@ -28,13 +28,42 @@ QString witness(const QString& wallet, const QString& name = QStringLiteral("mem
     return path;
 }
 QString cli() { return QString::fromLocal8Bit(COMMONS_TEST_FAKE_CLI); }
+QJsonObject profile(const QString& wallet, const QString& kind = QStringLiteral("allowlist")) {
+    return QJsonObject{{"label", "Local test workspace"}, {"kind", kind},
+        {"state_account", address()}, {"cli_path", cli()}, {"wallet_dir", wallet}};
+}
+QString catalog(const QString& parent, const QJsonArray& profiles) {
+    const auto path = QDir(parent).filePath("ui-profiles.json");
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) return {};
+    file.write(QJsonDocument(QJsonObject{{"version", 1}, {"profiles", profiles}}).toJson());
+    file.close();
+    qputenv("COMMONS_UI_PROFILES", path.toUtf8());
+    return path;
+}
 }
 
 class CommonsBackendStateTest : public QObject {
     Q_OBJECT
 private slots:
     void init() { qputenv("COMMONS_FAKE_CLI_MODE", "echo"); }
-    void cleanup() { qunsetenv("COMMONS_FAKE_CLI_MODE"); }
+    void cleanup() { qunsetenv("COMMONS_FAKE_CLI_MODE"); qunsetenv("COMMONS_UI_PROFILES"); }
+    void viewingWorkspaceRejectsWritesButAllowsLiveInspection() {
+        QTemporaryDir temp; const auto wallet = makeWallet(temp.path());
+        QFile marker(QDir(wallet).filePath(".commons-readonly"));
+        QVERIFY(marker.open(QIODevice::WriteOnly)); marker.write("Public state viewer"); marker.close();
+        CommonsPrimitivesBackend backend; backend.configure(cli(), wallet);
+        QVERIFY(backend.readOnly());
+        QVERIFY(!object(backend.createDistribution(address(), address(), 10))["accepted"].toBool());
+        QVERIFY(!backend.busy());
+        QVERIFY(backend.lastError().contains("viewing only"));
+        QSignalSpy finished(&backend, &CommonsPrimitivesUiSource::operationFinished);
+        backend.inspectDistribution(address());
+        QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 4000);
+        QVERIFY(!backend.distributionStateAccount().isEmpty());
+        backend.configure(cli(), makeWallet(temp.path(), "member-wallet"));
+        QVERIFY(!backend.readOnly());
+    }
     void initiallyNotConfigured() {
         CommonsPrimitivesBackend backend;
         QVERIFY(!backend.configured());
@@ -148,6 +177,77 @@ private slots:
         QCOMPARE(backend.captureDirectory(), capture);
         QVERIFY(backend.busy());
         QVERIFY(backend.configured());
+    }
+    void savedWorkspaceOnlyReadsAndNeverSelectsCredential() {
+        QTemporaryDir temp;
+        const auto wallet = makeWallet(temp.path());
+        catalog(temp.path(), QJsonArray{profile(wallet)});
+        CommonsPrimitivesBackend backend;
+        QCOMPARE(QJsonDocument::fromJson(backend.savedProfilesJson().toUtf8()).array().size(), 1);
+        QVERIFY(!backend.savedProfilesJson().contains(wallet));
+        QVERIFY(object(backend.openSavedProfile(0))["read_only"].toBool());
+        QCOMPARE(backend.activeProfileAccount(), address());
+        QCOMPARE(backend.activeProfileLabel(), QStringLiteral("Local test workspace"));
+        QCOMPARE(backend.connectionWalletDir(), QFileInfo(wallet).canonicalFilePath());
+        QCOMPARE(backend.lastOperation(), QStringLiteral("allowlist.inspect_state"));
+        QCOMPARE(backend.allowlistWitnessLabel(), QStringLiteral("No witness selected"));
+        QTRY_VERIFY_WITH_TIMEOUT(!backend.busy(), 4000);
+        QCOMPARE(backend.distributionStateAccount(), address());
+    }
+    void savedWorkspaceSwitchDisarmsCredentialsAndLoadsCorrectKind() {
+        QTemporaryDir temp;
+        const auto first = makeWallet(temp.path(), "testnet-first");
+        const auto second = makeWallet(temp.path(), "testnet-second");
+        catalog(temp.path(), QJsonArray{profile(first), profile(second, "threshold")});
+        CommonsPrimitivesBackend backend;
+        backend.openSavedProfile(0);
+        QTRY_VERIFY_WITH_TIMEOUT(!backend.busy(), 4000);
+        backend.selectAllowlistWitness(witness(first));
+        backend.openSavedProfile(1);
+        QCOMPARE(backend.allowlistWitnessLabel(), QStringLiteral("No witness selected"));
+        QCOMPARE(backend.activeProfileKind(), QStringLiteral("threshold"));
+        QVERIFY(backend.distributionStateAccount().isEmpty());
+        QCOMPARE(backend.lastOperation(), QStringLiteral("threshold.inspect_state"));
+        QTRY_VERIFY_WITH_TIMEOUT(!backend.busy(), 4000);
+        QCOMPARE(backend.groupStateAccount(), address());
+    }
+    void invalidCatalogFailsClosed() {
+        QTemporaryDir temp;
+        auto bad = profile(makeWallet(temp.path()));
+        bad["state_account"] = "not-an-account";
+        catalog(temp.path(), QJsonArray{bad});
+        CommonsPrimitivesBackend backend;
+        QCOMPARE(backend.savedProfilesJson(), QStringLiteral("[]"));
+        QVERIFY(!object(backend.openSavedProfile(0))["opened"].toBool());
+        QVERIFY(!backend.configured());
+        QVERIFY(!backend.busy());
+    }
+    void oversizedCatalogFailsClosed() {
+        QTemporaryDir temp;
+        QJsonArray many;
+        for (int index = 0; index < 33; ++index) many.append(profile(makeWallet(temp.path())));
+        catalog(temp.path(), many);
+        CommonsPrimitivesBackend backend;
+        QCOMPARE(backend.savedProfilesJson(), QStringLiteral("[]"));
+        QVERIFY(!backend.configured());
+    }
+    void symlinkCatalogIsRejected() {
+        QTemporaryDir temp;
+        const auto path = catalog(temp.path(), QJsonArray{profile(makeWallet(temp.path()))});
+        const auto link = temp.filePath("link.json");
+        QVERIFY(QFile::link(path, link));
+        qputenv("COMMONS_UI_PROFILES", link.toUtf8());
+        CommonsPrimitivesBackend backend;
+        QCOMPARE(backend.savedProfilesJson(), QStringLiteral("[]"));
+        QVERIFY(!backend.configured());
+    }
+    void invalidSavedWorkspaceIndexDoesNotChangeSession() {
+        QTemporaryDir temp;
+        catalog(temp.path(), QJsonArray{profile(makeWallet(temp.path()))});
+        CommonsPrimitivesBackend backend;
+        QVERIFY(!object(backend.openSavedProfile(-1))["opened"].toBool());
+        QVERIFY(!object(backend.openSavedProfile(100))["opened"].toBool());
+        QVERIFY(!backend.configured());
     }
 };
 

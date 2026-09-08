@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonsLogosCliClient.h"
+#include <QJsonArray>
 #include "logos_ui_plugin_context.h"
 #include "rep_commons_primitives_ui_source.h"
 
@@ -11,6 +12,8 @@ public:
     CommonsPrimitivesBackend();
 
     QString configure(QString cliPath, QString walletDir) override;
+    QString reloadSavedProfiles() override;
+    QString openSavedProfile(int index) override;
     QString selectAllowlistWitness(QString witnessPath) override;
     QString selectThresholdWitness(QString witnessPath) override;
     QString createDistribution(QString stateAccount, QString rootHex, int memberCount) override;
@@ -34,6 +37,7 @@ private:
     void updateDistributionState(const QJsonObject& result);
     void updateGroupState(const QJsonObject& result);
 
+    QJsonArray m_savedProfiles;
     CommonsLogos::LogosCliClient m_client;
     QString m_allowlistWitnessPath;
     QString m_thresholdWitnessPath;

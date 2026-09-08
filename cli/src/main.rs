@@ -26,6 +26,38 @@ use std::{
 use validation::*;
 use wallet::{AccountIdentity, WalletCore, config::WalletConfig};
 
+/// Only these stable categories cross the UI boundary. Upstream errors may
+/// contain local paths or private witness data and are never displayed verbatim.
+#[derive(Debug, Clone, Copy)]
+enum ClientIssue {
+    NetworkUnavailable,
+    ProtocolChanged,
+    DeploymentMissing,
+    DifferentProgram,
+    WalletHistoryAhead,
+    ProfileUnreadable,
+    ReadOnlyWorkspace,
+}
+impl std::fmt::Display for ClientIssue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+impl std::error::Error for ClientIssue {}
+impl ClientIssue {
+    fn public(self) -> (&'static str, &'static str) {
+        match self {
+            Self::NetworkUnavailable => ("NETWORK_UNAVAILABLE", "The testnet is not responding. Your wallet has not been changed. Check your connection and try Refresh."),
+            Self::ProtocolChanged => ("TESTNET_PROTOCOL_CHANGED", "The testnet uses a different proof format. Update this client before sending an action; your existing wallet is preserved."),
+            Self::DeploymentMissing => ("DEPLOYMENT_NOT_FOUND", "This workspace is not present on the current testnet. It may not have been created yet, or the testnet may have restarted. Choose a current workspace; old receipts are historical only."),
+            Self::DifferentProgram => ("ACCOUNT_PROGRAM_MISMATCH", "This account belongs to a different application. Choose the correct group or check the account address."),
+            Self::WalletHistoryAhead => ("TESTNET_HISTORY_CHANGED", "The testnet restarted after this wallet was used. Keep this wallet as an archive and use a fresh testnet workspace. No old transaction was replayed."),
+            Self::ProfileUnreadable => ("PROFILE_UNREADABLE", "The selected workspace is incomplete or cannot be read. Choose another saved workspace or check its setup in Connection settings."),
+            Self::ReadOnlyWorkspace => ("READ_ONLY_WORKSPACE", "This is a viewing-only workspace. Connect your own member wallet to submit an action."),
+        }
+    }
+}
+
 /// A kernel-held lock is released on crash; no stale PID file needs deletion.
 struct WalletLock(fs::File);
 impl WalletLock {
@@ -181,9 +213,17 @@ async fn reconcile_pending(root: &Path, w: &mut WalletCore) -> Result<()> {
     Ok(())
 }
 
+fn check_workspace_access(root: &Path, op: Op) -> Result<()> {
+    if op.is_read() { return Ok(()); }
+    match fs::symlink_metadata(root.join(".commons-readonly")) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        _ => Err(ClientIssue::ReadOnlyWorkspace.into()),
+    }
+}
+
 async fn run(req: Request, op: Op) -> Result<Value> {
     validate(&req, op)?;
-    let root = wallet_root(&req.wallet_dir)?;
+    let root = wallet_root(&req.wallet_dir).context(ClientIssue::ProfileUnreadable)?;
     let config: WalletConfig = serde_json::from_slice(&read_inside(
         &root,
         &root.join("config.json"),
@@ -204,11 +244,10 @@ async fn run(req: Request, op: Op) -> Result<Value> {
     let client = SequencerClientBuilder::default()
         .request_timeout(std::time::Duration::from_secs(20))
         .build(endpoint)?;
-    let ids = client.get_program_ids().await?;
-    ensure!(
-        ids.get("privacy_preserving_circuit") == Some(&PROTOCOL_ID),
-        "testnet protocol fingerprint mismatch"
-    );
+    let ids = client.get_program_ids().await.context(ClientIssue::NetworkUnavailable)?;
+    if ids.get("privacy_preserving_circuit") != Some(&PROTOCOL_ID) {
+        return Err(ClientIssue::ProtocolChanged.into());
+    }
     let programs: Value = serde_json::from_slice(&read_inside(
         &root,
         &root.join("programs.json"),
@@ -217,13 +256,15 @@ async fn run(req: Request, op: Op) -> Result<Value> {
     )?)?;
     let pid: ProgramId = serde_json::from_value(programs[op.family()].clone())?;
     let state_id = account(string(&req.arguments, "state_account")?)?;
-    let chain_state = client.get_account(state_id).await?;
+    let chain_state = client.get_account(state_id).await.context(ClientIssue::NetworkUnavailable)?;
     if op.is_read() {
-        ensure!(
-            chain_state.program_owner == pid,
-            "state owner does not match configured program"
-        );
-        let block = client.get_last_block_id().await?;
+        if chain_state.program_owner == [0; 8] && chain_state.data.is_empty() {
+            return Err(ClientIssue::DeploymentMissing.into());
+        }
+        if chain_state.program_owner != pid {
+            return Err(ClientIssue::DifferentProgram.into());
+        }
+        let block = client.get_last_block_id().await.context(ClientIssue::NetworkUnavailable)?;
         return Ok(
             json!({"success":true,"operation":op.id(),"network":"testnet","endpoint":endpoint,"block_id":block,"program_id":pid,"state_account":hex::encode(state_id.as_ref()),"state":decode_state(op,&chain_state.data)?}),
         );
@@ -236,6 +277,14 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         std::env::var("RISC0_PROVER").as_deref() == Ok("ipc"),
         "explicit local IPC proving required; hosted proving is not supported"
     );
+    // A reset can retain the same proof ABI while erasing account history.
+    // Never silently rewind a wallet or reuse its previous private witnesses.
+    let latest = client.get_last_block_id().await.context(ClientIssue::NetworkUnavailable)?;
+    let stored = wallet::storage::Storage::from_path(&root.join("storage.json"))
+        .context(ClientIssue::ProfileUnreadable)?;
+    if stored.last_synced_block() > latest {
+        return Err(ClientIssue::WalletHistoryAhead.into());
+    }
     let _lock = WalletLock::take(&root)?;
     let elf = read_inside(
         &root,
@@ -391,6 +440,10 @@ fn safe_error(error: &anyhow::Error) -> Value {
     if let Some(e) = error.downcast_ref::<commons_logos_testnet_primitives::Error>() {
         return json!({"success":false,"error":{"code":*e as u32,"message":application_error_message(*e)}});
     }
+    if let Some(issue) = error.downcast_ref::<ClientIssue>() {
+        let (code, message) = issue.public();
+        return json!({"success":false,"error":{"code":code,"message":message}});
+    }
     json!({"success":false,"error":{"code":"CLI_REQUEST_FAILED","message":"The client could not finish this operation. Check the connection and inspect the current testnet state before retrying."}})
 }
 
@@ -398,6 +451,37 @@ fn safe_error(error: &anyhow::Error) -> Value {
 mod public_error_tests {
     use super::*;
     use commons_logos_testnet_primitives::Error;
+
+    #[test]
+    fn read_only_workspace_allows_reads_and_rejects_writes_before_network() {
+        let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir().join(format!("commons-readonly-{}-{stamp}", std::process::id()));
+        fs::create_dir(&root).unwrap();
+        assert!(check_workspace_access(&root, Op::CreateDistribution).is_ok());
+        fs::write(root.join(".commons-readonly"), b"viewer").unwrap();
+        assert!(check_workspace_access(&root, Op::InspectDistribution).is_ok());
+        let error = check_workspace_access(&root, Op::CreateDistribution).unwrap_err();
+        assert_eq!(safe_error(&error)["error"]["code"], "READ_ONLY_WORKSPACE");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn reset_and_network_errors_are_specific_without_upstream_secrets() {
+        for (issue, expected) in [
+            (ClientIssue::NetworkUnavailable, "NETWORK_UNAVAILABLE"),
+            (ClientIssue::ProtocolChanged, "TESTNET_PROTOCOL_CHANGED"),
+            (ClientIssue::DeploymentMissing, "DEPLOYMENT_NOT_FOUND"),
+            (ClientIssue::DifferentProgram, "ACCOUNT_PROGRAM_MISMATCH"),
+            (ClientIssue::WalletHistoryAhead, "TESTNET_HISTORY_CHANGED"),
+            (ClientIssue::ProfileUnreadable, "PROFILE_UNREADABLE"),
+        ] {
+            let error = anyhow::anyhow!("private witness and /private/wallet should not appear").context(issue);
+            let value = safe_error(&error);
+            assert_eq!(value["error"]["code"], expected);
+            assert!(!value.to_string().contains("/private/wallet"));
+            assert!(!value.to_string().contains("should not appear"));
+        }
+    }
 
     #[test]
     fn maps_every_application_error_without_losing_its_code() {

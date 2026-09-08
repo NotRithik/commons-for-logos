@@ -1,6 +1,8 @@
 #include "commons_primitives_backend.h"
 
 #include <QFileInfo>
+#include <QFile>
+#include <QRegularExpression>
 #include <QTimer>
 #include <QDir>
 #include <QJsonArray>
@@ -56,6 +58,7 @@ void insertIfPresent(QStringList& parts, const QString& label, const QString& va
 
 CommonsPrimitivesBackend::CommonsPrimitivesBackend()
 {
+    reloadSavedProfiles();
     // An optional operator-provided profile avoids re-entering paths on every
     // Basecamp restart. Normal validation still runs before accepting it.
     const auto defaultCli = qEnvironmentVariable("COMMONS_DEFAULT_CLI");
@@ -80,6 +83,12 @@ CommonsPrimitivesBackend::CommonsPrimitivesBackend()
 
 void CommonsPrimitivesBackend::resetSessionState()
 {
+    setActiveProfileLabel(QString());
+    setActiveProfileKind(QString());
+    setActiveProfileAccount(QString());
+    setReadOnly(false);
+    setConnectionCliPath(QString());
+    setConnectionWalletDir(QString());
     m_allowlistWitnessPath.clear();
     m_thresholdWitnessPath.clear();
     setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
@@ -106,6 +115,89 @@ void CommonsPrimitivesBackend::clearStateForOperation(const QString& operation)
     }
 }
 
+QString CommonsPrimitivesBackend::reloadSavedProfiles()
+{
+    // The operator opts in to a local catalog. A catalog is navigation metadata,
+    // never authority to submit a transaction or reveal a membership witness.
+    if (m_client.isBusy())
+        return compactJson(QJsonObject{{"loaded", false}, {"error", "Wait for the current operation."}});
+    m_savedProfiles = QJsonArray();
+    setSavedProfilesJson(QStringLiteral("[]"));
+    const auto filename = qEnvironmentVariable("COMMONS_UI_PROFILES");
+    if (filename.isEmpty())
+        return compactJson(QJsonObject{{"loaded", true}, {"count", 0}});
+    const QFileInfo info(filename);
+    QFile file(filename);
+    if (!info.isAbsolute() || !info.isFile() || info.isSymLink()
+        || info.size() > 32768 || !file.open(QIODevice::ReadOnly)) {
+        const QString error = QStringLiteral("Saved workspaces could not be read. Use Connection settings or check the local catalog.");
+        setLastError(error);
+        setStatusText(error);
+        return compactJson(QJsonObject{{"loaded", false}, {"error", error}});
+    }
+    const auto document = QJsonDocument::fromJson(file.readAll());
+    const auto object = document.object();
+    const auto values = object.value("profiles").toArray();
+    static const QRegularExpression accountPattern(QStringLiteral("^[0-9a-fA-F]{64}$"));
+    QJsonArray accepted;
+    QJsonArray display;
+    bool valid = document.isObject() && object.value("version").toInt() == 1
+        && object.value("profiles").isArray() && values.size() <= 32;
+    for (const auto& value : values) {
+        const auto profile = value.toObject();
+        const auto kind = profile.value("kind").toString();
+        const auto label = profile.value("label").toString().trimmed();
+        const auto account = profile.value("state_account").toString().toLower();
+        valid = valid && value.isObject() && !label.isEmpty() && label.size() <= 100
+            && (kind == "allowlist" || kind == "threshold")
+            && accountPattern.match(account).hasMatch()
+            && QFileInfo(profile.value("cli_path").toString()).isAbsolute()
+            && QFileInfo(profile.value("wallet_dir").toString()).isAbsolute();
+        if (!valid)
+            break;
+        accepted.append(profile);
+        display.append(QJsonObject{{"label", label}, {"kind", kind}, {"state_account", account}});
+    }
+    if (!valid) {
+        const QString error = QStringLiteral("The saved workspace catalog is invalid. No workspace was loaded.");
+        setLastError(error);
+        setStatusText(error);
+        return compactJson(QJsonObject{{"loaded", false}, {"error", error}});
+    }
+    m_savedProfiles = accepted;
+    setSavedProfilesJson(QString::fromUtf8(QJsonDocument(display).toJson(QJsonDocument::Compact)));
+    return compactJson(QJsonObject{{"loaded", true}, {"count", accepted.size()}});
+}
+
+QString CommonsPrimitivesBackend::openSavedProfile(int index)
+{
+    if (m_client.isBusy())
+        return compactJson(QJsonObject{{"opened", false}, {"error", "Wait for the current operation."}});
+    if (index < 0 || index >= m_savedProfiles.size()) {
+        const QString error = QStringLiteral("Choose a saved workspace from the list.");
+        setLastError(error);
+        setStatusText(error);
+        return compactJson(QJsonObject{{"opened", false}, {"error", error}});
+    }
+    const auto profile = m_savedProfiles.at(index).toObject();
+    const auto response = QJsonDocument::fromJson(configure(profile.value("cli_path").toString(),
+        profile.value("wallet_dir").toString()).toUtf8()).object();
+    if (!response.value("configured").toBool())
+        return compactJson(QJsonObject{{"opened", false}, {"error", lastError()}});
+    const auto kind = profile.value("kind").toString();
+    const auto account = profile.value("state_account").toString().toLower();
+    setActiveProfileLabel(profile.value("label").toString().trimmed());
+    setActiveProfileKind(kind);
+    setActiveProfileAccount(account);
+    // Selecting a workspace only reads chain state. Credentials remain unselected
+    // and every proof-producing action still requires a deliberate button press.
+    if (kind == "allowlist")
+        inspectDistribution(account);
+    else
+        inspectGroup(account);
+    return compactJson(QJsonObject{{"opened", true}, {"read_only", true}});
+}
+
 QString CommonsPrimitivesBackend::configure(QString cliPath, QString walletDir)
 {
     if (m_client.isBusy())
@@ -130,6 +222,10 @@ QString CommonsPrimitivesBackend::configure(QString cliPath, QString walletDir)
     }
 
     setConfigured(true);
+    const QFileInfo readOnlyMarker(QDir(m_client.walletDir()).filePath(QStringLiteral(".commons-readonly")));
+    setReadOnly(readOnlyMarker.exists() || readOnlyMarker.isSymLink());
+    setConnectionCliPath(m_client.cliPath());
+    setConnectionWalletDir(m_client.walletDir());
     const QString capture = QDir(m_client.walletDir()).filePath(QStringLiteral("evidence"));
     if (!QFileInfo(capture).isSymLink() && QDir().mkpath(capture)
         && QFileInfo(capture).canonicalFilePath().startsWith(m_client.walletDir() + QLatin1Char('/')))
@@ -137,7 +233,7 @@ QString CommonsPrimitivesBackend::configure(QString cliPath, QString walletDir)
     else setCaptureDirectory(QString());
     setBackendState(QStringLiteral("Ready"));
     setLastError(QString());
-    setStatusText(QStringLiteral("Configured for testnet. No transaction has been sent."));
+    setStatusText(readOnly() ? QStringLiteral("Viewing current testnet state. This workspace cannot send transactions.") : QStringLiteral("Configured for testnet. No transaction has been sent."));
 
     QJsonObject response;
     response.insert(QStringLiteral("configured"), true);
@@ -298,6 +394,10 @@ QString CommonsPrimitivesBackend::selectWitnessFile(const QString& rawPath, cons
 QString CommonsPrimitivesBackend::queue(CommonsLogos::PrimitiveOperation operation,
                                       const QJsonObject& arguments)
 {
+    const bool reading = operation == CommonsLogos::PrimitiveOperation::AllowlistInspect
+        || operation == CommonsLogos::PrimitiveOperation::ThresholdInspect;
+    if (readOnly() && !reading)
+        return reject(operation, QStringLiteral("This workspace is for viewing only. Choose a member wallet to submit transactions."));
     if (!m_client.isBusy())
         clearStateForOperation(CommonsLogos::operationId(operation));
     const CommonsLogos::StartResult result = m_client.start(operation, arguments);
@@ -316,8 +416,6 @@ QString CommonsPrimitivesBackend::queue(CommonsLogos::PrimitiveOperation operati
     setActiveOperation(displayName);
     setLastOperation(result.operation);
     setLastError(QString());
-    const bool reading = operation == CommonsLogos::PrimitiveOperation::AllowlistInspect
-        || operation == CommonsLogos::PrimitiveOperation::ThresholdInspect;
     const bool proving = operation == CommonsLogos::PrimitiveOperation::AllowlistClaim
         || operation == CommonsLogos::PrimitiveOperation::ThresholdPropose
         || operation == CommonsLogos::PrimitiveOperation::ThresholdApprove;

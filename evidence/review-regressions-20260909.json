@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-09-08T20:06:36.152498+00:00",
+  "scope": "local automated regression and build checks; not final prize acceptance",
+  "checks": {
+    "tooling": {
+      "passed": true,
+      "count": 69,
+      "log_sha256": "c90bbe79aefdb07beda98ec20aefba16f8a6898859fc076f60c873f5ddbe00aa"
+    },
+    "native": {
+      "passed": true,
+      "count": null,
+      "log_sha256": "7b5d22ccc2e90f76b44874003ccbe480c375d997e471bf68ec7f8a8c0c19bf5e"
+    }
+  },
+  "live_model_chat_accepted": false,
+  "prize_submitted": false
+}

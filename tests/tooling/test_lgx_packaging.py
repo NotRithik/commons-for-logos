@@ -42,7 +42,7 @@ class LgxPayloadTests(unittest.TestCase):
         text=(ROOT/'module/src/qml/Main.qml').read_text()
         self.assertIn('root.captureFrames >= 2400',text)
         self.assertIn('interval: 1500',text)
-        self.assertIn('onConfiguredChanged: if (!configured) captureRecording = false',text)
+        self.assertRegex(text, r'onConfiguredChanged:\s*\{[^}]*if \(!configured\) captureRecording = false')
         self.assertIn('const saved = image.saveToFile',text)
         self.assertIn('root.captureFrames += 1',text)
         self.assertIn('root.connectionExpanded = false',text)
