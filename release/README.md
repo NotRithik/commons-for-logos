@@ -49,3 +49,16 @@ complete local workflows.
 For a fresh ten-claim public run on persistent local hardware, use
 `--claims 10 --timeout-seconds 43200`. Its report states the required count for
 that run. A one-claim smoke pass is never reported as 20-claim acceptance.
+
+
+## Post-reset deployment, 9 September 2026
+
+`deployment.json` now points to the fresh distributions and approval group after
+the 8 September reset. `deployment-pre-reset-20260907.json` retains the earlier
+addresses. The program artifacts have not changed; their immutable hashes and
+download location in `manifest.json` are intentionally preserved.
+
+Use `python3 scripts/check-public-state.py` for current counts and execution state.
+The earlier twenty-claim receipt is historical. The fresh shared decision executed
+at block 559; fresh membership proving continues, so the saved current report does
+not claim that all LP-0003 criteria are complete.

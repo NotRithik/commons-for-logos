@@ -35,6 +35,7 @@ jobs:
         run: |
           cargo +1.94.0 fetch --locked --manifest-path testnet/Cargo.toml
           cargo +1.94.0 fetch --locked --manifest-path idl/Cargo.toml
+          cargo +1.94.0 fetch --locked --manifest-path credential-tool/Cargo.toml
       - name: Run v0.2.4 host and serialization tests
         run: cargo +1.94.0 test --locked --offline --manifest-path testnet/Cargo.toml -p commons-logos-testnet-primitives -p commons-logos-testnet-sdk
       - name: Test and regenerate the actual SPEL IDLs
@@ -42,6 +43,10 @@ jobs:
           cargo +1.94.0 test --locked --offline --manifest-path idl/Cargo.toml
           cargo +1.94.0 run --locked --offline --manifest-path idl/Cargo.toml
           git diff --exit-code -- idl/generated
+      - name: Verify protected GUI credential export without loading a wallet
+        run: |
+          cargo +1.94.0 fmt --manifest-path credential-tool/Cargo.toml -- --check
+          cargo +1.94.0 test --locked --offline --manifest-path credential-tool/Cargo.toml
       - name: State the verification boundary
         run: echo 'Host, wire-format and IDL tests are not zero-knowledge proof, sequencer or testnet transaction evidence. Real-proof integration is verified separately, not by this job.'
   native-module:

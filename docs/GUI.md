@@ -84,7 +84,7 @@ The views import `Logos.Theme` and `Logos.Controls` from the installed Basecamp
 host. Buttons, tabs, typography, background surfaces and status colors use the
 same design tokens as Basecamp's own applications. No font files or substitute
 theme are shipped. Private membership and shared approvals are tabs in the same
-Commons module; the Steward owner view is a separate module in the same host.
+Commons module; the Commons Relay owner view is a separate module in the same host.
 
 An operator can set `COMMONS_DEFAULT_CLI` and `COMMONS_DEFAULT_WALLET` in the
 Basecamp launch environment. They are validated exactly like manually entered
@@ -112,3 +112,46 @@ unused state account and genuine prepared membership commitment are required.
 After the public testnet reset on 8 September, old catalog entries are labelled
 as archives and a fresh live viewing workspace is separate. Historical receipts
 are preserved; they are not used to draw a fake successful current state.
+
+
+## Export a prepared demo credential for the GUI
+
+The reproducible demo stores a protected Borsh bundle of all its synthetic members.
+The GUI accepts one member credential at a time, not the whole bundle. After the
+corresponding demo stage has stopped, export those already-created credentials:
+
+```sh
+cargo +1.94.0 fetch --locked --manifest-path credential-tool/Cargo.toml
+cargo +1.94.0 run --locked --offline --manifest-path credential-tool/Cargo.toml -- /absolute/path/to/testnet-profile threshold
+```
+
+For membership use `distribution_a` or `distribution_b` instead of `threshold`.
+Choose `ui-credentials/threshold/member-1.borsh` within that same profile using
+**Select credential**. The exporter uses the published witness type. It never
+opens a wallet, generates a key, starts a proof, sends a transaction or prints
+private content. Files have owner-only read/write permissions; existing mismatched
+files are preserved, not overwritten.
+
+These test profiles contain the demo organizer's synthetic members. They are not
+a production identity-distribution mechanism. Do not upload the credentials or
+wallet profiles or expose their contents in a recording. The wallet must hold the
+matching member key; importing a credential alone is not sufficient.
+
+
+## Workspace menu and action availability
+
+The workspace picker is rendered with the shared Logos palette inside the
+Basecamp scene. Its popup is capped, scrollable, keyboard-accessible, and closes
+with Escape without selecting or submitting anything. It does not use a native
+macOS menu or change the application's global control style.
+
+Refresh reads the selected account before actions become available. Completed
+proposals cannot be executed again. A new proposal needs an exact unsigned
+64-bit value and a selected private credential; a pending proposal needs the
+required distinct approvals before Execute becomes available. Full membership
+lists explain that no registrations remain. These are UI safeguards; the native
+client and on-chain program independently revalidate every request.
+
+See **Export a prepared demo credential for the GUI** above for the protected
+credential conversion. The workspace menu itself never imports a credential or
+submits a transaction.

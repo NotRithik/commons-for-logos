@@ -1,9 +1,9 @@
 {
-  "checked_at": "2026-09-07T17:20:55.300361+00:00",
+  "checked_at": "2026-09-09T03:24:30.822555+00:00",
   "endpoint": "https://testnet.lez.logos.co/",
   "observed_block_range": [
-    41914,
-    41914
+    831,
+    831
   ],
   "wallet_loaded": false,
   "transactions_submitted": 0,
@@ -31,29 +31,29 @@
   },
   "distributions": [
     {
-      "address": "D7RGc18T5NnP6j5mkSNSCtCZDrc5CF6yGhRSNBknWSim",
-      "hex": "b3f12b468fdeb9acbc7e97d4452db11fe16202ff8f62fb29f008f36e17765232",
+      "address": "G5v74KjfGzTrzTUcixMWtgMqpgV6m1bkzHxLrsziuE7",
+      "hex": "03dd452cdaad00ae8be856d601415439eb3e69fbca9ce49974fe68c46dc2cd40",
       "state": {
-        "root": "8b028721a16c39f4729857e89b5f6ed7a7fc162db29f3153275d4b794a708d21",
+        "root": "4701ab6493e99b63fcf654ee108560580263ef8c98a9321708f81fee12c3710d",
         "member_count": 10,
         "unique_claims": 10
       }
     },
     {
-      "address": "CNsx32sAGebTc88Sqw1synSz4Jd8jrs9K5gC7ARck97V",
-      "hex": "a90b5c7bb5d542d782430f2838d9f847d2ae788bb524e58a14b18d47c35b57c0",
+      "address": "E2mUDTg4DioQVHHtbZs6ha7ou1VMXiPf2g87M9kCZ41v",
+      "hex": "c19bcad81fb89d3c95b3ac5c7e1ce006fa61bb28a5e15282bd79f8f7c0ab0231",
       "state": {
-        "root": "3af37a17a023bf586a495bbffea07b0124d4ab09865a4d949afd4845190953a0",
+        "root": "5ce47292628896efc93364a816a5aa75bd14d29b08b161539a9b9ff2fdb188ff",
         "member_count": 10,
-        "unique_claims": 10
+        "unique_claims": 3
       }
     }
   ],
   "threshold": {
-    "address": "DdVsxpch4oFvjbEeUyfqePmSjpTbjFunwML266WRyg4U",
-    "hex": "bba5ce32066795d84deebab88fa45e4da20a51088eb6bad3fb83bf237c3bd965",
+    "address": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+    "hex": "eb038d5a8a9e154c9d23ff8f9c48656ac970e061d688d5262d736770020c9ac6",
     "state": {
-      "root": "f9d79a2d49be315cea0a9b487ec8e6b20d61a9e75c079ba23d2b8d131afd5804",
+      "root": "94949b86fcec4d243c2631c299524ad7bb724d0956c188ebb2ca3d10acebc564",
       "member_count": 3,
       "threshold": 2,
       "value": 42,
@@ -68,7 +68,7 @@
   },
   "chain_criteria": {
     "LP-0002": true,
-    "LP-0003": true
+    "LP-0003": false
   },
   "not_checked_here": [
     "narrated video",

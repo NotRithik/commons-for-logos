@@ -64,6 +64,20 @@ private slots:
         backend.configure(cli(), makeWallet(temp.path(), "member-wallet"));
         QVERIFY(!backend.readOnly());
     }
+    void publicStateSurvivesCredentialSelectionButNotProfileChanges() {
+        QTemporaryDir temp; const auto wallet = makeWallet(temp.path());
+        CommonsPrimitivesBackend backend; backend.configure(cli(), wallet);
+        QSignalSpy finished(&backend, &CommonsPrimitivesUiSource::operationFinished);
+        backend.inspectGroup(address());
+        QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 4000);
+        const auto state = backend.groupStateJson();
+        QVERIFY(!object(state).isEmpty());
+        backend.selectThresholdWitness(witness(wallet));
+        QCOMPARE(backend.groupStateJson(), state);
+        backend.configure(cli(), makeWallet(temp.path(), "different-wallet"));
+        QCOMPARE(backend.groupStateJson(), QStringLiteral("{}"));
+        QCOMPARE(backend.distributionStateJson(), QStringLiteral("{}"));
+    }
     void initiallyNotConfigured() {
         CommonsPrimitivesBackend backend;
         QVERIFY(!backend.configured());

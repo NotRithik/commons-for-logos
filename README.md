@@ -16,7 +16,16 @@ The native Basecamp module has an allowlist screen, a shared-approvals screen, a
 - [Protocol and account model](docs/PROTOCOL.md)
 - [Privacy model](docs/PRIVACY.md)
 
-Deployment addresses, confirmed transactions and completed verification runs are recorded in [the release evidence](evidence/verification.json). Only results for the program images named there apply to this release.
+The current testnet addresses are in [release/deployment.json](release/deployment.json).
+Run `python3 scripts/check-public-state.py` to inspect them without loading a wallet
+or sending a transaction. Its `chain_criteria` fields distinguish completed shared
+approvals from the still-running post-reset membership acceptance. A saved snapshot
+is timestamped evidence, not a promise about later testnet resets.
+
+The 7 September twenty-claim and shared-approval receipts remain **historical** in
+`evidence/testnet-completed.json` and `evidence/verification.json`; their pre-reset
+addresses are preserved in `release/deployment-pre-reset-20260907.json`. Do not use
+those historical counts as evidence that the current network has twenty claims.
 
 ## Reproduce the local stack
 

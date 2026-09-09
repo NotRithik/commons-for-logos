@@ -1,0 +1,13 @@
+[workspace]
+[package]
+name = "commons-export-ui-credentials"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+[dependencies]
+commons-logos-testnet-primitives = { path = "../testnet/crates/primitives" }
+borsh = "1.6"
+[patch.crates-io]
+keccak = { git = "https://github.com/logos-blockchain/sponges", rev = "3a56e99771beedf04946eab21a4a62adc2951377" }
+[profile.dev]
+debug = "line-tables-only"

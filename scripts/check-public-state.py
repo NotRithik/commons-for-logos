@@ -87,10 +87,10 @@ def rpc(method: str, params: list) -> object:
 def check_ready(report: dict, prize: str) -> bool:
     if prize=='LP-0002':
         g=report['threshold']['state'];p=g['proposal']
-        return bool(p and p['executed'] and p['unique_approvals']>=g['threshold'] and g['value']==42)
+        return bool(p and p['executed'] is True and p['unique_approvals']>=g['threshold'] and g['value']==p['next_value'] and p['sequence']==g['sequence'])
     if prize=='LP-0003':
         distributions=report['distributions']
-        return len({d['address'] for d in distributions})>=2 and sum(d['state']['unique_claims'] for d in distributions)>=20
+        return len(distributions)>=2 and len({d['address'] for d in distributions})==len(distributions) and sum(d['state']['unique_claims'] for d in distributions)>=20
     raise ValueError('Unknown prize')
 
 def main():

@@ -54,7 +54,7 @@ class Lgx:
 def files_for_variant(native:Path,variant:str):
     if variant not in ['darwin-arm64','linux-x86_64']:raise ValueError('Unsupported native variant')
     ext='.dylib' if variant=='darwin-arm64' else '.so'
-    names=[NAME+'_plugin'+ext,NAME+'_replica_factory'+ext,'metadata.json','qml/Main.qml','icons/commons.svg']
+    names=[NAME+'_plugin'+ext,NAME+'_replica_factory'+ext,'metadata.json','qml/Main.qml','qml/WorkspacePicker.qml','qml/WorkspaceState.js','icons/commons.svg']
     for name in names:
         p=native/name
         if p.is_symlink() or not p.is_file():raise ValueError('Missing regular module file: '+name)

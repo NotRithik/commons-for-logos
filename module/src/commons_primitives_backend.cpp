@@ -94,7 +94,9 @@ void CommonsPrimitivesBackend::resetSessionState()
     setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
     setThresholdWitnessLabel(QStringLiteral("No witness selected"));
     setDistributionStateAccount(QString());
+    setDistributionStateJson(QStringLiteral("{}"));
     setGroupStateAccount(QString());
+    setGroupStateJson(QStringLiteral("{}"));
     setDistributionSummary(QStringLiteral("No live distribution state loaded."));
     setGroupSummary(QStringLiteral("No live group state loaded."));
     setCaptureDirectory(QString());
@@ -108,9 +110,11 @@ void CommonsPrimitivesBackend::clearStateForOperation(const QString& operation)
 {
     if (operation.startsWith(QStringLiteral("allowlist."))) {
         setDistributionStateAccount(QString());
+        setDistributionStateJson(QStringLiteral("{}"));
         setDistributionSummary(QStringLiteral("Inspect a distribution to load its current state."));
     } else if (operation.startsWith(QStringLiteral("threshold."))) {
         setGroupStateAccount(QString());
+        setGroupStateJson(QStringLiteral("{}"));
         setGroupSummary(QStringLiteral("Inspect a group to load its current state."));
     }
 }
@@ -488,6 +492,7 @@ void CommonsPrimitivesBackend::failOperation(const QString& operation,
 void CommonsPrimitivesBackend::updateDistributionState(const QJsonObject& result)
 {
     const QJsonObject state = stateObject(result);
+    setDistributionStateJson(compactJson(state));
     const QString stateAccount = stringValue(result, QStringLiteral("state_account"));
     if (!stateAccount.isEmpty())
         setDistributionStateAccount(stateAccount);
@@ -513,6 +518,7 @@ void CommonsPrimitivesBackend::updateDistributionState(const QJsonObject& result
 void CommonsPrimitivesBackend::updateGroupState(const QJsonObject& result)
 {
     const QJsonObject state = stateObject(result);
+    setGroupStateJson(compactJson(state));
     const QString stateAccount = stringValue(result, QStringLiteral("state_account"));
     if (!stateAccount.isEmpty())
         setGroupStateAccount(stateAccount);

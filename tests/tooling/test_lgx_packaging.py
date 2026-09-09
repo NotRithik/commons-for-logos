@@ -10,7 +10,7 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 class LgxPayloadTests(unittest.TestCase):
     def payload(self,p):
-        names=['commons_primitives_ui_plugin.dylib','commons_primitives_ui_replica_factory.dylib','qml/Main.qml','icons/commons.svg']
+        names=['commons_primitives_ui_plugin.dylib','commons_primitives_ui_replica_factory.dylib','qml/Main.qml','qml/WorkspacePicker.qml','qml/WorkspaceState.js','icons/commons.svg']
         for name in names:
             path=p/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('test fixture')
         (p/'metadata.json').write_text(json.dumps({'name':module.NAME,'type':'ui_qml','view':'qml/Main.qml','version':'0.1.0'}))
@@ -18,7 +18,7 @@ class LgxPayloadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d);self.payload(p);(p/'storage.json').write_text('never package');(p/'private.key').write_text('never package')
             names,_=module.files_for_variant(p,'darwin-arm64')
-            self.assertEqual(len(names),5);self.assertNotIn('storage.json',names);self.assertNotIn('private.key',names)
+            self.assertEqual(len(names),7);self.assertNotIn('storage.json',names);self.assertNotIn('private.key',names)
     def test_missing_plugin_is_rejected(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d);self.payload(p);(p/'commons_primitives_ui_plugin.dylib').unlink()

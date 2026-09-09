@@ -34,6 +34,8 @@ class CommonsPrimitivesUi
     PROP(QString thresholdWitnessLabel="No witness selected" READONLY)
     PROP(QString distributionStateAccount="" READONLY)
     PROP(QString groupStateAccount="" READONLY)
+    PROP(QString groupStateJson="{}" READONLY)
+    PROP(QString distributionStateJson="{}" READONLY)
     PROP(QString distributionSummary="No live distribution state loaded." READONLY)
     PROP(QString groupSummary="No live group state loaded." READONLY)
     SIGNAL(operationFinished(QString operation, QString resultJson))

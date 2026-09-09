@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-09-09T03:45:32.120129+00:00",
+  "regression": "Native macOS workspace popup ignored the shared dark theme and displayed an oversized white surface.",
+  "fixed": true,
+  "actual_basecamp_ui_verified": true,
+  "ui_checks": [
+    "dark readable opened menu",
+    "selected current workspace without transaction",
+    "current group state loaded",
+    "executed decision disables repeat execution",
+    "credential selection preserves loaded public state",
+    "exact unsigned proposed value enables review"
+  ],
+  "qml_control_suite": {
+    "passed": 20,
+    "failed": 0,
+    "synthetic_data_only": true
+  },
+  "native_suites_passed": 4,
+  "tooling_tests_passed": 73,
+  "credential_export_tests_passed": 5,
+  "source_sha256": {
+    "Main.qml": "644a4dfdc52c321602cc2eddb9ac9b933bb20eb772cc353d81ddd95c9066ffdc",
+    "WorkspacePicker.qml": "3c5192baf3ac65eca4aaf57e4ede462aa0ec3a9b2f0dfb1e694dc42033a99594",
+    "WorkspaceState.js": "4ce20f5782d9b275190421e0bb986e16d41389b8d2fa0b10197bba87f26ea737"
+  },
+  "on_chain_ui_proposal_in_progress": true,
+  "full_threshold_ui_flow_claimed_complete": false
+}

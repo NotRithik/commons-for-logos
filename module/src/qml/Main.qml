@@ -4,6 +4,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import Logos.Theme
 import Logos.Controls
+import "WorkspaceState.js" as WorkspaceState
 
 Item {
     id: root
@@ -13,6 +14,10 @@ Item {
     readonly property bool configured: ready && backend && backend.configured
     readonly property bool busy: ready && backend && backend.busy
     readonly property bool canWrite: configured && backend && !backend.readOnly
+    readonly property var groupActions: WorkspaceState.group(backend ? backend.groupStateJson : "{}",
+        groupState.text, backend ? backend.groupStateAccount : "")
+    readonly property var membershipActions: WorkspaceState.membership(backend ? backend.distributionStateJson : "{}",
+        allowState.text, backend ? backend.distributionStateAccount : "")
     property bool connectionExpanded: true
     property bool allowCreateExpanded: false
     property bool groupCreateExpanded: false
@@ -62,7 +67,7 @@ Item {
     function submitConfirmedWrite() {
         const a = root.pendingArguments
         const b = root.backend
-        if (!root.configured || root.busy || !b) return
+        if (!root.canWrite || root.busy || !b) return
         let reply
         switch (root.pendingWrite) {
         case "claim": reply = b.claimAllowlist(a[0]); break
@@ -418,9 +423,10 @@ Item {
                     visible: root.savedProfiles.length > 0
                     Layout.fillWidth: true
                     CopyLabel { text: "Workspace" }
-                    ComboBox {
+                    WorkspacePicker {
                         id: workspacePicker
                         objectName: "workspace.picker"
+                        viewportItem: root
                         Accessible.name: "Saved testnet workspace"
                         Layout.fillWidth: true
                         implicitHeight: 40
@@ -436,7 +442,11 @@ Item {
                         palette.buttonText: Theme.palette.text
                         palette.base: Theme.palette.backgroundSecondary
                         palette.button: Theme.palette.backgroundSecondary
-                        palette.highlight: Theme.palette.overlayOrange
+                        palette.window: Theme.palette.surfaceRaised
+                        palette.mid: Theme.palette.border
+                        palette.accent: Theme.palette.primary
+                        palette.placeholderText: Theme.palette.textSecondary
+                        palette.highlight: Theme.palette.backgroundElevated
                         onActivated: root.callBackend(root.backend.openSavedProfile(currentIndex))
                     }
                     Caption { text: "Reads testnet state only" }
@@ -531,7 +541,7 @@ Item {
                                     text: !root.backend ? "No distribution loaded."
                                         : root.backend.distributionStateAccount && allowState.text.trim() !== root.backend.distributionStateAccount
                                           ? "Account changed. Inspect to load this distribution."
-                                          : root.backend.distributionSummary
+                                          : root.membershipActions.message
                                 }
                             }
                             RowLayout {
@@ -541,7 +551,7 @@ Item {
                                     CopyLabel { text: root.backend && root.backend.allowlistWitnessLabel !== "No witness selected" ? "Credential selected on this device" : "No credential selected" }
                                 }
                                 Action { objectName: "allowlist.witnessButton"; text: "Select credential"; Accessible.name: "Choose private claim witness"; enabled: root.canWrite && !root.busy; onClicked: { root.pendingWitnessTarget = "allowlist"; witnessPathDialog.open() } }
-                                Action { objectName: "allowlist.claim"; text: "Register privately"; primary: true; Accessible.name: "Claim allocation privately"; enabled: root.canWrite && !root.busy && root.backend.allowlistWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("claim", [allowState.text], "Register your membership on testnet using the credential selected on this device. A private proof is generated locally; this can take several minutes. Your membership address is not published.") }
+                                Action { objectName: "allowlist.claim"; text: "Register privately"; primary: true; Accessible.name: "Claim allocation privately"; enabled: root.canWrite && !root.busy && root.membershipActions.register && root.backend.allowlistWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("claim", [allowState.text], "Register your membership on testnet using the credential selected on this device. A private proof is generated locally; this can take several minutes. Your membership address is not published.") }
                             }
                             ColumnLayout {
                                 visible: root.allowCreateExpanded
@@ -586,7 +596,7 @@ Item {
                                     text: !root.backend ? "No group loaded."
                                         : root.backend.groupStateAccount && groupState.text.trim() !== root.backend.groupStateAccount
                                           ? "Account changed. Inspect to load this group."
-                                          : root.backend.groupSummary
+                                          : root.groupActions.message
                                 }
                             }
                             RowLayout {
@@ -599,9 +609,9 @@ Item {
                             }
                             RowLayout {
                                 Field { id: nextValue; objectName: "threshold.nextValue"; Accessible.name: "Proposed parameter value"; placeholderText: "New parameter value"; Layout.fillWidth: true }
-                                Action { objectName: "threshold.propose"; text: "Propose"; Accessible.name: "Propose parameter change"; enabled: root.canWrite && !root.busy && root.backend.thresholdWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("propose", [groupState.text, nextValue.text], "Propose changing the group value to " + nextValue.text + ". This creates a proposal, not an execution. Members must approve before it can take effect.") }
-                                Action { objectName: "threshold.approve"; text: "Approve privately"; Accessible.name: "Approve privately"; enabled: root.canWrite && !root.busy && root.backend.thresholdWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("approve", [groupState.text], "Approve the current proposal with your selected membership credential. A private proof is generated on this Mac. The program rejects a second approval by the same member.") }
-                                Action { objectName: "threshold.execute"; text: "Execute"; primary: true; Accessible.name: "Execute approved proposal"; enabled: root.canWrite && !root.busy; onClicked: root.confirmWrite("execute", [groupState.text], "Execute the currently approved proposal on testnet. The program checks the required approval threshold before changing the value.") }
+                                Action { objectName: "threshold.propose"; text: "Propose"; Accessible.name: "Propose parameter change"; enabled: root.canWrite && !root.busy && root.groupActions.propose && WorkspaceState.unsignedValue(nextValue.text) && root.backend.thresholdWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("propose", [groupState.text, nextValue.text], "Propose changing the group value to " + nextValue.text + ". This creates a proposal, not an execution. Members must approve before it can take effect.") }
+                                Action { objectName: "threshold.approve"; text: "Approve privately"; Accessible.name: "Approve privately"; enabled: root.canWrite && !root.busy && root.groupActions.approve && root.backend.thresholdWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("approve", [groupState.text], "Approve the current proposal with your selected membership credential. A private proof is generated on this Mac. The program rejects a second approval by the same member.") }
+                                Action { objectName: "threshold.execute"; text: "Execute"; primary: true; Accessible.name: "Execute approved proposal"; enabled: root.canWrite && !root.busy && root.groupActions.execute; onClicked: root.confirmWrite("execute", [groupState.text], "Execute the currently approved proposal on testnet. The program checks the required approval threshold before changing the value.") }
                             }
                             ColumnLayout {
                                 visible: root.groupCreateExpanded

@@ -1,9 +1,13 @@
 {
   "endpoint": "https://testnet.lez.logos.co/",
-  "distributions": ["D7RGc18T5NnP6j5mkSNSCtCZDrc5CF6yGhRSNBknWSim", "CNsx32sAGebTc88Sqw1synSz4Jd8jrs9K5gC7ARck97V"],
-  "threshold_group": "DdVsxpch4oFvjbEeUyfqePmSjpTbjFunwML266WRyg4U",
+  "distributions": [
+    "G5v74KjfGzTrzTUcixMWtgMqpgV6m1bkzHxLrsziuE7",
+    "E2mUDTg4DioQVHHtbZs6ha7ou1VMXiPf2g87M9kCZ41v"
+  ],
+  "threshold_group": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
   "program_deployment_transactions": {
     "allowlist": "22f1c60325e06dc516c1a663913989c883cd96588df8b024517b095adb8e7634",
     "threshold": "f0f3b3a231c1ed197e803c07a096403290f1681ed38509ed73447dfe7c136e2a"
-  }
+  },
+  "snapshot_note": "Deployment after the 8 September 2026 testnet reset. Check current counts; historical twenty-claim evidence is not a current-state claim."
 }
