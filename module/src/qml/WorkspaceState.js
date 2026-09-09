@@ -2,11 +2,13 @@
 
 // These hints prevent invalid UI actions. The native CLI and chain still decide
 // authorization and validity; no hint is permission to send a transaction.
-function unsignedValue(value) {
-    if (typeof value !== "string") return false
-    const text = value.trim()
-    if (!/^(0|[1-9][0-9]{0,19})$/.test(text)) return false
-    return text.length < 20 || text <= "18446744073709551615"
+function signedValue(value) {
+    // Match cli::validation::integer without converting through a JS double.
+    // Preserve all 64 bits and reject whitespace, exponent notation and + signs.
+    if (typeof value !== "string" || !/^-?(0|[1-9][0-9]{0,18})$/.test(value)) return false
+    const negative = value.charAt(0) === "-"
+    const magnitude = negative ? value.slice(1) : value
+    return magnitude.length < 19 || magnitude <= (negative ? "9223372036854775808" : "9223372036854775807")
 }
 function readState(raw, account, loadedAccount) {
     if (typeof account !== "string" || !/^[a-fA-F0-9]{64}$/.test(account.trim())
@@ -22,12 +24,12 @@ function group(raw, account, loadedAccount) {
     const blocked = {known: false, propose: false, approve: false, execute: false,
         message: "Refresh status to load this group's current decision."}
     if (!s || !count(s.member_count) || !count(s.threshold) || s.threshold < 1
-        || s.threshold > s.member_count || !unsignedValue(s.value)) return blocked
+        || s.threshold > s.member_count || !signedValue(s.value)) return blocked
     if (s.proposal === null) return {known: true, propose: true, approve: false, execute: false,
         message: "No proposal is waiting. Current value: " + s.value + ". Choose a credential and enter a value to propose a change."}
     const p = s.proposal
     if (!p || typeof p.executed !== "boolean" || !count(p.approvals_count)
-        || p.approvals_count > s.member_count || !unsignedValue(p.next_value)) return blocked
+        || p.approvals_count > s.member_count || !signedValue(p.next_value)) return blocked
     if (p.executed) return {known: true, propose: true, approve: false, execute: false,
         message: "Decision applied. Current value: " + s.value + ". This proposal cannot be approved or executed again."}
     const enough = p.approvals_count >= s.threshold

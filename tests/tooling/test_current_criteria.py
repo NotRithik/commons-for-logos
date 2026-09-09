@@ -8,7 +8,7 @@ class CurrentCriteriaTests(unittest.TestCase):
     def group(self,value=43):
         return {'threshold':{'state':{'value':value,'threshold':2,'sequence':2,'proposal':{'next_value':value,'executed':True,'unique_approvals':2,'sequence':2}}}}
     def test_completed_authorized_parameter_change_is_not_limited_to_42(self):
-        for value in [0,42,43,18446744073709551615]:self.assertTrue(m.check_ready(self.group(value),'LP-0002'))
+        for value in [-9223372036854775808,0,42,43,9223372036854775807]:self.assertTrue(m.check_ready(self.group(value),'LP-0002'))
     def test_pending_mismatched_or_under_threshold_does_not_pass(self):
         for key,value in [('executed',False),('unique_approvals',1),('next_value',42),('sequence',1)]:
             r=self.group();r['threshold']['state']['proposal'][key]=value

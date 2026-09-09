@@ -146,7 +146,7 @@ with Escape without selecting or submitting anything. It does not use a native
 macOS menu or change the application's global control style.
 
 Refresh reads the selected account before actions become available. Completed
-proposals cannot be executed again. A new proposal needs an exact unsigned
+proposals cannot be executed again. A new proposal needs an exact signed
 64-bit value and a selected private credential; a pending proposal needs the
 required distinct approvals before Execute becomes available. Full membership
 lists explain that no registrations remain. These are UI safeguards; the native

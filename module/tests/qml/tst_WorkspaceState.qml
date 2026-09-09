@@ -8,11 +8,24 @@ TestCase {
     function state(proposal) {
         return JSON.stringify({member_count: 3, threshold: 2, value: "42", proposal: proposal})
     }
-    function test_u64_validation_keeps_exact_integer_precision() {
-        for (const value of ["0", "42", "9007199254740993", "18446744073709551615"])
-            verify(Rules.unsignedValue(value), value)
-        for (const value of ["", "abc", "-1", "1.5", "1e3", "01", "18446744073709551616", 42])
-            verify(!Rules.unsignedValue(value), String(value))
+    function test_i64_validation_keeps_exact_integer_precision() {
+        for (const value of ["0", "-0", "42", "-1", "9007199254740993", "-9007199254740993", "9223372036854775807", "-9223372036854775808"])
+            verify(Rules.signedValue(value), value)
+        for (const value of ["", "abc", "+1", "1.5", "1e3", "01", "-01", " 42", "42 ", "9223372036854775808", "-9223372036854775809", "18446744073709551615", 42])
+            verify(!Rules.signedValue(value), String(value))
+    }
+    function test_negative_group_values_remain_usable() {
+        const raw = JSON.stringify({member_count:3, threshold:2, value:"-7", proposal:null})
+        const result = Rules.group(raw, account, account)
+        verify(result.known); verify(result.propose)
+        const pending = JSON.stringify({member_count:3, threshold:2, value:"-7", proposal:{executed:false, approvals_count:1, next_value:"-9223372036854775808"}})
+        verify(Rules.group(pending, account, account).approve)
+    }
+    function test_values_beyond_program_range_do_not_enable_actions() {
+        for (const value of ["9223372036854775808", "-9223372036854775809"]) {
+            const raw = JSON.stringify({member_count:3, threshold:2, value:value, proposal:null})
+            verify(!Rules.group(raw, account, account).known)
+        }
     }
     function test_executed_decision_cannot_be_approved_or_executed_again() {
         const result = Rules.group(state({executed: true, approvals_count: 2, next_value: "42"}), account, account)
