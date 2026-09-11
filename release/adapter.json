@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "endpoint": "https://testnet.lez.logos.co/",
+  "program_id": [
+    3644508047,
+    1077172035,
+    924388325,
+    1423087514,
+    3419861245,
+    833550574,
+    229578599,
+    4130777718
+  ],
+  "consumer": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+  "policy": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+  "expected_value": 43,
+  "last_consumed_sequence": 2,
+  "file": "commons_governed_setting",
+  "bytes": 379136,
+  "sha256": "967283c66aefb740eb2df2fca61ed32343ae1f2a82ef5ea6d1d5e4275741d993",
+  "source_commit": "7a93c9c67338aace1c156ac95229ac465615dde4",
+  "deployment_block": 4404,
+  "initialization_block": 4405,
+  "application_block": 4406,
+  "evidence": "evidence/adapter-completed-20260911.json"
+}

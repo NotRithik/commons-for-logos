@@ -55,3 +55,24 @@ explicit statement of the intended current-testnet CU metric. This repository
 reports the measured guest cycles and real proof/confirmation timings separately;
 it does not invent a billed-CU conversion. The issue is an acknowledged limitation,
 not evidence that the prize's compute-reporting interpretation has been accepted.
+
+## Native-UI timings, 11 September 2026
+
+These are measured elapsed times for the actual native client flow, including
+proving, submission and confirmation where applicable. They are not isolated
+proof benchmarks or billed compute units. The policy and membership examples
+are different public instances.
+
+| Confirmed operation | Block | Elapsed seconds | Private proof path |
+|---|---:|---:|---|
+| Propose 100 -> 125 | 4325 | 2152.799 | Yes, RISC0_DEV_MODE=0 |
+| First independent approval | 4362 | 2101.285 | Yes, RISC0_DEV_MODE=0 |
+| Second independent approval | 4426 | 2286.456 | Yes, RISC0_DEV_MODE=0 |
+| Execute approved change | 4437 | 35.008 | Public execution, no new member proof |
+| Register membership | 4430 | 2233.563 | Yes, RISC0_DEV_MODE=0 |
+
+The separate governed-setting consumer's actual compiled-guest preflights measured
+178,942 user cycles for initialization and 186,921 for applying the pinned executed
+decision. These execution measurements did not generate private proofs. Its public
+transactions confirmed in blocks 4405 and 4406. See the sanitized adapter evidence
+and `VERIFICATION.md` for exact scope and public transaction references.

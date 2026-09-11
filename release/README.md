@@ -59,6 +59,18 @@ addresses. The program artifacts have not changed; their immutable hashes and
 download location in `manifest.json` are intentionally preserved.
 
 Use `python3 scripts/check-public-state.py` for current counts and execution state.
-The earlier twenty-claim receipt is historical. The fresh shared decision executed
-at block 559; fresh membership proving continues, so the saved current report does
-not claim that all LP-0003 criteria are complete.
+The pre-reset twenty-claim receipt remains historical. The later public read in
+`evidence/current-state-20260911-1404.json` verifies both post-reset distributions
+with ten unique claims each and the original policy at value 43, sequence 2.
+The independently created native-UI policy reached value 125 in block 4437; its
+receipt is `evidence/ui-execution-4437.json`. These are distinct instances.
+
+`adapter.json` identifies the separate governed-setting consumer. Its public
+deployment, initialization and application confirmed in blocks 4404, 4405 and
+4406. It consumed the original executed value 43, sequence 2, not the newer UI
+policy. `python3 scripts/check-policy-consumer.py` independently verifies its
+current public state without a wallet or transaction.
+
+See `docs/VERIFICATION.md` for the evidence boundaries, successful standalone
+real-proof CI and fresh native package installation. Narrated videos and prize
+acceptance are not implied by those observations.

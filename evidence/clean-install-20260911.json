@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-09-11T16:28:51.260667+00:00",
+  "release": "v0.2.0-rc.1",
+  "source_commit": "42f3bd035209099718ce84ee9ccfc70494b946ca",
+  "installation": "Official Basecamp Package Manager into a fresh, separate owner-only profile",
+  "actual_native_ui_opened": true,
+  "initial_state": "View-only mode",
+  "member_identities_created": 0,
+  "wallet_storage_present": false,
+  "read_only_chain_observation": {
+    "operation": "allowlist.inspect",
+    "block_id": 4481,
+    "state_account": "204c317672d276829d91f07634d5705d9ad64f1d0b79c883281c511eec09ec3a",
+    "claims_count": 1,
+    "member_count": 3
+  },
+  "registration_disabled_without_member": true,
+  "transactions_submitted": 0,
+  "other_profiles_preserved": true
+}

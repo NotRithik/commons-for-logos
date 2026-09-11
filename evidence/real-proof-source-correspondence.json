@@ -1,0 +1,61 @@
+{
+  "observed_at": "2026-09-11T16:23:34.739137+00:00",
+  "workflow_run": "https://github.com/NotRithik/commons-for-logos/actions/runs/34309398475",
+  "run_attempt": 2,
+  "conclusion": "success",
+  "proof_run_commit": "be635758f3d5985a7a2d2f32dbb272255972c67e",
+  "release_commit": "42f3bd035209099718ce84ee9ccfc70494b946ca",
+  "identical_executed_core_sources": [
+    {
+      "path": ".github/workflows/real-proofs.yml",
+      "identical": true,
+      "sha256": "b29431d4c30ce80392f51e9bf5d1d699be44169e0cd89e8b1052d802acc83dd2"
+    },
+    {
+      "path": "integration/src/main.rs",
+      "identical": true,
+      "sha256": "44cfa6a71f374cf31534d488472152a12b905892ef852080dafbde6f7f5235c7"
+    },
+    {
+      "path": "scripts/demo-local.py",
+      "identical": true,
+      "sha256": "90aa3fb6204dc40f0f4b37858f2d4021674cd3db822ebfea8d7bbc15c8f66aa2"
+    },
+    {
+      "path": "scripts/prepare-local.sh",
+      "identical": true,
+      "sha256": "0d05dc3879e89f5e9befe5facd8ba6e432ce1382788a36e9c3dcd02bede41353"
+    },
+    {
+      "path": "testnet/crates/primitives/Cargo.toml",
+      "identical": true,
+      "sha256": "31c27f5b3a77d093e9ab6b1b021e7142659ad5c673d43da77e334fbfdae30fb4"
+    },
+    {
+      "path": "testnet/crates/primitives/src/lib.rs",
+      "identical": true,
+      "sha256": "86fd41527cda2855d1a47b163fb2e5ee7a3770d2429f8743b48432d3ab918655"
+    },
+    {
+      "path": "testnet/crates/primitives/tests/state_machine.rs",
+      "identical": true,
+      "sha256": "e734e8ef7ef474f155e14a22e60dffea599cb3b375199528f557508da0b92373"
+    },
+    {
+      "path": "testnet/crates/guest/Cargo.toml",
+      "identical": true,
+      "sha256": "f68d916d8847272afbd83c9e0ec086dad9be9a86605cf2fff4189809a0365454"
+    },
+    {
+      "path": "testnet/crates/guest/src/bin/allowlist.rs",
+      "identical": true,
+      "sha256": "e322aab498921a8d856944b86604fc09ae3765b504329eba8de96e97058c1f7b"
+    },
+    {
+      "path": "testnet/crates/guest/src/bin/threshold.rs",
+      "identical": true,
+      "sha256": "e55180a2f517c3aff4340bd772f5be0fc6e4f5af284913068de5dc9c9bce3d1f"
+    }
+  ],
+  "scope": "This is source correspondence, not a claim that the entire new repository or GUI was executed by the older CI job. Adapter code and current GUI have separate evidence."
+}

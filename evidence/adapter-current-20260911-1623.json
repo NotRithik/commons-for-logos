@@ -1,0 +1,77 @@
+{
+  "checked_at": "2026-09-11T16:20:30.669743+00:00",
+  "endpoint": "https://testnet.lez.logos.co/",
+  "observed_block_range": [
+    4479,
+    4479
+  ],
+  "wallet_loaded": false,
+  "transactions_submitted": 0,
+  "consumer": {
+    "address": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+    "hex": "6886bbfd6ad47a6b92f3a79feb7ce48a29be23fd596d47a312c257f0a58029e0",
+    "program_id": [
+      3644508047,
+      1077172035,
+      924388325,
+      1423087514,
+      3419861245,
+      833550574,
+      229578599,
+      4130777718
+    ],
+    "state": {
+      "policy_program": [
+        3889587528,
+        4072157194,
+        1675466154,
+        3386074792,
+        1392369498,
+        2156404430,
+        3280262519,
+        3599087292
+      ],
+      "policy_hex": "eb038d5a8a9e154c9d23ff8f9c48656ac970e061d688d5262d736770020c9ac6",
+      "minimum": -9223372036854775808,
+      "maximum": 9223372036854775807,
+      "value": 43,
+      "last_consumed_sequence": 2
+    }
+  },
+  "policy": {
+    "address": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+    "program_id": [
+      3889587528,
+      4072157194,
+      1675466154,
+      3386074792,
+      1392369498,
+      2156404430,
+      3280262519,
+      3599087292
+    ],
+    "state": {
+      "root": "94949b86fcec4d243c2631c299524ad7bb724d0956c188ebb2ca3d10acebc564",
+      "member_count": 3,
+      "threshold": 2,
+      "value": 43,
+      "sequence": 2,
+      "proposal": {
+        "sequence": 2,
+        "next_value": 43,
+        "unique_approvals": 2,
+        "executed": true
+      }
+    }
+  },
+  "matches_recorded_consumer_value": true,
+  "matches_recorded_consumed_sequence": true,
+  "matches_current_executed_policy": true,
+  "not_proven_by_this_read": [
+    "historical approval privacy",
+    "replay rejection",
+    "original transaction timings",
+    "prize acceptance"
+  ],
+  "success": true
+}

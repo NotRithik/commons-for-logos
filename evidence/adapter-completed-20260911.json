@@ -1,0 +1,146 @@
+{
+  "report": {
+    "block_id": 4406,
+    "consumer": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+    "foreign_policy_application_state_unchanged": true,
+    "last_consumed_sequence": 2,
+    "network": "https://testnet.lez.logos.co",
+    "policy": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+    "private_proofs_repeated": 0,
+    "program_id": [
+      3644508047,
+      1077172035,
+      924388325,
+      1423087514,
+      3419861245,
+      833550574,
+      229578599,
+      4130777718
+    ],
+    "replay_rejected_by_real_guest": true,
+    "replay_transaction_sent": false,
+    "stage": "adapter.complete",
+    "success": true,
+    "token_transfers": 0,
+    "value": 43
+  },
+  "events": [
+    {
+      "RISC0_DEV_MODE": "0",
+      "consumer": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+      "member_wallets_loaded": false,
+      "network": "https://testnet.lez.logos.co",
+      "policy": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+      "program_id": [
+        3644508047,
+        1077172035,
+        924388325,
+        1423087514,
+        3419861245,
+        833550574,
+        229578599,
+        4130777718
+      ],
+      "sequence": 2,
+      "stage": "adapter.review",
+      "token_transfers": 0,
+      "value": 43
+    },
+    {
+      "block_id": 4404,
+      "program_id": [
+        3644508047,
+        1077172035,
+        924388325,
+        1423087514,
+        3419861245,
+        833550574,
+        229578599,
+        4130777718
+      ],
+      "stage": "adapter.deploy",
+      "status": "confirmed",
+      "tx_hash": "07f9ed4bfe182bdade9ba74c96af667d7acb10a9182421b9df089091eec639a9"
+    },
+    {
+      "foreign_policy_unchanged": true,
+      "guest_user_cycles": 178942,
+      "proof": false,
+      "stage": "adapter.initialize.guest",
+      "status": "executed-real-guest"
+    },
+    {
+      "block_id": 4405,
+      "consumer": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+      "policy": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+      "private": false,
+      "program_id": [
+        3644508047,
+        1077172035,
+        924388325,
+        1423087514,
+        3419861245,
+        833550574,
+        229578599,
+        4130777718
+      ],
+      "stage": "adapter.initialize",
+      "status": "confirmed",
+      "submission_seconds": 0.811486833,
+      "tx_hash": "020e62e53400ff2d9264df56a96b8311afc86c72433c962a1896a09f404fb739"
+    },
+    {
+      "foreign_policy_unchanged": true,
+      "guest_user_cycles": 186921,
+      "proof": false,
+      "stage": "adapter.apply.guest",
+      "status": "executed-real-guest"
+    },
+    {
+      "block_id": 4406,
+      "consumer": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+      "policy": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+      "private": false,
+      "program_id": [
+        3644508047,
+        1077172035,
+        924388325,
+        1423087514,
+        3419861245,
+        833550574,
+        229578599,
+        4130777718
+      ],
+      "stage": "adapter.apply",
+      "status": "confirmed",
+      "submission_seconds": 0.828134667,
+      "tx_hash": "005541e749193088ec49b6dd398f588581961a637f52752342a7be8c37fa8df4"
+    },
+    {
+      "block_id": 4406,
+      "consumer": "832ZVqb5SW3GJfCuqR9oMTVpzJ1HuXJmt1YSfgjKgstK",
+      "foreign_policy_application_state_unchanged": true,
+      "last_consumed_sequence": 2,
+      "network": "https://testnet.lez.logos.co",
+      "policy": "GpPx8ZmnNCXShTW618xnPy8KjXCfWrZomjMBM7idzWwo",
+      "private_proofs_repeated": 0,
+      "program_id": [
+        3644508047,
+        1077172035,
+        924388325,
+        1423087514,
+        3419861245,
+        833550574,
+        229578599,
+        4130777718
+      ],
+      "replay_rejected_by_real_guest": true,
+      "replay_transaction_sent": false,
+      "stage": "adapter.complete",
+      "success": true,
+      "token_transfers": 0,
+      "value": 43
+    }
+  ],
+  "scope": "Separate public consumer; no member wallet, payment, or private proof was repeated"
+}
