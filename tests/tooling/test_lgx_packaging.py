@@ -18,7 +18,7 @@ class LgxPayloadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d);self.payload(p);(p/'storage.json').write_text('never package');(p/'private.key').write_text('never package')
             names,_=module.files_for_variant(p,'darwin-arm64')
-            self.assertEqual(len(names),7);self.assertNotIn('storage.json',names);self.assertNotIn('private.key',names)
+            self.assertEqual(len(names),8);self.assertIn('qml/GovernancePage.qml',names);self.assertNotIn('storage.json',names);self.assertNotIn('private.key',names)
     def test_missing_plugin_is_rejected(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d);self.payload(p);(p/'commons_primitives_ui_plugin.dylib').unlink()

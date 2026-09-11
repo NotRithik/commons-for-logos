@@ -1,0 +1,22 @@
+{
+  "observed_at": "2026-09-11T15:47:34.466082+00:00",
+  "interface": "real Logos Basecamp 0.2.3 on macOS",
+  "source_commit": "7a93c9c1c0a544d99bff9a2fbb4f5b60d577d79f",
+  "checks": {
+    "duplicate_approval": "rejected with already-approved message; accepted count remained 1/2 before independent Bob vote",
+    "partial_approvals_after_restart": "actual fresh read at block4383 preserved1/2",
+    "bob_independent_approval": "confirmed4426; see receipt",
+    "governance_execution": "actual UI125 and applied in block4437; exact receipt pending capture",
+    "membership_success": "confirmed4430; see receipt",
+    "duplicate_registration": "rejected with already-registered message",
+    "membership_after_duplicate": "Fresh actual GUI read at block4441 remained1/3 after the duplicate-registration refusal.",
+    "invitation_scrollbar": "Visible vertical scrollbar and wheel scrolling to both beginning and end verified on installed source. Temporary overscroll bounce settled normally.",
+    "private_membership_layout": "counter, credential and Register button fit together without blank stretched page",
+    "clean_launcher": "New key-free Basecamp profile opened successfully; native package installation confirmation awaiting owner click."
+  },
+  "not_claimed": [
+    "builder-narrated video",
+    "current-release standalone CI success",
+    "prize acceptance"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "observed_from": "real Logos Basecamp UI technical-details receipt",
+  "observed_at": "2026-09-11T13:47:32.885987+00:00",
+  "operation": "threshold.propose",
+  "success": true,
+  "private": true,
+  "risc0_dev_mode": "0",
+  "block_id": 4325,
+  "seconds": 2152.799095208,
+  "tx_hash": "c9bea45b061b52b3f33a02de2d049179d511557ffd1fd4b7264c87accd2c886f",
+  "state_account": "a1e6574dfa45a9f9d7c9ed72f9d3721baef68078ce28ffb45813a8f55d8bdf6e",
+  "state": {
+    "fingerprint": "3ac36c2842373a3d948ef04abb24973d542a9e3092d0f988dfd7d7156a4ee97f",
+    "member_count": 3,
+    "threshold": 2,
+    "value": "100",
+    "sequence": 1,
+    "proposal": {
+      "sequence": 1,
+      "next_value": "125",
+      "approvals_count": 0,
+      "executed": false
+    }
+  }
+}

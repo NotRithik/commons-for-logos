@@ -1,0 +1,25 @@
+{
+  "observed_from": "actual Basecamp technical-details receipt",
+  "observed_at": "2026-09-11T15:36:55.986179+00:00",
+  "operation": "threshold.approve",
+  "success": true,
+  "private": true,
+  "risc0_dev_mode": "0",
+  "block_id": 4426,
+  "seconds": 2286.455762583,
+  "state_account": "a1e6574dfa45a9f9d7c9ed72f9d3721baef68078ce28ffb45813a8f55d8bdf6e",
+  "tx_hash": "8aca23a4bbaaa10ea4c28ce5f8916b3b5061eac343ed8eb4989959cb50d78ede",
+  "state": {
+    "fingerprint": "515b88ec4e017b7111f536bdd5dee3b7e5fb1f8be9ef99edfd445a5cf99cad96",
+    "member_count": 3,
+    "sequence": 1,
+    "threshold": 2,
+    "value": "100",
+    "proposal": {
+      "sequence": 1,
+      "next_value": "125",
+      "approvals_count": 2,
+      "executed": false
+    }
+  }
+}

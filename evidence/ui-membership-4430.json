@@ -1,0 +1,18 @@
+{
+  "observed_from": "actual Basecamp technical-details receipt",
+  "observed_at": "2026-09-11T15:39:23.564339+00:00",
+  "operation": "allowlist.claim",
+  "success": true,
+  "private": true,
+  "risc0_dev_mode": "0",
+  "block_id": 4430,
+  "seconds": 2233.562747958,
+  "state_account": "204c317672d276829d91f07634d5705d9ad64f1d0b79c883281c511eec09ec3a",
+  "tx_hash": "1f540b6ef0991b9df28cb0cc42c3fca4b729bacca800617d70744a98be406e7c",
+  "state": {
+    "claims_count": 1,
+    "member_count": 3,
+    "fingerprint": "58371e9cd42606f9dc4844165b3d76e83dd96e7dd69486a0cbc751bf0f43a0b0",
+    "root": "4a0ebc7f4ebc4660a1a3e89c5f63543a80b764944c8422d5bea41fa9ef77556a"
+  }
+}

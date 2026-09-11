@@ -20,6 +20,52 @@ The standard app uses the official LEZ endpoint. A local sequencer is needed onl
 for the separate reproducible development/CI test. Proof generation happens on
 the user's machine through RISC Zero; no hosted model or prover API is used.
 
+## Start a separate Commons window
+
+Use the source checkout and matching release client. Keep `commons-logos-cli` next
+to its `artifacts` folder containing the two original program files. The launcher
+below does not replace an existing Basecamp installation or reuse a Kite profile.
+
+First fetch the pinned local proving prerequisites. This step downloads and checks
+official archives, but does not install or run them globally:
+
+```sh
+mkdir -p out
+python3 scripts/fetch-proof-deps.py out/proof-deps
+```
+
+On macOS, point the launcher at your actual Basecamp application and the extracted
+client. Replace the first two example paths with your own installed locations:
+
+```sh
+python3 scripts/launch-basecamp.py \
+  --basecamp "/Applications/LogosBasecamp.app" \
+  --client "/absolute/path/to/commons-client/commons-logos-cli" \
+  --proof-paths "$PWD/out/proof-deps/paths.json" \
+  --profile "$HOME/Commons-Demo" \
+  --prepare-only
+```
+
+`--prepare-only` validates local dependency paths and creates a dedicated key-free
+reader. It does not open the app, create member keys, contact the testnet, or send
+a transaction. Remove `--prepare-only` from that same command to open the window.
+On Linux, use the installed Basecamp executable instead of a `.app` path. The
+launcher supports that command form; native Linux compilation is verified in CI,
+while the recorded interactive desktop run is macOS.
+
+In the new window, open **Package Manager**, install the verified Commons `.lgx`,
+and open **Commons** from the sidebar. The initial reader is intentionally
+view-only. Open **My workspaces** to create your own member identity or choose an
+existing one. You do not need to create a funded agent, copy another member's
+wallet, or edit JSON merely to begin onboarding.
+
+Keep the launcher terminal and app open while a private proof is running. Rerunning
+the same launcher refuses a second instance; it does not kill the first one. An
+unrelated existing profile directory is rejected. Reuse your existing Commons
+profile rather than choosing a new folder to retry an uncertain transaction.
+The local `logs` folder can contain dependency diagnostics; do not publish it as
+proof evidence. Use sanitized receipts and the recording guides instead.
+
 ## Workflows
 
 Start with [the plain-English walkthrough](QUICK-START.md). In **My workspaces**,

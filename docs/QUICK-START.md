@@ -85,3 +85,12 @@ A testnet reset can remove earlier deployments or make old wallet history incomp
 Member secret keys and private credentials stay on their devices. Public application state does not contain the member address list or reveal which member approved. Group settings, proposal values, approval and registration counts, transaction timing, and the public state reference are observable. The organizer sees enrollments supplied to them; this is not anonymity from an organizer who already knows those members. Network traffic and off-chain coordination can leak information beyond the application state.
 
 See [PRIVACY.md](PRIVACY.md), [PROTOCOL.md](PROTOCOL.md), and [ERRORS.md](ERRORS.md) for the precise assumptions and limitations. Keep enrollment/invitation documents and private settings out of a public recording. Show the named workspace, reviewed action, proof status, and confirmed public outcome instead.
+
+## Starting from a downloaded release
+
+Use [Start a separate Commons window](GUI.md#start-a-separate-commons-window) to
+connect the matching client, local proof engine and a dedicated Basecamp profile.
+The launcher prepares a view-only reader first; it never creates a member wallet
+or sends a transaction just by opening the app. Install the Commons package in
+that window's Package Manager, then use the named identity/workspace flow above.
+This profile is separate from Kite and does not require an agent-chat setup.
