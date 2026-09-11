@@ -133,11 +133,16 @@ pub fn validate(req: &Request, op: Op) -> Result<()> {
     );
     ensure!(req.operation == op.id(), "operation mismatch");
     ensure!(
-        req.arguments.len() == op.keys().len()
-            && op.keys().iter().all(|k| req.arguments.contains_key(*k)),
+        op.keys().iter().all(|k| req.arguments.contains_key(*k))
+            && req.arguments.keys().all(|k| op.keys().contains(&k.as_str())
+                || (matches!(op, Op::Propose | Op::Approve | Op::Execute)
+                    && k == "expected_state_fingerprint")),
         "exact argument set required"
     );
     account(string(&req.arguments, "state_account")?)?;
+    if req.arguments.contains_key("expected_state_fingerprint") {
+        hash(string(&req.arguments, "expected_state_fingerprint")?)?;
+    }
     if matches!(op, Op::CreateDistribution | Op::CreateGroup) {
         hash(string(&req.arguments, "root")?)?;
         count(&req.arguments, "member_count")?;

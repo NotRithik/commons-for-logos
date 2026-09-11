@@ -86,6 +86,15 @@ int main(int argc, char** argv)
     out.insert(QStringLiteral("state_account"),
                requestArguments.value(QStringLiteral("state_account")).toString());
     out.insert(QStringLiteral("state"), state);
+    if (mode.startsWith("execute-")) {
+        QJsonObject proposal{{"sequence",2},{"next_value","43"},{"approvals_count",2},{"executed",mode != "execute-pending"}};
+        QJsonObject group{{"sequence",2},{"member_count",3},{"threshold",2},{"value","43"},{"proposal",proposal}};
+        if (mode == "execute-wrong-value") group.insert("value","42");
+        if (mode == "execute-wrong-sequence") group.insert("sequence",1);
+        if (mode == "execute-wrong-account") out.insert("state_account",QString(64,'b'));
+        if (mode == "execute-low-threshold") {proposal.insert("approvals_count",1);group.insert("proposal",proposal);}
+        out.insert("state",group);out.insert("tx_hash",QString(64,'1'));out.insert("block_id",559);
+    }
     writeJson(out);
     return 0;
 }

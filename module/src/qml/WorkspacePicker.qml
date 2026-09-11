@@ -13,6 +13,9 @@ Basic.ComboBox {
     readonly property real desiredPopupHeight: Math.min(maximumPopupHeight, count * 44 + 8)
     readonly property bool opensBelow: roomBelow >= desiredPopupHeight || roomBelow >= roomAbove
 
+    Accessible.onPressAction: {
+        if (enabled) { if (popup.visible) popup.close(); else popup.open() }
+    }
     implicitHeight: 42
     leftPadding: 12
     rightPadding: 34
@@ -44,6 +47,14 @@ Basic.ComboBox {
         height: 44
         text: control.textAt(index)
         Accessible.name: text
+        Accessible.role: Accessible.ListItem
+        Accessible.onPressAction: {
+            if (control.enabled) {
+                control.currentIndex = index
+                control.activated(index)
+                control.popup.close()
+            }
+        }
         highlighted: control.highlightedIndex === index
         hoverEnabled: true
         contentItem: Text {

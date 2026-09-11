@@ -80,6 +80,29 @@ private slots:
         qunsetenv("COMMONS_TEST_SECRET");
     }
 
+    void executionReceiptMustProveTheRequestedState_data()
+    {
+        QTest::addColumn<QByteArray>("mode"); QTest::addColumn<bool>("accepted");
+        QTest::newRow("complete") << QByteArray("execute-good") << true;
+        QTest::newRow("old-pending") << QByteArray("execute-pending") << false;
+        QTest::newRow("wrong-value") << QByteArray("execute-wrong-value") << false;
+        QTest::newRow("wrong-sequence") << QByteArray("execute-wrong-sequence") << false;
+        QTest::newRow("wrong-account") << QByteArray("execute-wrong-account") << false;
+        QTest::newRow("too-few-approvals") << QByteArray("execute-low-threshold") << false;
+    }
+    void executionReceiptMustProveTheRequestedState()
+    {
+        QFETCH(QByteArray, mode); QFETCH(bool, accepted);
+        qputenv("COMMONS_FAKE_CLI_MODE",mode);
+        QTemporaryDir temp; QVERIFY(temp.isValid());
+        LogosCliClient client;QString error;
+        QVERIFY(client.configure(fakeCliPath(),makeTestnetWallet(temp),&error));
+        QSignalSpy complete(&client,&LogosCliClient::completed), failed(&client,&LogosCliClient::failed);
+        QVERIFY(client.start(PrimitiveOperation::ThresholdExecute,{{"state_account",hex32()}}).accepted);
+        QTRY_COMPARE_WITH_TIMEOUT(complete.count()+failed.count(),1,5000);
+        QCOMPARE(complete.count(),accepted?1:0);QCOMPARE(failed.count(),accepted?0:1);
+    }
+
     void configurationRequiresNamedCli()
     {
         QTemporaryDir temp;

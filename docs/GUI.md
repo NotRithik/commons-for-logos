@@ -22,11 +22,25 @@ the user's machine through RISC Zero; no hosted model or prover API is used.
 
 ## Workflows
 
-**Membership:** create a distribution from an eligibility root, load the public
-state account, select an eligible member's witness file, and claim privately.
-**Shared approvals:** create a threshold group, propose a value, gather distinct
-private approvals, then execute the approved change. Read the state again to
-confirm the result.
+Start with [the plain-English walkthrough](QUICK-START.md). In **My workspaces**,
+load an existing member identity or create your own. Organizers prepare a named
+membership list or decision policy from member enrollments. Participants import
+their individual invitations; an eligible organizer can **Enable my membership**.
+These steps save local data and do not publish, register or vote.
+
+**Membership:** open the named list, refresh its public status, then review and
+choose **Register privately**. Each eligible member can register once per list.
+The example is an allowlist gate, not a token payout.
+
+**Shared approvals:** open a named policy and propose an exact whole-number value.
+Distinct members separately review and approve. **Apply change** becomes available
+when the threshold is reached. Read the final state to verify the intended value
+and proposal sequence, not just that a transaction hash was returned.
+
+Preparing a new workspace saves a draft; **Review first publication** is the separate
+on-chain creation step. Blockchain references and manual credential selection
+remain available under advanced controls for developers, not as required inputs
+for the ordinary named-workspace flow.
 
 A testnet submission can take several minutes while its local proof is generated.
 Do not treat a pending operation as confirmed. The app displays success only
@@ -84,7 +98,9 @@ The views import `Logos.Theme` and `Logos.Controls` from the installed Basecamp
 host. Buttons, tabs, typography, background surfaces and status colors use the
 same design tokens as Basecamp's own applications. No font files or substitute
 theme are shipped. Private membership and shared approvals are tabs in the same
-Commons module; the Commons Relay owner view is a separate module in the same host.
+Commons module. They call separate on-chain programs. Commons Relay / Kite is a
+separate project and package; it is not a dependency of this module. Separate
+Basecamp profiles can be used to keep their demonstrations isolated.
 
 An operator can set `COMMONS_DEFAULT_CLI` and `COMMONS_DEFAULT_WALLET` in the
 Basecamp launch environment. They are validated exactly like manually entered
@@ -103,11 +119,13 @@ writes. It can contain the testnet marker, endpoint configuration and program ID
 without `storage.json`, private member keys or credentials. The label indicates
 view-only mode; the last successful read includes its block number.
 
-To register or approve, configure an actual member wallet and choose the private
-credential supplied by its organizer. Review the action and wait for a confirmed
-receipt. Private proving can take many minutes; a busy screen is not permission to
-send the same transaction twice. Organizer setup remains an advanced flow: an
-unused state account and genuine prepared membership commitment are required.
+To register or approve, select your member identity and import its individual
+invitation. The app derives the private credential locally; the organizer should
+never ask for your signing key or send another member's wallet. Review the action
+and wait for a confirmed receipt. Private proving can take many minutes; a busy
+screen is not permission to send the same transaction twice. The named organizer
+flow prepares the state reference and membership commitment for you. The manual
+root/account form remains available as an advanced developer path.
 
 After the public testnet reset on 8 September, old catalog entries are labelled
 as archives and a fresh live viewing workspace is separate. Historical receipts

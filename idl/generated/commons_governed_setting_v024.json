@@ -1,0 +1,264 @@
+{
+  "version": "0.1.0",
+  "name": "commons_governed_setting_v024",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "consumer",
+          "writable": true,
+          "signer": true,
+          "init": true,
+          "visibility": [
+            "public"
+          ]
+        },
+        {
+          "name": "policy_state",
+          "writable": false,
+          "signer": false,
+          "init": false,
+          "visibility": [
+            "public"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "policy",
+          "type": {
+            "defined": "PolicyBinding"
+          }
+        },
+        {
+          "name": "minimum",
+          "type": "i64"
+        },
+        {
+          "name": "maximum",
+          "type": "i64"
+        },
+        {
+          "name": "initial_value",
+          "type": "i64"
+        }
+      ],
+      "execution": {
+        "public": true,
+        "private_owned": false
+      },
+      "variant": "Initialize"
+    },
+    {
+      "name": "apply",
+      "accounts": [
+        {
+          "name": "consumer",
+          "writable": true,
+          "signer": false,
+          "init": false,
+          "visibility": [
+            "public"
+          ]
+        },
+        {
+          "name": "policy_state",
+          "writable": false,
+          "signer": false,
+          "init": false,
+          "visibility": [
+            "public"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "expected_sequence",
+          "type": "u64"
+        },
+        {
+          "name": "expected_value",
+          "type": "i64"
+        }
+      ],
+      "execution": {
+        "public": true,
+        "private_owned": false
+      },
+      "variant": "Apply"
+    }
+  ],
+  "accounts": [
+    {
+      "name": "GovernedSetting",
+      "type": {
+        "name": "GovernedSetting",
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "magic",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "policy",
+            "type": {
+              "defined": "PolicyBinding"
+            }
+          },
+          {
+            "name": "minimum",
+            "type": "i64"
+          },
+          {
+            "name": "maximum",
+            "type": "i64"
+          },
+          {
+            "name": "value",
+            "type": "i64"
+          },
+          {
+            "name": "last_consumed_sequence",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "PolicyBinding",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "program_id",
+          "type": {
+            "array": [
+              "u32",
+              8
+            ]
+          }
+        },
+        {
+          "name": "state_account",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "GovernedSetting",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "magic",
+          "type": {
+            "array": [
+              "u8",
+              8
+            ]
+          }
+        },
+        {
+          "name": "policy",
+          "type": {
+            "defined": "PolicyBinding"
+          }
+        },
+        {
+          "name": "minimum",
+          "type": "i64"
+        },
+        {
+          "name": "maximum",
+          "type": "i64"
+        },
+        {
+          "name": "value",
+          "type": "i64"
+        },
+        {
+          "name": "last_consumed_sequence",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 2001,
+      "name": "AccountCount",
+      "msg": "COMMONS_ADAPTER_2001_AccountCount"
+    },
+    {
+      "code": 2002,
+      "name": "WrongPolicyAccount",
+      "msg": "COMMONS_ADAPTER_2002_WrongPolicyAccount"
+    },
+    {
+      "code": 2003,
+      "name": "WrongPolicyProgram",
+      "msg": "COMMONS_ADAPTER_2003_WrongPolicyProgram"
+    },
+    {
+      "code": 2004,
+      "name": "InvalidPolicyState",
+      "msg": "COMMONS_ADAPTER_2004_InvalidPolicyState"
+    },
+    {
+      "code": 2005,
+      "name": "DecisionNotExecuted",
+      "msg": "COMMONS_ADAPTER_2005_DecisionNotExecuted"
+    },
+    {
+      "code": 2006,
+      "name": "DecisionAlreadyConsumed",
+      "msg": "COMMONS_ADAPTER_2006_DecisionAlreadyConsumed"
+    },
+    {
+      "code": 2007,
+      "name": "UnexpectedDecision",
+      "msg": "COMMONS_ADAPTER_2007_UnexpectedDecision"
+    },
+    {
+      "code": 2008,
+      "name": "ValueOutsideBounds",
+      "msg": "COMMONS_ADAPTER_2008_ValueOutsideBounds"
+    },
+    {
+      "code": 2009,
+      "name": "UnauthorizedInitialization",
+      "msg": "COMMONS_ADAPTER_2009_UnauthorizedInitialization"
+    },
+    {
+      "code": 2010,
+      "name": "AlreadyInitialized",
+      "msg": "COMMONS_ADAPTER_2010_AlreadyInitialized"
+    },
+    {
+      "code": 2011,
+      "name": "WrongConsumerProgram",
+      "msg": "COMMONS_ADAPTER_2011_WrongConsumerProgram"
+    },
+    {
+      "code": 2012,
+      "name": "InvalidConsumerState",
+      "msg": "COMMONS_ADAPTER_2012_InvalidConsumerState"
+    },
+    {
+      "code": 2013,
+      "name": "DataTooLarge",
+      "msg": "COMMONS_ADAPTER_2013_DataTooLarge"
+    }
+  ],
+  "metadata": {
+    "name": "commons_governed_setting_v024",
+    "version": "0.1.0"
+  },
+  "instruction_type": "commons_logos_policy_adapter::GovernedSettingInstruction"
+}

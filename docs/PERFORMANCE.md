@@ -45,3 +45,13 @@ that interface**. The table above documents the reproducible guest-cycle
 measurements instead. The inner membership guest, outer privacy circuit, proof
 compression and network confirmation are different costs and are not summed
 into a made-up CU figure.
+
+## Upstream compute-receipt limitation
+
+The missing per-transaction consumed-CU field is tracked in the open upstream
+[LEZ issue 840](https://github.com/logos-blockchain/logos-execution-zone/issues/840),
+which identifies the pinned revision and asks for either metered receipts or an
+explicit statement of the intended current-testnet CU metric. This repository
+reports the measured guest cycles and real proof/confirmation timings separately;
+it does not invent a billed-CU conversion. The issue is an acknowledged limitation,
+not evidence that the prize's compute-reporting interpretation has been accepted.

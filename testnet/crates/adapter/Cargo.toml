@@ -1,0 +1,22 @@
+[package]
+name = "commons-logos-policy-adapter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+commons-logos-testnet-primitives = { path = "../primitives" }
+lee_core.workspace = true
+borsh.workspace = true
+serde.workspace = true
+risc0-zkvm.workspace = true
+
+[features]
+default = []
+host = ["commons-logos-testnet-primitives/host", "lee_core/host"]
+
+[[example]]
+name = "commons_governed_setting"
+path = "examples/governed_setting.rs"
+test = false
+bench = false

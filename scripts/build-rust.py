@@ -30,6 +30,7 @@ def main() -> None:
     parser.add_argument('--guest-rustc', type=Path)
     parser.add_argument('--package', action='append', default=[])
     parser.add_argument('--features')
+    parser.add_argument('--example', help='Build one explicitly named Rust example')
     args = parser.parse_args()
     manifest = args.manifest.resolve(strict=True)
     if manifest.name != 'Cargo.toml':
@@ -51,6 +52,8 @@ def main() -> None:
         command += ['-p', package]
     if args.features:
         command += ['--features', args.features]
+    if args.example:
+        command += ['--example', args.example]
     if args.kind == 'guest':
         env['RUSTC'] = str(args.guest_rustc.resolve(strict=True))
         command += ['--release', '--target', 'riscv32im-risc0-zkvm-elf']

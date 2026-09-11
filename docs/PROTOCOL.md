@@ -40,7 +40,9 @@ The production CLI cannot select a public path for a witness-bearing operation. 
 
 Threshold execution is permissionless **after** the threshold has been met; the production CLI uses an unsigned public state-account reference for this operation. An authorized creator is still required to initialize that state account.
 
-The CLI takes an exclusive per-wallet lock. After a transaction is broadcast, it atomically persists the hash and operation before awaiting finality. An interrupted client must reconcile that pending hash and resynchronize wallet state before attempting a different mutation. A network error is not taken as proof that an earlier transaction never landed.
+The CLI takes an exclusive per-wallet lock. Direct threshold execution saves its deterministic transaction hash and exact intent before broadcasting, then validates the confirmed transaction and intended postcondition. The pinned upstream private API combines proving and submission: for private actions the client can save the returned hash only after that call returns. Therefore a crash or lost reply during that upstream call is not covered by an independently durable pre-broadcast checkpoint. A known pending hash must be reconciled and wallet state resynchronized before another mutation. Do not infer non-submission from a timeout, delete a pending record to force a retry, or claim that every ambiguous private submission can be recovered automatically.
+
+An explicitly configured missing local proof engine and the pinned wallet's typed circuit-proving failure are pre-submission errors for that attempt. They receive specific safe messages, separate from uncertain send failures. Membership credentials and raw upstream diagnostic payloads are never echoed into public errors.
 
 ## Evidence boundary
 

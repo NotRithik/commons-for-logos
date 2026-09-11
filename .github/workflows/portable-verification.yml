@@ -36,6 +36,8 @@ jobs:
           cargo +1.94.0 fetch --locked --manifest-path testnet/Cargo.toml
           cargo +1.94.0 fetch --locked --manifest-path idl/Cargo.toml
           cargo +1.94.0 fetch --locked --manifest-path credential-tool/Cargo.toml
+      - name: Build the reusable on-chain policy consumer library
+        run: cargo +1.94.0 check --locked --offline --manifest-path testnet/Cargo.toml -p commons-logos-policy-adapter --features host
       - name: Run v0.2.4 host and serialization tests
         run: cargo +1.94.0 test --locked --offline --manifest-path testnet/Cargo.toml -p commons-logos-testnet-primitives -p commons-logos-testnet-sdk
       - name: Test and regenerate the actual SPEL IDLs

@@ -1,10 +1,10 @@
 {
   "name": "commons_primitives_ui",
   "display_name": "Commons for Logos",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "ui_qml",
   "interface": "universal",
-  "category": "wallet",
+  "category": "governance",
   "description": "Private allowlists and threshold approvals for Logos Basecamp",
   "main": "commons_primitives_ui_plugin",
   "icon": "icons/commons.svg",

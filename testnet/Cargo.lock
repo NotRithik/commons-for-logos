@@ -482,6 +482,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "commons-logos-policy-adapter"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "commons-logos-testnet-primitives",
+ "lee_core",
+ "risc0-zkvm",
+ "serde",
+]
+
+[[package]]
 name = "commons-logos-testnet-guests"
 version = "0.1.0"
 dependencies = [

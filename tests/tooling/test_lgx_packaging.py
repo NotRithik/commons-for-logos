@@ -10,7 +10,7 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 class LgxPayloadTests(unittest.TestCase):
     def payload(self,p):
-        names=['commons_primitives_ui_plugin.dylib','commons_primitives_ui_replica_factory.dylib','qml/Main.qml','qml/WorkspacePicker.qml','qml/WorkspaceState.js','icons/commons.svg']
+        names=['commons_primitives_ui_plugin.dylib','commons_primitives_ui_replica_factory.dylib','qml/Main.qml','qml/WorkspacePicker.qml','qml/WorkspaceState.js','qml/GovernancePage.qml','icons/commons.svg']
         for name in names:
             path=p/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('test fixture')
         (p/'metadata.json').write_text(json.dumps({'name':module.NAME,'type':'ui_qml','view':'qml/Main.qml','version':'0.1.0'}))

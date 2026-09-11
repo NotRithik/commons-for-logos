@@ -1,5 +1,6 @@
 //! Accurate v0.2.4 IDL generation through the pinned official SPEL parser.
 //! Interface declarations are derived from the compiled program's real enum.
+mod adapter;
 use anyhow::{bail, ensure, Context, Result};
 use quote::ToTokens;
 use serde_json::json;
@@ -265,8 +266,9 @@ fn main() -> Result<()> {
         .to_owned();
     let out = root.join("idl/generated");
     let idls = generate(&root, &out)?;
+    adapter::generate(&root, &out)?;
     println!(
-        "Generated {} exact v0.2.4 SPEL IDLs at {}",
+        "Generated {} primitive SPEL IDLs plus the separate adapter IDL at {}",
         idls.len(),
         out.display()
     );

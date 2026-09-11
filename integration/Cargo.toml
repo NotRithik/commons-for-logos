@@ -7,6 +7,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+commons-logos-policy-adapter = { path = "../testnet/crates/adapter", features = ["host"] }
 commons-logos-testnet-primitives = { path = "../testnet/crates/primitives", features = ["host"] }
 wallet = { git = "https://github.com/logos-blockchain/logos-execution-zone", rev = "47eba256479f6f785acbd138834340703cd03401" }
 lee = { git = "https://github.com/logos-blockchain/logos-execution-zone", rev = "47eba256479f6f785acbd138834340703cd03401" }

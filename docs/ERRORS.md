@@ -35,3 +35,26 @@ The current codes observed in `testnet/crates/primitives/src/lib.rs` are:
 - `IdentityMismatch` is distinct from `InvalidMembership`, which is useful for client integration bugs involving account derivation.
 - Public transaction failure semantics belong partly to LEZ settlement. Public execution failures may still be chargeable, even if the primitive itself does not return an app-state diff.
 - Error strings should not include witness fields. Current formatting uses only code and variant name.
+
+## Native client errors and recovery
+
+These stable client categories are separate from the deterministic program errors
+above. They do not change the guest wire format or program ID. Messages are fixed
+strings: underlying errors may contain private data and are not shown verbatim.
+
+| Client code | User action and boundary |
+| --- | --- |
+| `LOCAL_PROVER_UNAVAILABLE` | An explicitly configured absolute proof-engine path is missing or not executable. Restore the matching local engine. This attempt has not opened a wallet or submitted a transaction. Unconfigured/PATH discovery remains the upstream prover's responsibility. |
+| `LOCAL_PROOF_FAILED` | The pinned wallet returned its typed circuit-proving error before sending this transaction. Check local proof dependencies, then refresh and review again. This classification is not applied to arbitrary send errors. |
+| `MEMBERSHIP_CREDENTIAL_UNREADABLE` | Select the correct protected credential or re-import the original invitation for this identity. A malformed credential does not count as a claim or approval. |
+| `WALLET_BUSY` | Wait for the other operation using this member wallet. Do not remove lock files or start a second copy. |
+| `REVIEWED_STATE_CHANGED` | Refresh and review the current proposal. The previous reviewed state is no longer current. |
+| `READ_ONLY_WORKSPACE` | Use your own member identity for a write; a key-free viewer cannot register or approve. |
+| `EXECUTION_RECONCILIATION_REQUIRED` | Preserve the existing pending intent and reconcile its exact result; do not repeat an execution whose outcome is unresolved. |
+| `CLI_REQUEST_FAILED` | An unclassified request failed. Inspect the actual current state and any pending transaction before retrying. This generic error makes no claim that a transaction was not submitted. |
+
+Network/version/profile errors retain the specific categories in
+`cli/src/main.rs`. A rejected local request, a failed local proof, an included
+failed transaction and a lost response after submission are different outcomes.
+The UI never advances a count merely because a request was accepted or a timer
+is running. Only the confirmed result/live public state determines success.

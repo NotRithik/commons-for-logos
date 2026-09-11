@@ -26,7 +26,7 @@ function group(raw, account, loadedAccount) {
     if (!s || !count(s.member_count) || !count(s.threshold) || s.threshold < 1
         || s.threshold > s.member_count || !signedValue(s.value)) return blocked
     if (s.proposal === null) return {known: true, propose: true, approve: false, execute: false,
-        message: "No proposal is waiting. Current value: " + s.value + ". Choose a credential and enter a value to propose a change."}
+        message: "No proposal is waiting. Current value: " + s.value + ". Enter a new value to propose a change."}
     const p = s.proposal
     if (!p || typeof p.executed !== "boolean" || !count(p.approvals_count)
         || p.approvals_count > s.member_count || !signedValue(p.next_value)) return blocked

@@ -1,6 +1,7 @@
 #include "CommonsLogosCliClient.h"
 
 #include <QFileInfo>
+#include <cmath>
 #include <QDir>
 #include <QSet>
 #ifdef Q_OS_UNIX
@@ -80,6 +81,31 @@ bool stringIsExistingFile(const QJsonObject& object,
                     QStringLiteral("%1 must be an existing absolute file path.").arg(key));
     }
     return true;
+}
+
+bool validExecutionReceipt(const QJsonObject& reply, const QString& requestedAccount)
+{
+    const auto state = reply.value("state").toObject();
+    const auto proposal = state.value("proposal").toObject();
+    const auto sequence = state.value("sequence");
+    const auto proposalSequence = proposal.value("sequence");
+    const double seq = sequence.toDouble(-1);
+    const double pseq = proposalSequence.toDouble(-2);
+    const int members = state.value("member_count").toInt(-1);
+    const int threshold = state.value("threshold").toInt(-1);
+    const int approvals = proposal.value("approvals_count").toInt(-1);
+    const auto value = state.value("value");
+    const auto nextValue = proposal.value("next_value");
+    return reply.value("operation").toString() == "threshold.execute"
+        && reply.value("state_account").toString() == requestedAccount
+        && validateHex32(reply.value("tx_hash").toString())
+        && proposal.value("executed").isBool() && proposal.value("executed").toBool()
+        && sequence.isDouble() && proposalSequence.isDouble()
+        && seq >= 0 && seq <= 9007199254740991.0 && std::floor(seq) == seq && pseq == seq
+        && members >= 1 && members <= 256 && threshold >= 1 && threshold <= members
+        && approvals >= threshold && approvals <= members
+        && value.isString() && nextValue.isString() && validateI64Decimal(value.toString())
+        && value.toString() == nextValue.toString();
 }
 
 QString extractCliError(const QJsonObject& object)
@@ -214,6 +240,7 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
     result.accepted = true;
     result.requestId = QStringLiteral("commons-%1").arg(m_nextRequest++);
     m_currentRequestId = result.requestId;
+    m_currentStateAccount = arguments.value("state_account").toString();
     m_currentOperation = operation;
     m_currentSensitivePaths = sensitivePathsFor(arguments);
 
@@ -250,6 +277,8 @@ StartResult LogosCliClient::start(const PrimitiveOperation operation,
 #endif
     m_stdout.clear();
     m_stderrBytes = 0;
+    m_progressLine.clear();
+    m_dropProgressLine = false;
     connect(process, &QProcess::readyReadStandardOutput, this, &LogosCliClient::collectOutput);
     connect(process, &QProcess::readyReadStandardError, this, &LogosCliClient::collectOutput);
 
@@ -298,6 +327,13 @@ bool LogosCliClient::validateOperationArguments(const PrimitiveOperation operati
     case PrimitiveOperation::ThresholdInspect:
     case PrimitiveOperation::ThresholdExecute: allowedKeys = {"state_account"}; break;
     default: return fail(errorMessage, QStringLiteral("Unknown operation."));
+    }
+    if (operation == PrimitiveOperation::ThresholdPropose
+        || operation == PrimitiveOperation::ThresholdApprove
+        || operation == PrimitiveOperation::ThresholdExecute) {
+        allowedKeys.append("expected_state_fingerprint");
+        if (arguments.contains("expected_state_fingerprint")
+            && !stringIsHex32(arguments,"expected_state_fingerprint",errorMessage)) return false;
     }
     for (auto it=arguments.begin(); it!=arguments.end(); ++it)
         if (!allowedKeys.contains(it.key())) return fail(errorMessage, QStringLiteral("Unknown argument: %1").arg(it.key()));
@@ -405,6 +441,11 @@ void LogosCliClient::finishProcess(const int exitCode, const QProcess::ExitStatu
         return;
     }
 
+    if (m_currentOperation == PrimitiveOperation::ThresholdExecute
+        && !validExecutionReceipt(rawObject, m_currentStateAccount)) {
+        emit failed(requestId, operation, QStringLiteral("The returned transaction does not prove this proposal executed. Refresh state and reconcile before retrying."));
+        return;
+    }
     emit completed(requestId, operation, redactSensitiveJsonObject(rawObject, sensitivePaths));
 }
 
@@ -441,6 +482,32 @@ void LogosCliClient::collectOutput()
         return;
     }
     m_stdout.append(out);
+    // Exact constant markers affect progress text only, never permission or
+    // confirmation. Retain at most one bounded line; discard raw diagnostics.
+    for (const char byte : err) {
+        if (byte == '\n') {
+            if (!m_dropProgressLine) {
+                if (m_progressLine.endsWith('\r')) m_progressLine.chop(1);
+                QString message;
+                if (m_progressLine == "COMMONS_PROGRESS_V1 syncing")
+                    message = QStringLiteral("Synchronizing your existing member wallet with testnet...");
+                else if (m_progressLine == "COMMONS_PROGRESS_V1 proving")
+                    message = QStringLiteral("Generating a real private proof locally (RISC0_DEV_MODE=0). Keep this window open; this may take many minutes.");
+                else if (m_progressLine == "COMMONS_PROGRESS_V1 submitting")
+                    message = QStringLiteral("Submitting the reviewed action to testnet...");
+                else if (m_progressLine == "COMMONS_PROGRESS_V1 confirming")
+                    message = QStringLiteral("Submission returned. Waiting for its testnet confirmation; do not submit another copy.");
+                else if (m_progressLine == "COMMONS_PROGRESS_V1 syncing-result")
+                    message = QStringLiteral("Transaction confirmed. Synchronizing and checking the resulting state...");
+                if (!message.isEmpty()) emit progress(m_currentRequestId, operationId(m_currentOperation), message);
+            }
+            m_progressLine.clear();
+            m_dropProgressLine = false;
+        } else if (!m_dropProgressLine) {
+            if (m_progressLine.size() < 128) m_progressLine.append(byte);
+            else { m_progressLine.clear(); m_dropProgressLine = true; }
+        }
+    }
 }
 
 void LogosCliClient::stopOwnedProcess(QProcess* process)

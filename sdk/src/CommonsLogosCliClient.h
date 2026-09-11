@@ -47,6 +47,7 @@ public:
 
 signals:
     void started(QString requestId, QString operation);
+    void progress(QString requestId, QString operation, QString message);
     void completed(QString requestId, QString operation, QJsonObject result);
     void failed(QString requestId, QString operation, QString errorMessage);
 
@@ -61,6 +62,7 @@ private:
     QString m_walletDir;
     QProcess* m_process = nullptr;
     QString m_currentRequestId;
+    QString m_currentStateAccount;
     PrimitiveOperation m_currentOperation = PrimitiveOperation::AllowlistInspect;
     QStringList m_currentSensitivePaths;
     quint64 m_nextRequest = 1;
@@ -68,6 +70,8 @@ private:
     int m_timeoutMs;
     QByteArray m_stdout;
     qsizetype m_stderrBytes = 0;
+    QByteArray m_progressLine;
+    bool m_dropProgressLine = false;
     static constexpr qsizetype MAX_OUTPUT_BYTES = 1024 * 1024;
 };
 

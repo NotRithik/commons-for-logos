@@ -8,18 +8,26 @@ This release targets the Logos testnet. It is not audited and must not hold real
 
 ## Start here
 
-The native Basecamp module has an allowlist screen, a shared-approvals screen, and a local client connection. Select your wallet profile, inspect a distribution or group, and choose the membership credential stored on your device. Connection paths and transaction JSON stay in collapsible settings and technical details.
+The native Basecamp module has private membership, shared approvals, and **My workspaces**. Create or load your own member identity, select a named list or policy, and review the action before submitting. Organizers can prepare lists and 2-of-3-style approval policies from member enrollments without collecting anyone else's signing key. Each participant imports their own invitation locally. Raw blockchain references, connection paths and transaction JSON stay in advanced controls.
+
+Start with [the plain-English quick start](docs/QUICK-START.md). It explains identities, drafts, publication, invitations and the difference between registering, proposing, approving and applying a change. The examples are a membership gate and a threshold-controlled integer setting, not token payouts or storage provisioning.
+
+LP-0002 and LP-0003 share this module and SDK but use **different on-chain programs**, separate evidence and separate submissions. Kite / Commons Relay (LP-0008) is a different project and is not included in this module's package.
 
 - [Build and install the native module](docs/NATIVE-BUILD.md)
 - [Use the Basecamp app and CLI](docs/GUI.md)
 - [Run the complete local demonstration](docs/LOCAL-DEMO.md)
 - [Protocol and account model](docs/PROTOCOL.md)
+- [Consume an approved decision from another on-chain program](docs/COMPOSABILITY.md)
 - [Privacy model](docs/PRIVACY.md)
+- [LP-0002 recording and narration plan](docs/RECORDING-LP-0002.md)
+- [LP-0003 recording and narration plan](docs/RECORDING-LP-0003.md)
 
 The current testnet addresses are in [release/deployment.json](release/deployment.json).
 Run `python3 scripts/check-public-state.py` to inspect them without loading a wallet
-or sending a transaction. Its `chain_criteria` fields distinguish completed shared
-approvals from the still-running post-reset membership acceptance. A saved snapshot
+or sending a transaction. Its `chain_criteria` fields report the observed shared-approval and membership
+acceptance state. Read the returned counts and timestamp rather than inferring
+completion from this README. A saved snapshot
 is timestamped evidence, not a promise about later testnet resets.
 
 The 7 September twenty-claim and shared-approval receipts remain **historical** in

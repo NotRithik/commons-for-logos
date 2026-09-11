@@ -283,6 +283,10 @@ const char* schemaLiteral()
               },
               "next_value": {
                 "$ref": "#/definitions/i64_decimal"
+              },
+              "expected_state_fingerprint": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$"
               }
             },
             "additionalProperties": false
@@ -312,6 +316,10 @@ const char* schemaLiteral()
               },
               "witness_file": {
                 "$ref": "#/definitions/witness_file"
+              },
+              "expected_state_fingerprint": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$"
               }
             },
             "additionalProperties": false
@@ -337,6 +345,10 @@ const char* schemaLiteral()
             "properties": {
               "state_account": {
                 "$ref": "#/definitions/state_account"
+              },
+              "expected_state_fingerprint": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$"
               }
             },
             "additionalProperties": false

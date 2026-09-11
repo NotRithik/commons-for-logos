@@ -21,6 +21,14 @@ Item {
     property bool connectionExpanded: true
     property bool allowCreateExpanded: false
     property bool groupCreateExpanded: false
+    property bool groupReferenceExpanded: false
+    property bool allowReferenceExpanded: false
+    readonly property bool thresholdCredentialReady: !!(root.backend && root.backend.thresholdWitnessReady === true)
+    readonly property bool allowlistCredentialReady: !!(root.backend && root.backend.allowlistWitnessReady === true)
+    readonly property var selectedPolicy: {
+        try { const p = JSON.parse(root.backend ? root.backend.activeGovernancePolicyJson : "{}"); return p.state_account === groupState.text.trim() ? p : {} }
+        catch (_) { return {} }
+    }
     property bool technicalExpanded: false
     property string pendingWitnessTarget: "allowlist"
     property double operationStartedAt: 0
@@ -34,6 +42,9 @@ Item {
         catch (_) { return [] }
     }
     property string pendingWrite: ""
+    property string pendingFingerprint: ""
+    property string pendingWallet: ""
+    readonly property var reviewedGroup: { try { return JSON.parse(backend ? backend.groupStateJson : "{}") } catch (_) { return {} } }
     property var pendingArguments: []
     onConfiguredChanged: {
         connectionExpanded = !configured
@@ -59,23 +70,50 @@ Item {
     }
     function validAccount(value) { return /^[a-fA-F0-9]{64}$/.test(value.trim()) }
     function confirmWrite(operation, values, explanation) {
+        if (operation === "propose" || operation === "approve" || operation === "execute") {
+            root.pendingFingerprint = root.reviewedGroup.fingerprint || ""
+            if (!root.validAccount(root.pendingFingerprint)) {
+                root.callBackend(JSON.stringify({accepted:false,error:"Refresh this decision before reviewing it. Use the client and module from the same release."}))
+                return
+            }
+            const proposal = root.reviewedGroup.proposal || {}
+            explanation += "\n\nCurrent value: " + root.reviewedGroup.value
+            if (operation !== "propose") explanation += "\nProposal #" + proposal.sequence
+                + ": change to " + proposal.next_value + "\nApprovals recorded: " + proposal.approvals_count
+                + " of " + root.reviewedGroup.threshold + " required."
+            explanation += "\n\nThis approval is bound to the state shown here. A changed policy requires a fresh review."
+        } else root.pendingFingerprint = ""
         root.pendingWrite = operation
         root.pendingArguments = values.slice()
-        confirmationText.text = explanation
+        root.pendingWallet = root.backend ? root.backend.connectionWalletDir : ""
+        let workspace = {}
+        let identity = ""
+        try { workspace=JSON.parse(root.backend.activeGovernancePolicyJson || "{}") } catch (_) {}
+        try { identity=JSON.parse(root.backend.governanceStateJson || "{}").identity_label || "" } catch (_) {}
+        const label = workspace.state_account === values[0] ? workspace.title : ""
+        const context = (label ? "Workspace: " + label + "\n" : "Blockchain reference: " + values[0] + "\n")
+            + (identity ? "Acting as: " + identity + "\n" : "") + "Network: Logos testnet\n\n"
+        confirmationText.text = context + explanation
         writeConfirmation.open()
     }
     function submitConfirmedWrite() {
         const a = root.pendingArguments
         const b = root.backend
         if (!root.canWrite || root.busy || !b) return
+        if (b.connectionWalletDir !== root.pendingWallet) {
+            root.pendingWrite=""
+            root.pendingArguments=[]
+            root.callBackend(JSON.stringify({accepted:false,error:"The selected identity changed. Open the workspace and review this action again."}))
+            return
+        }
         let reply
         switch (root.pendingWrite) {
         case "claim": reply = b.claimAllowlist(a[0]); break
         case "create-allowlist": reply = b.createDistribution(a[0], a[1], a[2]); break
         case "create-group": reply = b.createGroup(a[0], a[1], a[2], a[3], a[4]); break
-        case "propose": reply = b.proposeParameter(a[0], a[1]); break
-        case "approve": reply = b.approveParameter(a[0]); break
-        case "execute": reply = b.executeParameter(a[0]); break
+        case "propose": reply = b.submitReviewedParameter("propose", a[0], a[1], root.pendingFingerprint); break
+        case "approve": reply = b.submitReviewedParameter("approve", a[0], "", root.pendingFingerprint); break
+        case "execute": reply = b.submitReviewedParameter("execute", a[0], "", root.pendingFingerprint); break
         default: return
         }
         root.pendingWrite = ""
@@ -333,7 +371,7 @@ Item {
         }
         contentItem: ColumnLayout {
             spacing: 14
-            CopyLabel { text: "Choose the credential supplied for your membership. The file must be inside your configured wallet folder and stays on this device."; Layout.fillWidth: true }
+            CopyLabel { text: "Choose the private membership file prepared for your identity. The file must be inside your configured wallet folder and stays on this device."; Layout.fillWidth: true }
             Field {
                 id: witnessPathInput
                 objectName: "witness.pathInput"
@@ -361,13 +399,18 @@ Item {
                 SectionHeading { text: "Two things you can do" }
                 CopyLabel { Layout.fillWidth: true; text: "Private membership: prove that you are on a list without publishing your member address. Each member can register once per list. This is a membership gate, not a token payout." }
                 CopyLabel { Layout.fillWidth: true; text: "Shared approvals: propose a change to a group setting. Members approve privately, and the change can be applied only when enough distinct members agree." }
-                SectionHeading { text: "Try an existing workspace" }
-                CopyLabel { Layout.fillWidth: true; text: "1. Choose a named workspace above. Opening it only reads public testnet state; it does not create a transaction. Refresh status shows the current registration count or decision status." }
-                CopyLabel { Layout.fillWidth: true; text: "2. To register or approve, connect your member wallet and choose the credential supplied by the organizer. Keep that credential private. A viewing-only workspace cannot submit actions." }
-                CopyLabel { Layout.fillWidth: true; text: "3. Review the exact action before submitting. Private proof generation can take many minutes on this Mac. Wait for the confirmation; do not send the same action again because it is slow." }
-                SectionHeading { text: "Create a new list or group" }
-                CopyLabel { Layout.fillWidth: true; text: "Organizer setup is currently an advanced flow. It needs an unused state account and the membership commitment generated by the preparation tools. It is not an agent task or a chat prompt. Do not invent these values or paste a normal wallet address into the commitment field." }
-                CopyLabel { Layout.fillWidth: true; text: "For a membership list, enter the commitment and member count, then review Create allowlist. For a decision group, also choose the approval threshold and initial value. The backend checks the inputs before sending." }
+                SectionHeading { text: "Start with your identity" }
+                CopyLabel { Layout.fillWidth: true; text: "Open My workspaces. Load an existing identity or create a new one. Your identity is your member wallet on this computer; it is different from a list or policy. Keep its private files to yourself." }
+                SectionHeading { text: "Join a list or decision" }
+                CopyLabel { Layout.fillWidth: true; text: "Share your enrollment code privately with the organizer. They add that enrollment, not your private key. Select your own identity and use Join with invitation to save the invitation they send back. When you organize a workspace that includes you, use Enable my membership." }
+                SectionHeading { text: "Create a new workspace" }
+                CopyLabel { Layout.fillWidth: true; text: "Choose Create membership list or Create a policy. Give it a name and add each member's enrollment. A policy also needs a starting whole-number value and a required approval count. Preparing a draft only saves it locally. Review first publication is a separate blockchain action." }
+                SectionHeading { text: "Review every action" }
+                CopyLabel { Layout.fillWidth: true; text: "Open the named workspace to read its current state. Register privately records membership once. Propose creates a suggested value; it does not cast a vote. Approve privately records your approval. Apply change becomes available only after enough distinct members have approved." }
+                CopyLabel { Layout.fillWidth: true; text: "The review shows the intended action. Private proof generation can take many minutes. Keep the app open and wait for confirmation; do not submit a duplicate because it is slow. An elapsed timer is not proof of success." }
+                SectionHeading { text: "What is the blockchain reference?" }
+                CopyLabel { Layout.fillWidth: true; text: "It is the public address of one list or policy, like the address of a shared document. It is not a password and does not give someone voting rights. Choosing a saved name fills it in for you; the long address is only under Advanced for cross-checking." }
+                CopyLabel { Layout.fillWidth: true; text: "Saved examples can be viewed without signing keys. A view-only workspace cannot register or vote. In a testnet demo the member keys are local, owner-only files, not encrypted custody storage. Never use them for real money." }
                 CopyLabel { Layout.fillWidth: true; text: "Testnet resets can remove old deployments. Historical receipts are not proof that a list still exists now. Choose a newly deployed workspace after a reset; your old wallet is kept, not replayed." }
             }
         }
@@ -449,7 +492,7 @@ Item {
                         palette.highlight: Theme.palette.backgroundElevated
                         onActivated: root.callBackend(root.backend.openSavedProfile(currentIndex))
                     }
-                    Caption { text: "Reads testnet state only" }
+                    Caption { text: root.backend && root.backend.readOnly ? "View only" : "Member wallet - actions require review" }
                 }
                 GridLayout {
                     visible: root.connectionExpanded
@@ -486,6 +529,7 @@ Item {
         LogosTabBar {
             id: tabs
             Layout.fillWidth: true
+            currentIndex: 2
             LogosTabButton {
                 objectName: "tabs.allowlist"
                 text: "Private membership"
@@ -500,6 +544,13 @@ Item {
                 width: implicitWidth + Theme.spacing.xlarge
                 Accessible.onPressAction: tabs.currentIndex = 1
             }
+            LogosTabButton {
+                objectName: "tabs.governance"
+                text: "My workspaces"
+                Accessible.name: "My workspaces tab"
+                width: implicitWidth + Theme.spacing.xlarge
+                Accessible.onPressAction: tabs.currentIndex = 2
+            }
         }
 
         ScrollView {
@@ -512,10 +563,25 @@ Item {
                 width: contentScroll.availableWidth
                 spacing: 16
                 StackLayout {
+                    id: workspacePages
                     currentIndex: tabs.currentIndex
                     Layout.fillWidth: true
+                    Layout.fillHeight: false
+                    // Do not stretch a short action screen to the height of a
+                    // hidden creation form. Keep controls close to their status.
+                    readonly property real activeHeight: currentIndex === 0 ? membershipCard.implicitHeight
+                        : currentIndex === 1 ? decisionCard.implicitHeight : workspaceLibrary.implicitHeight
+                    Layout.preferredHeight: activeHeight
+                    Layout.minimumHeight: activeHeight
+                    Layout.maximumHeight: activeHeight
+                    onCurrentIndexChanged: Qt.callLater(function() {
+                        if (contentScroll.contentItem && contentScroll.contentItem.contentY !== undefined)
+                            contentScroll.contentItem.contentY = 0
+                    })
                     Card {
+                        id: membershipCard
                         Layout.fillWidth: true
+                        Layout.fillHeight: false
                         contentItem: ColumnLayout {
                             spacing: 16
                             RowLayout {
@@ -524,12 +590,18 @@ Item {
                                     CopyLabel { text: "Prove membership once, without publishing your address."; Layout.fillWidth: true }
                                     Layout.fillWidth: true
                                 }
-                                Action { text: root.allowCreateExpanded ? "Close setup" : "Organizer setup"; onClicked: root.allowCreateExpanded = !root.allowCreateExpanded }
+                                Action { text: root.allowCreateExpanded ? "Close advanced setup" : "Advanced setup"; onClicked: root.allowCreateExpanded = !root.allowCreateExpanded }
                             }
-                            Caption { text: "MEMBERSHIP LIST REFERENCE" }
                             RowLayout {
-                                Field { id: allowState; objectName: "allowlist.stateAccount"; Accessible.name: "Allowlist state account"; placeholderText: "Paste the 64-character state account"; Layout.fillWidth: true }
+                                CopyLabel { text: root.backend && root.backend.activeProfileKind === "allowlist" ? root.backend.activeProfileLabel : "Choose a named membership workspace above."; Layout.fillWidth: true }
                                 Action { objectName: "allowlist.inspect"; text: "Refresh status"; Accessible.name: "Inspect allowlist state"; enabled: root.configured && !root.busy && root.validAccount(allowState.text); onClicked: root.callBackend(root.backend.inspectDistribution(allowState.text)) }
+                            }
+                            Action { text: root.allowReferenceExpanded ? "Hide blockchain reference" : "Blockchain reference (advanced)"; onClicked: root.allowReferenceExpanded = !root.allowReferenceExpanded }
+                            ColumnLayout {
+                                visible: root.allowReferenceExpanded || root.allowCreateExpanded
+                                Layout.fillWidth: true
+                                CopyLabel { text: "This is the public address of the membership list, not your wallet address or a password. Your private membership file proves that you may register."; Layout.fillWidth: true }
+                                Field { id: allowState; objectName: "allowlist.stateAccount"; Accessible.name: "Membership list blockchain reference"; placeholderText: "Membership-list blockchain address (64 hexadecimal characters)"; Layout.fillWidth: true }
                             }
                             Rectangle {
                                 Layout.fillWidth: true
@@ -538,7 +610,8 @@ Item {
                                 CopyLabel {
                                     id: allowSummary; objectName: "allowlist.summary"; Accessible.name: text
                                     anchors.fill: parent; anchors.margins: 14; color: Theme.palette.textSecondary
-                                    text: !root.backend ? "No distribution loaded."
+                                    text: root.busy ? "Your request is in progress. Wait for the result below; do not submit it again."
+                                        : !root.backend ? "No distribution loaded."
                                         : root.backend.distributionStateAccount && allowState.text.trim() !== root.backend.distributionStateAccount
                                           ? "Account changed. Inspect to load this distribution."
                                           : root.membershipActions.message
@@ -548,10 +621,10 @@ Item {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Caption { text: "MEMBERSHIP CREDENTIAL" }
-                                    CopyLabel { text: root.backend && root.backend.allowlistWitnessLabel !== "No witness selected" ? "Credential selected on this device" : "No credential selected" }
+                                    CopyLabel { text: root.allowlistCredentialReady ? "Membership ready on this device" : "Select your private membership file to register." }
                                 }
                                 Action { objectName: "allowlist.witnessButton"; text: "Select credential"; Accessible.name: "Choose private claim witness"; enabled: root.canWrite && !root.busy; onClicked: { root.pendingWitnessTarget = "allowlist"; witnessPathDialog.open() } }
-                                Action { objectName: "allowlist.claim"; text: "Register privately"; primary: true; Accessible.name: "Claim allocation privately"; enabled: root.canWrite && !root.busy && root.membershipActions.register && root.backend.allowlistWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("claim", [allowState.text], "Register your membership on testnet using the credential selected on this device. A private proof is generated locally; this can take several minutes. Your membership address is not published.") }
+                                Action { objectName: "allowlist.claim"; text: "Register privately"; primary: true; Accessible.name: "Register membership privately"; enabled: root.canWrite && !root.busy && root.membershipActions.register && root.allowlistCredentialReady; onClicked: root.confirmWrite("claim", [allowState.text], "Register your membership on testnet using the credential selected on this device. A private proof is generated locally; this can take several minutes. Your membership address is not published.") }
                             }
                             ColumnLayout {
                                 visible: root.allowCreateExpanded
@@ -570,7 +643,9 @@ Item {
                         }
                     }
                     Card {
+                        id: decisionCard
                         Layout.fillWidth: true
+                        Layout.fillHeight: false
                         contentItem: ColumnLayout {
                             spacing: 16
                             RowLayout {
@@ -579,12 +654,23 @@ Item {
                                     CopyLabel { text: "A proposal takes effect only after enough members approve privately."; Layout.fillWidth: true }
                                     Layout.fillWidth: true
                                 }
-                                Action { text: root.groupCreateExpanded ? "Close setup" : "Organizer setup"; onClicked: root.groupCreateExpanded = !root.groupCreateExpanded }
+                                Action { text: root.groupCreateExpanded ? "Close advanced setup" : "Advanced setup"; onClicked: root.groupCreateExpanded = !root.groupCreateExpanded }
                             }
-                            Caption { text: "DECISION GROUP REFERENCE" }
                             RowLayout {
-                                Field { id: groupState; objectName: "threshold.stateAccount"; Accessible.name: "Threshold state account"; placeholderText: "Paste the 64-character group state account"; Layout.fillWidth: true }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    SectionHeading { text: root.selectedPolicy.title || "Selected shared decision" }
+                                    CopyLabel { text: root.selectedPolicy.field_name ? "Controlled setting: " + root.selectedPolicy.field_name.replace(/_/g, " ") : "Choose a named policy in My workspaces, or open a saved workspace above."; Layout.fillWidth: true }
+                                }
+                                Action { text: "Choose policy"; onClicked: tabs.currentIndex = 2 }
                                 Action { objectName: "threshold.inspect"; text: "Refresh status"; Accessible.name: "Inspect threshold state"; enabled: root.configured && !root.busy && root.validAccount(groupState.text); onClicked: root.callBackend(root.backend.inspectGroup(groupState.text)) }
+                            }
+                            Action { text: root.groupReferenceExpanded ? "Hide blockchain reference" : "Blockchain reference (advanced)"; onClicked: root.groupReferenceExpanded = !root.groupReferenceExpanded }
+                            ColumnLayout {
+                                visible: root.groupReferenceExpanded || root.groupCreateExpanded
+                                Layout.fillWidth: true
+                                CopyLabel { text: "This public address identifies the policy on the blockchain. It is not a password, and knowing it does not let someone vote. Named policies fill it in automatically."; Layout.fillWidth: true }
+                                Field { id: groupState; objectName: "threshold.stateAccount"; Accessible.name: "Decision blockchain reference"; placeholderText: "Policy blockchain address (64 hexadecimal characters)"; Layout.fillWidth: true }
                             }
                             Rectangle {
                                 Layout.fillWidth: true
@@ -593,7 +679,8 @@ Item {
                                 CopyLabel {
                                     id: groupSummary; objectName: "threshold.summary"; Accessible.name: text
                                     anchors.fill: parent; anchors.margins: 14; color: Theme.palette.textSecondary
-                                    text: !root.backend ? "No group loaded."
+                                    text: root.busy ? "Your request is in progress. Wait for the result below; do not submit it again."
+                                        : !root.backend ? "No group loaded."
                                         : root.backend.groupStateAccount && groupState.text.trim() !== root.backend.groupStateAccount
                                           ? "Account changed. Inspect to load this group."
                                           : root.groupActions.message
@@ -603,15 +690,15 @@ Item {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Caption { text: "MEMBERSHIP CREDENTIAL" }
-                                    CopyLabel { text: root.backend && root.backend.thresholdWitnessLabel !== "No witness selected" ? "Credential selected on this device" : "No credential selected" }
+                                    CopyLabel { text: root.thresholdCredentialReady ? "Membership ready on this device" : "Enable your membership in My workspaces before proposing or approving." }
                                 }
                                 Action { objectName: "threshold.witnessButton"; text: "Select credential"; Accessible.name: "Choose private approval witness"; enabled: root.canWrite && !root.busy; onClicked: { root.pendingWitnessTarget = "threshold"; witnessPathDialog.open() } }
                             }
                             RowLayout {
-                                Field { id: nextValue; objectName: "threshold.nextValue"; Accessible.name: "Proposed parameter value"; placeholderText: "New parameter value"; Layout.fillWidth: true }
-                                Action { objectName: "threshold.propose"; text: "Propose"; Accessible.name: "Propose parameter change"; enabled: root.canWrite && !root.busy && root.groupActions.propose && WorkspaceState.signedValue(nextValue.text) && root.backend.thresholdWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("propose", [groupState.text, nextValue.text], "Propose changing the group value to " + nextValue.text + ". This creates a proposal, not an execution. Members must approve before it can take effect.") }
-                                Action { objectName: "threshold.approve"; text: "Approve privately"; Accessible.name: "Approve privately"; enabled: root.canWrite && !root.busy && root.groupActions.approve && root.backend.thresholdWitnessLabel !== "No witness selected"; onClicked: root.confirmWrite("approve", [groupState.text], "Approve the current proposal with your selected membership credential. A private proof is generated on this Mac. The program rejects a second approval by the same member.") }
-                                Action { objectName: "threshold.execute"; text: "Execute"; primary: true; Accessible.name: "Execute approved proposal"; enabled: root.canWrite && !root.busy && root.groupActions.execute; onClicked: root.confirmWrite("execute", [groupState.text], "Execute the currently approved proposal on testnet. The program checks the required approval threshold before changing the value.") }
+                                Field { id: nextValue; objectName: "threshold.nextValue"; Accessible.name: "Proposed parameter value"; placeholderText: "New whole-number value"; Layout.fillWidth: true }
+                                Action { objectName: "threshold.propose"; text: "Propose"; Accessible.name: "Propose parameter change"; enabled: root.canWrite && !root.busy && root.groupActions.propose && WorkspaceState.signedValue(nextValue.text) && root.thresholdCredentialReady; onClicked: root.confirmWrite("propose", [groupState.text, nextValue.text], "Propose changing the group value to " + nextValue.text + ". This creates a proposal, not an execution. Members must approve before it can take effect.") }
+                                Action { objectName: "threshold.approve"; text: "Approve privately"; Accessible.name: "Approve privately"; enabled: root.canWrite && !root.busy && root.groupActions.approve && root.thresholdCredentialReady; onClicked: root.confirmWrite("approve", [groupState.text], "Approve the current proposal with your selected membership credential. A private proof is generated on this Mac. The program rejects a second approval by the same member.") }
+                                Action { objectName: "threshold.execute"; text: "Apply change"; primary: true; Accessible.name: "Execute approved proposal"; enabled: root.canWrite && !root.busy && root.groupActions.execute; onClicked: root.confirmWrite("execute", [groupState.text], "Execute the currently approved proposal on testnet. The program checks the required approval threshold before changing the value.") }
                             }
                             ColumnLayout {
                                 visible: root.groupCreateExpanded
@@ -628,6 +715,38 @@ Item {
                                     Action { objectName: "threshold.create"; text: "Create group"; primary: true; Accessible.name: "Create threshold group"; enabled: root.canWrite && !root.busy; onClicked: root.confirmWrite("create-group", [groupState.text, groupRoot.text, groupMemberCount.value, groupThreshold.value, initialValue.text], "Create a " + groupThreshold.value + "-of-" + groupMemberCount.value + " testnet approval group with initial value " + initialValue.text + ".") }
                                 }
                             }
+                        }
+                    }
+                    GovernancePage {
+                        id: workspaceLibrary
+                        Layout.fillHeight: false
+                        host: root
+                        Layout.fillWidth: true
+                        onOpenDecisionRequested: stateAccount => {
+                            groupState.text = stateAccount
+                            tabs.currentIndex = 1
+                            root.callBackend(root.backend.inspectGroup(stateAccount))
+                        }
+                        onOpenMembershipRequested: stateAccount => {
+                            allowState.text = stateAccount
+                            tabs.currentIndex = 0
+                            root.callBackend(root.backend.inspectDistribution(stateAccount))
+                        }
+                        onReviewCreateRequested: policy => {
+                            if (policy.kind === "allowlist") {
+                                allowState.text = policy.state_account
+                                root.confirmWrite("create-allowlist", [policy.state_account, policy.root, policy.member_count],
+                                    "Publish the private membership list “" + policy.title + "”?\n\n"
+                                    + policy.member_count + " eligible members can each register once. Only the list commitment and registration records become public, not the member addresses."
+                                    + "\n\nThis is a membership gate. It does not transfer tokens or register anyone automatically.")
+                                return
+                            }
+                            groupState.text = policy.state_account
+                            root.confirmWrite("create-group", [policy.state_account, policy.root, policy.member_count, policy.threshold, policy.initial_value],
+                                "Publish the testnet policy “" + policy.title + "”?\n\n" + policy.threshold + " of " + policy.member_count
+                                + " distinct private members will be required to change “" + policy.field_name + "”.\nInitial integer value: " + policy.initial_value
+                                + ".\nState account: " + policy.state_account + "\nMembership commitment: " + policy.root
+                                + "\n\nNames and units are local labels. This creates a policy instance; it does not transfer money or approve a future change.")
                         }
                     }
                 }

@@ -1174,6 +1174,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "borsh",
+ "commons-logos-policy-adapter",
  "commons-logos-testnet-primitives",
  "hex",
  "key_protocol",
@@ -1189,6 +1190,17 @@ dependencies = [
  "tokio",
  "url",
  "wallet",
+]
+
+[[package]]
+name = "commons-logos-policy-adapter"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "commons-logos-testnet-primitives",
+ "lee_core",
+ "risc0-zkvm",
+ "serde",
 ]
 
 [[package]]

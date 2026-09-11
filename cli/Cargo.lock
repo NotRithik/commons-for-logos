@@ -1174,6 +1174,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "borsh",
+ "common",
  "commons-logos-testnet-primitives",
  "commons-logos-testnet-sdk",
  "hex",

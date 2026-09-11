@@ -1,6 +1,8 @@
 //! Testnet-only JSON CLI. Private witness bytes are accepted only from protected
 //! files inside the configured wallet. Nothing is sent to a public transaction
 //! if the operation contains a member witness.
+mod execution_intent;
+mod governance;
 mod validation;
 use anyhow::{Context, Result, ensure};
 use borsh::BorshDeserialize;
@@ -8,6 +10,7 @@ use commons_logos_testnet_primitives::{
     Distribution, DistributionInstruction, Group, GroupInstruction, MemberWitness,
     execute_distribution, execute_group,
 };
+use execution_intent::ExecutionIntent;
 use lee::{privacy_preserving_transaction::circuit::ProgramWithDependencies, program::Program};
 use lee_core::{
     account::{AccountId, AccountWithMetadata},
@@ -37,6 +40,11 @@ enum ClientIssue {
     WalletHistoryAhead,
     ProfileUnreadable,
     ReadOnlyWorkspace,
+    ReviewChanged,
+    ExecutionUnresolved,
+    LocalProverUnavailable,
+    CredentialUnreadable,
+    WalletBusy,
 }
 impl std::fmt::Display for ClientIssue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -47,13 +55,54 @@ impl std::error::Error for ClientIssue {}
 impl ClientIssue {
     fn public(self) -> (&'static str, &'static str) {
         match self {
-            Self::NetworkUnavailable => ("NETWORK_UNAVAILABLE", "The testnet is not responding. Your wallet has not been changed. Check your connection and try Refresh."),
-            Self::ProtocolChanged => ("TESTNET_PROTOCOL_CHANGED", "The testnet uses a different proof format. Update this client before sending an action; your existing wallet is preserved."),
-            Self::DeploymentMissing => ("DEPLOYMENT_NOT_FOUND", "This workspace is not present on the current testnet. It may not have been created yet, or the testnet may have restarted. Choose a current workspace; old receipts are historical only."),
-            Self::DifferentProgram => ("ACCOUNT_PROGRAM_MISMATCH", "This account belongs to a different application. Choose the correct group or check the account address."),
-            Self::WalletHistoryAhead => ("TESTNET_HISTORY_CHANGED", "The testnet restarted after this wallet was used. Keep this wallet as an archive and use a fresh testnet workspace. No old transaction was replayed."),
-            Self::ProfileUnreadable => ("PROFILE_UNREADABLE", "The selected workspace is incomplete or cannot be read. Choose another saved workspace or check its setup in Connection settings."),
-            Self::ReadOnlyWorkspace => ("READ_ONLY_WORKSPACE", "This is a viewing-only workspace. Connect your own member wallet to submit an action."),
+            Self::LocalProverUnavailable => (
+                "LOCAL_PROVER_UNAVAILABLE",
+                "The configured local proof engine is missing or not executable. No transaction was submitted by this attempt. Restore the matching proof engine, then refresh and review the action again.",
+            ),
+            Self::CredentialUnreadable => (
+                "MEMBERSHIP_CREDENTIAL_UNREADABLE",
+                "This membership credential cannot be read. Import your own original invitation again or select the correct protected credential file, then refresh before retrying.",
+            ),
+            Self::WalletBusy => (
+                "WALLET_BUSY",
+                "This member wallet is already in use by another operation. Wait for its result before trying again. Do not delete wallet lock or pending files.",
+            ),
+            Self::ReviewChanged => (
+                "REVIEWED_STATE_CHANGED",
+                "The policy changed after you reviewed it. No new transaction was sent. Refresh the decision and review the current proposal again.",
+            ),
+            Self::ExecutionUnresolved => (
+                "EXECUTION_RECONCILIATION_REQUIRED",
+                "The earlier execution receipt exists, but its exact result could not be verified from the current state. No transaction was repeated. Preserve the pending record for reconciliation.",
+            ),
+            Self::NetworkUnavailable => (
+                "NETWORK_UNAVAILABLE",
+                "The testnet is not responding. Your wallet has not been changed. Check your connection and try Refresh.",
+            ),
+            Self::ProtocolChanged => (
+                "TESTNET_PROTOCOL_CHANGED",
+                "The testnet uses a different proof format. Update this client before sending an action; your existing wallet is preserved.",
+            ),
+            Self::DeploymentMissing => (
+                "DEPLOYMENT_NOT_FOUND",
+                "This workspace is not present on the current testnet. It may not have been created yet, or the testnet may have restarted. Choose a current workspace; old receipts are historical only.",
+            ),
+            Self::DifferentProgram => (
+                "ACCOUNT_PROGRAM_MISMATCH",
+                "This account belongs to a different application. Choose the correct group or check the account address.",
+            ),
+            Self::WalletHistoryAhead => (
+                "TESTNET_HISTORY_CHANGED",
+                "The testnet restarted after this wallet was used. Keep this wallet as an archive and use a fresh testnet workspace. No old transaction was replayed.",
+            ),
+            Self::ProfileUnreadable => (
+                "PROFILE_UNREADABLE",
+                "The selected workspace is incomplete or cannot be read. Choose another saved workspace or check its setup in Connection settings.",
+            ),
+            Self::ReadOnlyWorkspace => (
+                "READ_ONLY_WORKSPACE",
+                "This is a viewing-only workspace. Connect your own member wallet to submit an action.",
+            ),
         }
     }
 }
@@ -72,10 +121,9 @@ impl WalletLock {
             .custom_flags(libc::O_NOFOLLOW)
             .open(root.join(".commons-cli.lock"))?;
         // SAFETY: a valid, held descriptor; no pointer or ownership transfer.
-        ensure!(
-            unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0,
-            "WALLET_BUSY"
-        );
+        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
+            return Err(ClientIssue::WalletBusy.into());
+        }
         Ok(Self(file))
     }
 }
@@ -85,18 +133,63 @@ impl Drop for WalletLock {
     }
 }
 
+// Constant stage identifiers only; never include witnesses, member IDs or paths.
+fn progress(stage: &str) {
+    eprintln!("\nCOMMONS_PROGRESS_V1 {stage}");
+}
+
+fn check_configured_prover() -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    // An explicitly configured absolute engine path can be checked without
+    // spawning it or opening a member wallet. Leave upstream PATH discovery
+    // intact when no absolute path has been configured.
+    if let Some(raw) = std::env::var_os("RISC0_SERVER_PATH") {
+        let path = std::path::PathBuf::from(raw);
+        if path.as_os_str().is_empty() {
+            return Err(ClientIssue::LocalProverUnavailable.into());
+        }
+        if path.is_absolute() {
+            let metadata = fs::metadata(&path).context(ClientIssue::LocalProverUnavailable)?;
+            if !metadata.is_file() || metadata.permissions().mode() & 0o111 == 0 {
+                return Err(ClientIssue::LocalProverUnavailable.into());
+            }
+        }
+    }
+    Ok(())
+}
+
+fn state_fingerprint(bytes: &[u8]) -> String {
+    hex::encode(commons_logos_testnet_primitives::hash_parts(
+        b"commons/reviewed-state/v1",
+        &[bytes],
+    ))
+}
+fn check_review(req: &Request, bytes: &[u8]) -> Result<()> {
+    if let Some(expected) = req.arguments.get("expected_state_fingerprint") {
+        if hash(
+            expected
+                .as_str()
+                .context("review fingerprint must be a string")?,
+        )? != hash(&state_fingerprint(bytes))?
+        {
+            return Err(ClientIssue::ReviewChanged.into());
+        }
+    }
+    Ok(())
+}
+
 fn decode_state(op: Op, bytes: &[u8]) -> Result<Value> {
     if op.family() == "allowlist" {
         let state = Distribution::try_from_slice(bytes)?;
         ensure!(state.magic == *b"COMNSD01", "wrong state type");
         Ok(
-            json!({"root":hex::encode(state.root),"member_count":state.member_count,"claims_count":state.claims.len()}),
+            json!({"fingerprint":state_fingerprint(bytes),"root":hex::encode(state.root),"member_count":state.member_count,"claims_count":state.claims.len()}),
         )
     } else {
         let state = Group::try_from_slice(bytes)?;
         ensure!(state.magic == *b"COMNSM01", "wrong state type");
         Ok(
-            json!({"root":hex::encode(state.root),"member_count":state.member_count,"threshold":state.threshold,"value":state.value.to_string(),"sequence":state.sequence,
+            json!({"fingerprint":state_fingerprint(bytes),"root":hex::encode(state.root),"member_count":state.member_count,"threshold":state.threshold,"value":state.value.to_string(),"sequence":state.sequence,
    "proposal":state.proposal.map(|p|json!({"sequence":p.sequence,"next_value":p.next_value.to_string(),"approvals_count":p.approvals.len(),"executed":p.executed}))}),
         )
     }
@@ -118,7 +211,13 @@ async fn wallet(root: &Path) -> Result<WalletCore> {
     )
     .await
 }
-fn pending(root: &Path, op: Op, state: AccountId, tx: &str) -> Result<()> {
+fn pending(
+    root: &Path,
+    op: Op,
+    state: AccountId,
+    tx: &str,
+    intent: Option<ExecutionIntent>,
+) -> Result<()> {
     let path = root.join(".commons-pending.json");
     let tmp = root.join(".commons-pending.json.new");
     use std::os::unix::fs::OpenOptionsExt;
@@ -129,7 +228,7 @@ fn pending(root: &Path, op: Op, state: AccountId, tx: &str) -> Result<()> {
         .mode(0o600)
         .custom_flags(libc::O_NOFOLLOW)
         .open(&tmp)?;
-    file.write_all(&serde_json::to_vec(&json!({"operation":op.id(),"state_account":hex::encode(state.as_ref()),"tx_hash":tx,"status":"broadcast_unconfirmed"}))?)?;
+    file.write_all(&serde_json::to_vec(&json!({"operation":op.id(),"state_account":hex::encode(state.as_ref()),"tx_hash":tx,"status":"broadcast_unconfirmed","execution_intent":intent.map(|i|json!({"sequence":i.sequence,"next_value":i.next_value}))}))?)?;
     file.sync_all()?;
     fs::rename(tmp, path)?;
     Ok(())
@@ -142,19 +241,37 @@ async fn private<T: Serialize>(
     witness: &MemberWitness,
     p: &ProgramWithDependencies,
     instruction: T,
+    expected_state: &lee_core::account::Account,
 ) -> Result<(String, u64)> {
     let member = w
         .resolve_private_account(witness.leaf.account_id)
         .context("private member key unavailable")?;
-    let (hash, _shared_keys) = w
-        .send_privacy_preserving_tx(
+    progress("proving");
+    let changed = std::cell::Cell::new(false);
+    let sent = w
+        .send_privacy_preserving_tx_with_pre_check(
             vec![AccountIdentity::PublicNoSign(state), member],
             Program::serialize_instruction(instruction)?,
             p,
+            |states| {
+                if states.first().copied() != Some(expected_state) {
+                    changed.set(true);
+                    return Err(wallet::ExecutionFailureKind::TransactionBuildError(
+                        lee::error::LeeError::InvalidInput("reviewed public state changed".into()),
+                    ));
+                }
+                Ok(())
+            },
         )
-        .await?;
-    pending(root, op, state, &hash.to_string())?;
+        .await;
+    if changed.get() {
+        return Err(ClientIssue::ReviewChanged.into());
+    }
+    let (hash, _shared_keys) = sent?;
+    pending(root, op, state, &hash.to_string(), None)?;
+    progress("confirming");
     let (_, block) = w.poll_transaction(hash).await?;
+    progress("syncing-result");
     w.sync_to_latest_block().await?;
     w.store_persistent_data()?;
     fs::remove_file(root.join(".commons-pending.json"))?;
@@ -175,6 +292,7 @@ async fn public<T: Serialize>(
     } else {
         AccountIdentity::Public(state)
     };
+    progress("submitting");
     let hash = w
         .send_pub_tx(
             vec![identity],
@@ -182,13 +300,60 @@ async fn public<T: Serialize>(
             p,
         )
         .await?;
-    pending(root, op, state, &hash.to_string())?;
+    pending(root, op, state, &hash.to_string(), None)?;
+    progress("confirming");
     let (_, block) = w.poll_transaction(hash).await?;
     w.sync_to_latest_block().await?;
     w.store_persistent_data()?;
     fs::remove_file(root.join(".commons-pending.json"))?;
     Ok((hash.to_string(), block))
 }
+/// A public, signature-free relay with deterministic per-proposal transport
+/// identity. Unlike the old unit Execute transaction, later proposals cannot
+/// resolve to a previously accepted transaction hash.
+async fn execute_public(
+    root: &Path,
+    w: &mut WalletCore,
+    state: AccountId,
+    program: ProgramId,
+    intent: ExecutionIntent,
+) -> Result<(String, u64)> {
+    use common::transaction::LeeTransaction;
+    use lee::public_transaction::{Message, PublicTransaction, WitnessSet};
+    let message =
+        Message::new_preserialized(program, vec![state], vec![], intent.instruction_words()?);
+    let transaction = PublicTransaction::new(message, WitnessSet::from_raw_parts(vec![]));
+    let expected: common::HashType = transaction.hash().into();
+    // Record exact intent BEFORE network submission. An ambiguous response keeps
+    // this checkpoint and must be reconciled rather than generating a new tag.
+    pending(
+        root,
+        Op::Execute,
+        state,
+        &expected.to_string(),
+        Some(intent),
+    )?;
+    progress("submitting");
+    let returned = w
+        .helm_owned()
+        .send_transaction(LeeTransaction::Public(transaction.clone()))
+        .await?;
+    ensure!(
+        returned == expected,
+        "sequencer returned a different transaction hash"
+    );
+    progress("confirming");
+    let (observed, block) = w.poll_transaction(expected).await?;
+    ensure!(
+        observed == LeeTransaction::Public(transaction),
+        "confirmed transaction differs from prepared execution"
+    );
+    w.sync_to_latest_block().await?;
+    w.store_persistent_data()?;
+    // Keep checkpoint until the exact postcondition has been independently read.
+    Ok((expected.to_string(), block))
+}
+
 /// Resolve a previously broadcast transaction before allowing another write.
 /// A network error or missing confirmation never deletes the checkpoint.
 async fn reconcile_pending(root: &Path, w: &mut WalletCore) -> Result<()> {
@@ -209,12 +374,43 @@ async fn reconcile_pending(root: &Path, w: &mut WalletCore) -> Result<()> {
     );
     w.sync_to_latest_block().await?;
     w.store_persistent_data()?;
+    if saved.get("operation").and_then(Value::as_str) == Some("threshold.execute") {
+        let target = account(
+            saved["state_account"]
+                .as_str()
+                .context(ClientIssue::ExecutionUnresolved)?,
+        )?;
+        let intent = ExecutionIntent {
+            sequence: saved["execution_intent"]["sequence"]
+                .as_u64()
+                .context(ClientIssue::ExecutionUnresolved)?,
+            next_value: saved["execution_intent"]["next_value"]
+                .as_i64()
+                .context(ClientIssue::ExecutionUnresolved)?,
+        };
+        let programs: Value = serde_json::from_slice(&read_inside(
+            root,
+            &root.join("programs.json"),
+            16 * 1024,
+            false,
+        )?)?;
+        let expected_program: ProgramId = serde_json::from_value(programs["threshold"].clone())?;
+        let current = w.get_account_public(target).await?;
+        if current.program_owner != expected_program {
+            return Err(ClientIssue::ExecutionUnresolved.into());
+        }
+        intent
+            .verify_postcondition(&Group::try_from_slice(&current.data)?)
+            .context(ClientIssue::ExecutionUnresolved)?;
+    }
     fs::remove_file(path)?;
     Ok(())
 }
 
 fn check_workspace_access(root: &Path, op: Op) -> Result<()> {
-    if op.is_read() { return Ok(()); }
+    if op.is_read() {
+        return Ok(());
+    }
     match fs::symlink_metadata(root.join(".commons-readonly")) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         _ => Err(ClientIssue::ReadOnlyWorkspace.into()),
@@ -224,6 +420,8 @@ fn check_workspace_access(root: &Path, op: Op) -> Result<()> {
 async fn run(req: Request, op: Op) -> Result<Value> {
     validate(&req, op)?;
     let root = wallet_root(&req.wallet_dir).context(ClientIssue::ProfileUnreadable)?;
+    // Enforce read-only mode at the CLI boundary, not merely in the GUI.
+    check_workspace_access(&root, op)?;
     let config: WalletConfig = serde_json::from_slice(&read_inside(
         &root,
         &root.join("config.json"),
@@ -244,7 +442,10 @@ async fn run(req: Request, op: Op) -> Result<Value> {
     let client = SequencerClientBuilder::default()
         .request_timeout(std::time::Duration::from_secs(20))
         .build(endpoint)?;
-    let ids = client.get_program_ids().await.context(ClientIssue::NetworkUnavailable)?;
+    let ids = client
+        .get_program_ids()
+        .await
+        .context(ClientIssue::NetworkUnavailable)?;
     if ids.get("privacy_preserving_circuit") != Some(&PROTOCOL_ID) {
         return Err(ClientIssue::ProtocolChanged.into());
     }
@@ -256,7 +457,10 @@ async fn run(req: Request, op: Op) -> Result<Value> {
     )?)?;
     let pid: ProgramId = serde_json::from_value(programs[op.family()].clone())?;
     let state_id = account(string(&req.arguments, "state_account")?)?;
-    let chain_state = client.get_account(state_id).await.context(ClientIssue::NetworkUnavailable)?;
+    let chain_state = client
+        .get_account(state_id)
+        .await
+        .context(ClientIssue::NetworkUnavailable)?;
     if op.is_read() {
         if chain_state.program_owner == [0; 8] && chain_state.data.is_empty() {
             return Err(ClientIssue::DeploymentMissing.into());
@@ -264,11 +468,15 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         if chain_state.program_owner != pid {
             return Err(ClientIssue::DifferentProgram.into());
         }
-        let block = client.get_last_block_id().await.context(ClientIssue::NetworkUnavailable)?;
+        let block = client
+            .get_last_block_id()
+            .await
+            .context(ClientIssue::NetworkUnavailable)?;
         return Ok(
             json!({"success":true,"operation":op.id(),"network":"testnet","endpoint":endpoint,"block_id":block,"program_id":pid,"state_account":hex::encode(state_id.as_ref()),"state":decode_state(op,&chain_state.data)?}),
         );
     }
+    check_review(&req, &chain_state.data)?;
     ensure!(
         std::env::var("RISC0_DEV_MODE").as_deref() == Ok("0"),
         "real proof mode required"
@@ -277,9 +485,15 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         std::env::var("RISC0_PROVER").as_deref() == Ok("ipc"),
         "explicit local IPC proving required; hosted proving is not supported"
     );
+    if op.is_private() {
+        check_configured_prover()?;
+    }
     // A reset can retain the same proof ABI while erasing account history.
     // Never silently rewind a wallet or reuse its previous private witnesses.
-    let latest = client.get_last_block_id().await.context(ClientIssue::NetworkUnavailable)?;
+    let latest = client
+        .get_last_block_id()
+        .await
+        .context(ClientIssue::NetworkUnavailable)?;
     let stored = wallet::storage::Storage::from_path(&root.join("storage.json"))
         .context(ClientIssue::ProfileUnreadable)?;
     if stored.last_synced_block() > latest {
@@ -300,6 +514,7 @@ async fn run(req: Request, op: Op) -> Result<Value> {
         "artifact image does not match deployment"
     );
     let p: ProgramWithDependencies = program.into();
+    progress("syncing");
     let mut w = wallet(&root).await?;
     reconcile_pending(&root, &mut w).await?;
     // Refresh keys/nonces only after taking the exclusive wallet lock.
@@ -316,8 +531,10 @@ async fn run(req: Request, op: Op) -> Result<Value> {
             Path::new(string(&req.arguments, "witness_file")?),
             MAX_WITNESS,
             true,
-        )?;
-        let witness = MemberWitness::try_from_slice(&bytes)?;
+        )
+        .context(ClientIssue::CredentialUnreadable)?;
+        let witness =
+            MemberWitness::try_from_slice(&bytes).context(ClientIssue::CredentialUnreadable)?;
         ensure!(
             w.resolve_private_account(witness.leaf.account_id).is_some(),
             "private key unavailable"
@@ -344,6 +561,14 @@ async fn run(req: Request, op: Op) -> Result<Value> {
     } else {
         None
     };
+    check_review(&req, &accounts[0].account.data)?;
+    let execution_intent = if matches!(op, Op::Execute) {
+        Some(ExecutionIntent::from_group(&Group::try_from_slice(
+            &accounts[0].account.data,
+        )?)?)
+    } else {
+        None
+    };
     let start = Instant::now();
     let (tx, block) = match op {
         Op::CreateDistribution => {
@@ -360,7 +585,17 @@ async fn run(req: Request, op: Op) -> Result<Value> {
                 witness: witness.clone(),
             };
             execute_distribution(pid, &accounts, ix.clone())?;
-            private(&root, op, &mut w, state_id, witness, &p, ix).await?
+            private(
+                &root,
+                op,
+                &mut w,
+                state_id,
+                witness,
+                &p,
+                ix,
+                &accounts[0].account,
+            )
+            .await?
         }
         Op::CreateGroup => {
             let ix = GroupInstruction::Create {
@@ -379,7 +614,17 @@ async fn run(req: Request, op: Op) -> Result<Value> {
                 next_value: integer(string(&req.arguments, "next_value")?)?,
             };
             execute_group(pid, &accounts, ix.clone())?;
-            private(&root, op, &mut w, state_id, witness, &p, ix).await?
+            private(
+                &root,
+                op,
+                &mut w,
+                state_id,
+                witness,
+                &p,
+                ix,
+                &accounts[0].account,
+            )
+            .await?
         }
         Op::Approve => {
             let witness = witness.as_ref().unwrap();
@@ -387,16 +632,41 @@ async fn run(req: Request, op: Op) -> Result<Value> {
                 witness: witness.clone(),
             };
             execute_group(pid, &accounts, ix.clone())?;
-            private(&root, op, &mut w, state_id, witness, &p, ix).await?
+            private(
+                &root,
+                op,
+                &mut w,
+                state_id,
+                witness,
+                &p,
+                ix,
+                &accounts[0].account,
+            )
+            .await?
         }
         Op::Execute => {
             let ix = GroupInstruction::Execute;
-            execute_group(pid, &accounts, ix.clone())?;
-            public(&root, op, &mut w, state_id, pid, ix).await?
+            execute_group(pid, &accounts, ix)?;
+            execute_public(
+                &root,
+                &mut w,
+                state_id,
+                pid,
+                execution_intent.context("execution intent missing")?,
+            )
+            .await?
         }
         _ => unreachable!("read-only modes returned before wallet mutation"),
     };
     let state = client.get_account(state_id).await?;
+    if let Some(intent) = execution_intent {
+        ensure!(
+            state.program_owner == pid,
+            "execution result program owner changed"
+        );
+        intent.verify_postcondition(&Group::try_from_slice(&state.data)?)?;
+        fs::remove_file(root.join(".commons-pending.json"))?;
+    }
     Ok(
         json!({"success":true,"operation":op.id(),"network":"testnet","endpoint":endpoint,"program_id":pid,"tx_hash":tx,"block_id":block,"seconds":start.elapsed().as_secs_f64(),"private":op.is_private(),"risc0_dev_mode":"0","state_account":hex::encode(state_id.as_ref()),"state":decode_state(op,&state.data)?}),
     )
@@ -435,10 +705,24 @@ fn application_error_message(error: commons_logos_testnet_primitives::Error) -> 
 }
 
 fn safe_error(error: &anyhow::Error) -> Value {
+    if let Some(issue) = error.downcast_ref::<governance::PublicIssue>() {
+        return json!({"success":false,"error":{"code":"GOVERNANCE_SETUP_FAILED","message":issue.0}});
+    }
+
     // Only static, enumerated messages cross the CLI boundary. Raw upstream
     // errors can contain witness fields, file paths or nested proof payloads.
     if let Some(e) = error.downcast_ref::<commons_logos_testnet_primitives::Error>() {
         return json!({"success":false,"error":{"code":*e as u32,"message":application_error_message(*e)}});
+    }
+    if matches!(
+        error.downcast_ref::<wallet::ExecutionFailureKind>(),
+        Some(wallet::ExecutionFailureKind::TransactionBuildError(
+            lee::error::LeeError::CircuitProvingError(_)
+        ))
+    ) {
+        // In the pinned wallet this typed failure precedes transaction send.
+        // Other errors, especially send/timeout errors, may be ambiguous.
+        return json!({"success":false,"error":{"code":"LOCAL_PROOF_FAILED","message":"The private proof could not be generated locally. No transaction was submitted by this attempt. Check the local proof dependencies, then refresh and review the action again."}});
     }
     if let Some(issue) = error.downcast_ref::<ClientIssue>() {
         let (code, message) = issue.public();
@@ -454,8 +738,12 @@ mod public_error_tests {
 
     #[test]
     fn read_only_workspace_allows_reads_and_rejects_writes_before_network() {
-        let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let root = std::env::temp_dir().join(format!("commons-readonly-{}-{stamp}", std::process::id()));
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root =
+            std::env::temp_dir().join(format!("commons-readonly-{}-{stamp}", std::process::id()));
         fs::create_dir(&root).unwrap();
         assert!(check_workspace_access(&root, Op::CreateDistribution).is_ok());
         fs::write(root.join(".commons-readonly"), b"viewer").unwrap();
@@ -475,7 +763,8 @@ mod public_error_tests {
             (ClientIssue::WalletHistoryAhead, "TESTNET_HISTORY_CHANGED"),
             (ClientIssue::ProfileUnreadable, "PROFILE_UNREADABLE"),
         ] {
-            let error = anyhow::anyhow!("private witness and /private/wallet should not appear").context(issue);
+            let error = anyhow::anyhow!("private witness and /private/wallet should not appear")
+                .context(issue);
             let value = safe_error(&error);
             assert_eq!(value["error"]["code"], expected);
             assert!(!value.to_string().contains("/private/wallet"));
@@ -550,6 +839,23 @@ fn main() {
             return Ok(
                 json!({"usage":"commons-logos-cli primitives <allowlist-create|allowlist-claim|allowlist-inspect|threshold-create|threshold-propose|threshold-approve|threshold-execute|threshold-inspect> --json-stdin","network":"testnet only","contract":"sdk/CLI-CONTRACT.md"}),
             );
+        }
+        if args.len() == 3 && args[0] == "governance" && args[2] == "--json-stdin" {
+            let mut bytes = Vec::new();
+            std::io::stdin()
+                .take(256 * 1024 + 1)
+                .read_to_end(&mut bytes)?;
+            ensure!(
+                bytes.len() <= 256 * 1024,
+                "governance request exceeds bound"
+            );
+            let rt = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .worker_threads(2)
+                .build()?;
+            return rt
+                .block_on(governance::dispatch(&args[1], &bytes))
+                .map_err(|error| anyhow::anyhow!(governance::public_issue(&error)));
         }
         ensure!(
             args.len() == 3 && args[0] == "primitives" && args[2] == "--json-stdin",

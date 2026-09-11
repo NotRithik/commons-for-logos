@@ -67,6 +67,10 @@ CommonsPrimitivesBackend::CommonsPrimitivesBackend()
         QTimer::singleShot(0, this, [this, defaultCli, defaultWallet]() {
             configure(defaultCli, defaultWallet);
         });
+    connect(&m_client, &CommonsLogos::LogosCliClient::progress, this,
+            [this](const QString&, const QString& operation, const QString& message) {
+                if (busy() && lastOperation() == operation) setStatusText(message);
+            });
     connect(&m_client,
             &CommonsLogos::LogosCliClient::completed,
             this,
@@ -92,7 +96,9 @@ void CommonsPrimitivesBackend::resetSessionState()
     m_allowlistWitnessPath.clear();
     m_thresholdWitnessPath.clear();
     setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
+    setAllowlistWitnessReady(false);
     setThresholdWitnessLabel(QStringLiteral("No witness selected"));
+    setThresholdWitnessReady(false);
     setDistributionStateAccount(QString());
     setDistributionStateJson(QStringLiteral("{}"));
     setGroupStateAccount(QString());
@@ -204,6 +210,7 @@ QString CommonsPrimitivesBackend::openSavedProfile(int index)
 
 QString CommonsPrimitivesBackend::configure(QString cliPath, QString walletDir)
 {
+    if (m_governanceProcess) return governanceFailure("Finish governance setup before changing wallets.");
     if (m_client.isBusy())
         return reject(CommonsLogos::PrimitiveOperation::AllowlistInspect,
                       QStringLiteral("Wait for the current CLI operation to finish."));
@@ -305,7 +312,7 @@ QString CommonsPrimitivesBackend::proposeParameter(QString stateAccount, QString
 {
     if (m_thresholdWitnessPath.isEmpty()) {
         return reject(CommonsLogos::PrimitiveOperation::ThresholdPropose,
-                      QStringLiteral("Select a threshold witness file first."));
+                      QStringLiteral("Import your member invitation in Governance policies before proposing or approving."));
     }
 
     QJsonObject arguments;
@@ -319,7 +326,7 @@ QString CommonsPrimitivesBackend::approveParameter(QString stateAccount)
 {
     if (m_thresholdWitnessPath.isEmpty()) {
         return reject(CommonsLogos::PrimitiveOperation::ThresholdApprove,
-                      QStringLiteral("Select a threshold witness file first."));
+                      QStringLiteral("Import your member invitation in Governance policies before proposing or approving."));
     }
 
     QJsonObject arguments;
@@ -357,9 +364,11 @@ QString CommonsPrimitivesBackend::selectWitnessFile(const QString& rawPath, cons
     if (thresholdWitness) {
         m_thresholdWitnessPath.clear();
         setThresholdWitnessLabel(QStringLiteral("No witness selected"));
+    setThresholdWitnessReady(false);
     } else {
         m_allowlistWitnessPath.clear();
         setAllowlistWitnessLabel(QStringLiteral("No witness selected"));
+    setAllowlistWitnessReady(false);
     }
     const QString path = CommonsLogos::localPathFromUi(rawPath);
     const QFileInfo info(path);
@@ -380,9 +389,11 @@ QString CommonsPrimitivesBackend::selectWitnessFile(const QString& rawPath, cons
     if (thresholdWitness) {
         m_thresholdWitnessPath = canonical;
         setThresholdWitnessLabel(label);
+        setThresholdWitnessReady(true);
     } else {
         m_allowlistWitnessPath = canonical;
         setAllowlistWitnessLabel(label);
+        setAllowlistWitnessReady(true);
     }
     setLastError(QString());
     setStatusText(QStringLiteral("Witness file selected."));
@@ -398,6 +409,7 @@ QString CommonsPrimitivesBackend::selectWitnessFile(const QString& rawPath, cons
 QString CommonsPrimitivesBackend::queue(CommonsLogos::PrimitiveOperation operation,
                                       const QJsonObject& arguments)
 {
+    if (m_governanceProcess) return reject(operation, QStringLiteral("Finish governance setup before starting another operation."));
     const bool reading = operation == CommonsLogos::PrimitiveOperation::AllowlistInspect
         || operation == CommonsLogos::PrimitiveOperation::ThresholdInspect;
     if (readOnly() && !reading)
@@ -563,4 +575,29 @@ void CommonsPrimitivesBackend::updateGroupState(const QJsonObject& result)
         setGroupSummary(QStringLiteral("Group state returned by CLI."));
     else
         setGroupSummary(parts.join(QStringLiteral("; ")));
+}
+
+#include "governance_backend.inc"
+
+QString CommonsPrimitivesBackend::submitReviewedParameter(QString action, QString stateAccount,
+                                                          QString nextValue, QString fingerprint)
+{
+    using CommonsLogos::PrimitiveOperation;
+    const auto op = action == "propose" ? PrimitiveOperation::ThresholdPropose
+        : action == "approve" ? PrimitiveOperation::ThresholdApprove : PrimitiveOperation::ThresholdExecute;
+    if (action != "propose" && action != "approve" && action != "execute")
+        return reject(op,"Unknown reviewed action.");
+    if (!CommonsLogos::validateHex32(fingerprint))
+        return reject(op,"Refresh this decision before reviewing an action.");
+    const auto cached = QJsonDocument::fromJson(groupStateJson().toUtf8()).object();
+    if (groupStateAccount().compare(stateAccount.trimmed(),Qt::CaseInsensitive)!=0
+        || cached.value("fingerprint").toString().compare(fingerprint,Qt::CaseInsensitive)!=0)
+        return reject(op,"The policy changed while the review was open. Refresh and review it again.");
+    QJsonObject args {{"state_account",stateAccount.trimmed()},{"expected_state_fingerprint",fingerprint}};
+    if (action != "execute") {
+        if (m_thresholdWitnessPath.isEmpty()) return reject(op,"Import your member invitation first.");
+        args.insert("witness_file",m_thresholdWitnessPath);
+    }
+    if (action == "propose") args.insert("next_value",nextValue.trimmed());
+    return queue(op,args);
 }
