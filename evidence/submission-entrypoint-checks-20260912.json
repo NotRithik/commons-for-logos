@@ -1,0 +1,76 @@
+{
+  "checked_at": "2026-09-11T20:47:29.773052+00:00",
+  "scope": "Actual shell/Python help and early-refusal execution; no replacement for real proof CI",
+  "checks": [
+    {
+      "check": "POSIX shell syntax",
+      "returncode": 0,
+      "passed": true
+    },
+    {
+      "check": "Real Python demo help",
+      "returncode": 0,
+      "passed": true
+    },
+    {
+      "check": "Outside working directory",
+      "returncode": 0,
+      "passed": true
+    },
+    {
+      "check": "Invalid mode rejected",
+      "returncode": 2,
+      "passed": true
+    },
+    {
+      "check": "Invalid short timeout rejected",
+      "returncode": 1,
+      "passed": true
+    },
+    {
+      "check": "Invalid long timeout rejected",
+      "returncode": 1,
+      "passed": true
+    },
+    {
+      "check": "Output escape refused",
+      "returncode": 1,
+      "passed": true
+    },
+    {
+      "check": "Missing interpreter refused",
+      "returncode": 127,
+      "passed": true
+    },
+    {
+      "check": "Launch path with spaces",
+      "returncode": 0,
+      "passed": true
+    },
+    {
+      "check": "Native source manifest matches build metadata",
+      "passed": true
+    },
+    {
+      "check": "commons_threshold_v024 SPEL alias matches generated interface",
+      "passed": true
+    },
+    {
+      "check": "commons_allowlist_v024 SPEL alias matches generated interface",
+      "passed": true
+    },
+    {
+      "check": "commons_governed_setting_v024 SPEL alias matches generated interface",
+      "passed": true
+    }
+  ],
+  "licenses": [
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "demo_sh_sha256": "aa230a67ff4da03a240382e9920ebb450d765097b6920badfcdfc0571fccfea9",
+  "real_demo_runner_sha256": "90aa3fb6204dc40f0f4b37858f2d4021674cd3db822ebfea8d7bbc15c8f66aa2",
+  "new_proofs": 0,
+  "new_transactions": 0,
+  "agents_restarted": false
+}

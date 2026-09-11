@@ -19,7 +19,7 @@ From a clean clone:
 ```sh
 /bin/sh scripts/prepare-local.sh fetch
 /bin/sh scripts/prepare-local.sh build
-python3 scripts/demo-local.py --mode all
+./demo.sh --mode all
 ```
 
 Fetch and build are separate on purpose: the build phase uses Cargo offline mode,
@@ -53,3 +53,6 @@ substitute for this real-proof workflow.
 
 The verification ledger identifies completed runs by source revision. Check that
 revision before comparing the result with another build.
+
+The root `demo.sh` delegates to this same Python runner and sets real local proof
+mode explicitly. `./demo.sh --help` performs no proof, funding or network action.

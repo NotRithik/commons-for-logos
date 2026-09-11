@@ -1,0 +1,33 @@
+{
+  "name": "commons_primitives_ui",
+  "display_name": "Commons for Logos",
+  "version": "0.2.0",
+  "type": "ui_qml",
+  "interface": "universal",
+  "category": "governance",
+  "description": "Private allowlists and threshold approvals for Logos Basecamp",
+  "main": "commons_primitives_ui_plugin",
+  "icon": "icons/commons.svg",
+  "view": "qml/Main.qml",
+  "dependencies": [],
+  "provides": [],
+  "uses": [],
+  "codegen": {
+    "rep": "src/commons_primitives_ui.rep",
+    "backend_class": "CommonsPrimitivesBackend",
+    "backend_header": "commons_primitives_backend.h"
+  },
+  "nix": {
+    "packages": {
+      "build": [],
+      "runtime": []
+    },
+    "external_libraries": [],
+    "cmake": {
+      "find_packages": [],
+      "extra_sources": [],
+      "extra_include_dirs": [],
+      "extra_link_libraries": []
+    }
+  }
+}

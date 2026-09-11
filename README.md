@@ -42,10 +42,28 @@ From a clean clone, with the prerequisites in the local demonstration guide:
 ```sh
 /bin/sh scripts/prepare-local.sh fetch
 /bin/sh scripts/prepare-local.sh build
-python3 scripts/demo-local.py --mode all
+./demo.sh --mode all
 ```
 
 The first command downloads pinned dependencies. The second compiles offline. The third starts its own local sequencer, deploys both programs, completes private claims and a threshold decision, then stops that sequencer. It uses fresh test profiles and real local proofs (`RISC0_DEV_MODE=0`).
+
+## Prize entrypoints
+
+For LP-0002, run `./demo.sh --mode threshold`. For LP-0003, run
+`./demo.sh --mode allowlist-smoke`. The latter exercises one real private claim
+in each of two local lists; the two-list, twenty-claim public-testnet evidence is
+separate. Run `./demo.sh --help` to inspect the options without starting a proof.
+The prerequisite fetch and build commands above are required for either mode.
+
+The native source manifest is [module/module.json](module/module.json), identical
+to the `metadata.json` used by the CMake build. The `*.idl.json` files in
+[idl/generated](idl/generated) are byte-identical named copies of the existing
+SPEL-generated interfaces. Regenerate their matching `.json` sources through
+`idl/` when changing the interfaces, then refresh the copies.
+
+- [LP-0002 submission and evidence](docs/SUBMISSION-LP-0002.md)
+- [LP-0003 submission and evidence](docs/SUBMISSION-LP-0003.md)
+- [Short recording outlines for both prizes](docs/RECORDING-MINIMUM.md)
 
 ## Tests
 
@@ -74,4 +92,4 @@ Implementation and testing were AI-assisted. Commons is independently developed 
 
 ## License
 
-MIT or Apache-2.0, at your option. Upstream dependencies retain their own licenses.
+Dual-licensed under [MIT](LICENSE-MIT) and [Apache-2.0](LICENSE-APACHE), at your option. Upstream dependencies retain their own licenses.
